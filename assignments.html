@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Assignment Portal | Submit & Review</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-dark: #0a0c12;
+      --card-bg: rgba(18, 22, 35, 0.75);
+      --card-border: rgba(66, 153, 225, 0.3);
+      --glow-primary: #00e0ff;
+      --glow-accent: #a855f7;
+      --text-primary: #eef2ff;
+      --text-secondary: #9ca3af;
+      --danger: #ff4d6d;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --radius-lg: 1.5rem;
+      --radius-md: 1rem;
+      --transition: all 0.2s ease;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 20% 30%, #0c0f1c, #03050b);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      padding: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    .bg-particles {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 25% 40%, rgba(0,224,255,0.05) 1px, transparent 1px),
+        radial-gradient(circle at 75% 85%, rgba(168,85,247,0.05) 1px, transparent 1px);
+      background-size: 48px 48px, 64px 64px;
+      animation: drift 120s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes drift {
+      0% { background-position: 0 0, 0 0; }
+      100% { background-position: 200px 200px, -150px 150px; }
+    }
+
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(0,224,255,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,224,255,0.08) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 10;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(66,153,225,0.3);
+    }
+    .header h1 {
+      font-size: 2rem;
+      background: linear-gradient(125deg, #fff, #00e0ff, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .role-switch {
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      padding: 0.3rem;
+      border-radius: 60px;
+      display: flex;
+      gap: 0.3rem;
+      border: 1px solid var(--card-border);
+    }
+    .role-btn {
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .role-btn.active {
+      background: var(--glow-primary);
+      color: #000;
+      font-weight: 600;
+      box-shadow: 0 0 10px rgba(0,224,255,0.5);
+    }
+    .stats-badge {
+      background: rgba(0,224,255,0.2);
+      backdrop-filter: blur(8px);
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      font-size: 0.85rem;
+    }
+
+    .dashboard {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--card-border);
+      padding: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .assignment-card {
+      background: rgba(0,0,0,0.3);
+      border-radius: var(--radius-md);
+      padding: 1.2rem;
+      margin-bottom: 1rem;
+      border-left: 3px solid var(--glow-primary);
+      transition: var(--transition);
+    }
+    .assignment-card:hover {
+      transform: translateX(4px);
+      border-left-color: var(--glow-accent);
+    }
+    .assignment-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .assignment-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+    .submission-area {
+      margin-top: 1rem;
+      border-top: 1px dashed rgba(66,153,225,0.3);
+      padding-top: 1rem;
+    }
+    textarea {
+      width: 100%;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(66,153,225,0.4);
+      border-radius: var(--radius-md);
+      padding: 0.7rem;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+    button {
+      background: linear-gradient(95deg, #1e293b, #0f172a);
+      border: 1px solid var(--glow-primary);
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.8rem;
+    }
+    button:hover {
+      background: linear-gradient(95deg, #2d3a5e, #1e293b);
+      box-shadow: 0 0 10px rgba(0,224,255,0.4);
+    }
+    .btn-sm {
+      padding: 0.3rem 0.8rem;
+      font-size: 0.7rem;
+    }
+    .btn-success {
+      border-color: var(--success);
+    }
+    .btn-danger {
+      border-color: var(--danger);
+    }
+    .submitted {
+      background: rgba(16,185,129,0.15);
+      border-left-color: var(--success);
+    }
+    .file-label {
+      display: inline-block;
+      background: rgba(0,0,0,0.5);
+      padding: 0.3rem 0.8rem;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      margin-right: 0.5rem;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .teacher-view table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.8rem 0.5rem;
+      border-bottom: 1px solid rgba(66,153,225,0.2);
+    }
+    th {
+      color: var(--glow-primary);
+    }
+    .submission-preview {
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .create-assignment {
+      background: rgba(0,0,0,0.2);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border: 1px dashed var(--glow-primary);
+    }
+    .create-assignment select, .create-assignment input {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 0.5rem;
+      color: var(--text-primary);
+      margin: 0.2rem 0.5rem;
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      padding: 0.7rem 1.5rem;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      border-left: 3px solid var(--glow-primary);
+      z-index: 1000;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    @media (max-width: 700px) {
+      .header { flex-direction: column; align-items: flex-start; }
+      .assignment-meta { flex-wrap: wrap; }
+      .create-assignment select, .create-assignment input { display: block; margin: 0.5rem 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="bg-particles"></div>
+<div class="grid-overlay"></div>
+
+<div class="container">
+  <div class="header">
+    <h1>📚 Assignment Portal</h1>
+    <div class="role-switch">
+      <button id="studentRoleBtn" class="role-btn active">👩‍🎓 Student View</button>
+      <button id="teacherRoleBtn" class="role-btn">👨‍🏫 Teacher View</button>
+    </div>
+    <div id="roleStats" class="stats-badge"></div>
+  </div>
+
+  <div id="studentView" class="dashboard">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2>📖 Your Assignments</h2>
+      <div>
+        <label style="margin-right: 0.5rem;">Student:</label>
+        <select id="studentSelector"></select>
+      </div>
+    </div>
+    <div id="studentAssignmentsList"></div>
+  </div>
+
+  <div id="teacherView" class="dashboard" style="display: none;">
+    <h2>👨‍🏫 Teacher Dashboard</h2>
+    <div class="create-assignment">
+      <h3>➕ Assign New Assignment</h3>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end;">
+        <div style="flex:1; min-width:150px;">
+          <label>Student</label>
+          <select id="teacherStudentSelect"></select>
+        </div>
+        <div style="flex:1; min-width:150px;">
+          <label>Book</label>
+          <select id="teacherBookSelect"></select>
+        </div>
+        <div style="flex:1; min-width:120px;">
+          <label>Due Date</label>
+          <input type="date" id="teacherDueDate">
+        </div>
+        <div>
+          <button id="createAssignmentBtn">📌 Assign</button>
+        </div>
+      </div>
+    </div>
+    <h3>📊 All Submissions</h3>
+    <div style="overflow-x: auto;">
+      <table id="teacherTable">
+        <thead>
+          <tr><th>Student</th><th>Book</th><th>Due Date</th><th>Submission</th><th>Status</th><th>Actions</th> </tr>
+        </thead>
+        <tbody id="teacherTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- STORAGE KEYS ----------
+  const BOOKS_KEY = 'admin_library_books';
+  const USERS_KEY = 'library_users';
+  const ASSIGNMENTS_KEY = 'book_assignments';
+  const SUBMISSIONS_KEY = 'student_submissions';
+
+  // ---------- GLOBAL DATA ----------
+  let books = [];
+  let users = [];
+  let assignments = [];
+  let submissions = [];
+
+  let currentRole = 'student';
+  let currentStudentId = null;
+
+  // ---------- HELPER FUNCTIONS ----------
+  function loadData() {
+    // Books
+    const storedBooks = localStorage.getItem(BOOKS_KEY);
+    if (storedBooks) books = JSON.parse(storedBooks);
+    else books = [
+      { id: '1', title: 'The Feynman Lectures on Physics', author: 'Feynman, Leighton, Sands', icon: '📖' },
+      { id: '2', title: 'Gravitation', author: 'Misner, Thorne, Wheeler', icon: '🌌' },
+      { id: '3', title: 'Quantum Mechanics and Path Integrals', author: 'Feynman & Hibbs', icon: '⚛️' }
+    ];
+
+    // Users (add teacher and students)
+    const storedUsers = localStorage.getItem(USERS_KEY);
+    if (storedUsers) users = JSON.parse(storedUsers);
+    else {
+      users = [
+        { id: 'teacher1', name: 'Prof. Smith', email: 'teacher@school.edu', role: 'teacher' },
+        { id: 'stu1', name: 'Alice Johnson', email: 'alice@student.edu', role: 'student' },
+        { id: 'stu2', name: 'Bob Chen', email: 'bob@student.edu', role: 'student' },
+        { id: 'stu3', name: 'Carol Davis', email: 'carol@student.edu', role: 'student' }
+      ];
+      saveUsers();
+    }
+
+    // Assignments
+    const storedAssignments = localStorage.getItem(ASSIGNMENTS_KEY);
+    if (storedAssignments) assignments = JSON.parse(storedAssignments);
+    else {
+      // seed assignments
+      assignments = [
+        { id: 'a1', bookId: '1', userId: 'stu1', assignedDate: '2025-03-20', dueDate: '2025-04-10', status: 'pending' },
+        { id: 'a2', bookId: '2', userId: 'stu2', assignedDate: '2025-03-22', dueDate: '2025-04-12', status: 'pending' },
+        { id: 'a3', bookId: '3', userId: 'stu1', assignedDate: '2025-03-25', dueDate: '2025-04-15', status: 'pending' }
+      ];
+      saveAssignments();
+    }
+
+    // Submissions
+    const storedSubmissions = localStorage.getItem(SUBMISSIONS_KEY);
+    if (storedSubmissions) submissions = JSON.parse(storedSubmissions);
+    else submissions = [];
+  }
+
+  function saveUsers() { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+  function saveAssignments() { localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(assignments)); }
+  function saveSubmissions() { localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(submissions)); }
+
+  function getStudentUsers() { return users.filter(u => u.role === 'student'); }
+
+  // Helper: generate unique ID
+  function generateId() { return Date.now().toString() + '-' + Math.random().toString(36).substr(2, 6); }
+
+  // Teacher creates a new assignment
+  function createAssignment() {
+    const studentId = document.getElementById('teacherStudentSelect').value;
+    const bookId = document.getElementById('teacherBookSelect').value;
+    const dueDate = document.getElementById('teacherDueDate').value;
+    if (!studentId || !bookId || !dueDate) {
+      showToast('Please select student, book and due date', '#ff4d6d');
+      return;
+    }
+    const newAssignment = {
+      id: generateId(),
+      bookId,
+      userId: studentId,
+      assignedDate: new Date().toISOString().split('T')[0],
+      dueDate,
+      status: 'pending'
+    };
+    assignments.push(newAssignment);
+    saveAssignments();
+    // Update both views
+    if (currentRole === 'teacher') {
+      renderTeacherView();
+      renderTeacherSelectors();
+    }
+    if (currentRole === 'student') renderStudentAssignments();
+    showToast('Assignment created successfully', '#10b981');
+  }
+
+  // Delete assignment (teacher)
+  function deleteAssignment(assignmentId) {
+    if (confirm('Delete this assignment? All related submissions will be lost.')) {
+      assignments = assignments.filter(a => a.id !== assignmentId);
+      submissions = submissions.filter(s => s.assignmentId !== assignmentId);
+      saveAssignments();
+      saveSubmissions();
+      if (currentRole === 'teacher') renderTeacherView();
+      if (currentRole === 'student') renderStudentAssignments();
+      showToast('Assignment removed', '#ff4d6d');
+    }
+  }
+
+  // View submission modal
+  function viewSubmission(submissionId) {
+    const sub = submissions.find(s => s.id === submissionId);
+    if (!sub) return;
+    const assignment = assignments.find(a => a.id === sub.assignmentId);
+    const student = users.find(u => u.id === sub.studentId);
+    const book = assignment ? books.find(b => b.id === assignment.bookId) : null;
+    const content = `
+      <strong>Student:</strong> ${student?.name}<br>
+      <strong>Book:</strong> ${book ? `${book.icon || '📖'} ${book.title}` : 'Unknown'}<br>
+      <strong>Submitted:</strong> ${new Date(sub.submittedAt).toLocaleString()}<br>
+      <strong>Text:</strong><br>
+      <div style="background:rgba(0,0,0,0.3); padding:0.7rem; border-radius:8px; margin-top:0.5rem;">${sub.textSubmission || 'No text'}</div>
+      ${sub.fileName ? `<strong>Attached file:</strong> ${sub.fileName}` : ''}
+    `;
+    const modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+    modal.style.backdropFilter = 'blur(8px)';
+    modal.style.zIndex = '2000';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.innerHTML = `
+      <div style="background: var(--card-bg); backdrop-filter: blur(20px); border-radius: 1.5rem; padding: 2rem; max-width: 500px; width: 90%; border: 1px solid var(--glow-primary);">
+        <h3>📄 Submission Details</h3>
+        <div style="margin: 1rem 0;">${content}</div>
+        <button onclick="this.closest('div').parentElement.remove()">Close</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  // Student submit assignment
+  function submitAssignment(assignmentId) {
+    const textElem = document.getElementById(`text_${assignmentId}`);
+    const textSubmission = textElem ? textElem.value.trim() : '';
+    const fileInput = document.getElementById(`file_${assignmentId}`);
+    let fileName = '';
+    if (fileInput && fileInput.files.length > 0) {
+      fileName = fileInput.files[0].name;
+      // In a real app, you'd upload the file to a server.
+      // For demo, we only store the filename.
+    }
+    if (!textSubmission && !fileName) {
+      showToast('Please enter text or attach a file', '#ff4d6d');
+      return;
+    }
+
+    const existingIndex = submissions.findIndex(s => s.assignmentId === assignmentId && s.studentId === currentStudentId);
+    const newSubmission = {
+      id: existingIndex !== -1 ? submissions[existingIndex].id : generateId(),
+      assignmentId,
+      studentId: currentStudentId,
+      textSubmission,
+      fileName,
+      submittedAt: new Date().toISOString(),
+      reviewed: false
+    };
+    if (existingIndex !== -1) submissions[existingIndex] = newSubmission;
+    else submissions.push(newSubmission);
+    saveSubmissions();
+    renderStudentAssignments();
+    showToast('Assignment submitted successfully!', '#10b981');
+  }
+
+  // ---------- RENDER FUNCTIONS ----------
+  function renderStudentSelector() {
+    const students = getStudentUsers();
+    const selector = document.getElementById('studentSelector');
+    selector.innerHTML = students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    if (students.length) {
+      if (!currentStudentId || !students.find(s => s.id === currentStudentId)) {
+        currentStudentId = students[0].id;
+      }
+      selector.value = currentStudentId;
+    }
+    selector.addEventListener('change', (e) => {
+      currentStudentId = e.target.value;
+      renderStudentAssignments();
+      updateRoleStats();
+    });
+  }
+
+  function renderStudentAssignments() {
+    const container = document.getElementById('studentAssignmentsList');
+    const studentAssignments = assignments.filter(a => a.userId === currentStudentId && a.status !== 'returned');
+    if (studentAssignments.length === 0) {
+      container.innerHTML = '<div class="assignment-card">No active assignments. 📭</div>';
+      return;
+    }
+    container.innerHTML = studentAssignments.map(assignment => {
+      const book = books.find(b => b.id === assignment.bookId);
+      const bookTitle = book ? `${book.icon || '📖'} ${book.title}` : 'Unknown Book';
+      const existingSub = submissions.find(s => s.assignmentId === assignment.id && s.studentId === currentStudentId);
+      const isSubmitted = !!existingSub;
+      const subText = existingSub ? existingSub.textSubmission : '';
+      const fileName = existingSub?.fileName || '';
+      const submittedDate = existingSub ? new Date(existingSub.submittedAt).toLocaleString() : null;
+
+      return `
+        <div class="assignment-card ${isSubmitted ? 'submitted' : ''}">
+          <div class="assignment-title">${bookTitle}</div>
+          <div class="assignment-meta">
+            <span>📅 Due: ${assignment.dueDate}</span>
+            <span>📝 Status: ${isSubmitted ? '✅ Submitted' : '⏳ Pending'}</span>
+          </div>
+          ${!isSubmitted ? `
+            <div class="submission-area">
+              <textarea id="text_${assignment.id}" rows="3" placeholder="Write your essay, notes, or answer..."></textarea>
+              <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <label class="file-label">📎 Attach File (optional) <input type="file" id="file_${assignment.id}" accept=".pdf,.doc,.docx,.txt"></label>
+                <button class="btn-sm" onclick="submitAssignment('${assignment.id}')">📤 Submit Work</button>
+              </div>
+            </div>
+          ` : `
+            <div class="submission-area">
+              <strong>Your submission:</strong>
+              <div style="background: rgba(0,0,0,0.3); padding: 0.7rem; border-radius: 8px; margin-top: 0.5rem;">
+                ${subText ? `<p>📄 ${subText.substring(0, 200)}${subText.length > 200 ? '...' : ''}</p>` : ''}
+                ${fileName ? `<p>📎 Attached: ${fileName}</p>` : ''}
+                <small>Submitted on ${submittedDate}</small>
+              </div>
+            </div>
+          `}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderTeacherSelectors() {
+    const studentSelect = document.getElementById('teacherStudentSelect');
+    const students = getStudentUsers();
+    studentSelect.innerHTML = students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+    const bookSelect = document.getElementById('teacherBookSelect');
+    bookSelect.innerHTML = books.map(b => `<option value="${b.id}">${b.icon || '📖'} ${b.title}</option>`).join('');
+  }
+
+  function renderTeacherView() {
+    const tbody = document.getElementById('teacherTableBody');
+    const activeAssignments = assignments.filter(a => a.status !== 'returned');
+    if (activeAssignments.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6">No active assignments. Create one above.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = activeAssignments.map(assignment => {
+      const student = users.find(u => u.id === assignment.userId);
+      const book = books.find(b => b.id === assignment.bookId);
+      const submission = submissions.find(s => s.assignmentId === assignment.id && s.studentId === assignment.userId);
+      const hasSubmission = !!submission;
+      const subPreview = hasSubmission ? (submission.textSubmission || submission.fileName) : 'Not submitted';
+      const subDate = hasSubmission ? new Date(submission.submittedAt).toLocaleString() : '';
+
+      return `
+        <tr>
+          <td>${student ? student.name : 'Unknown'}</td>
+          <td>${book ? `${book.icon || '📖'} ${book.title}` : 'Unknown'}</td>
+          <td>${assignment.dueDate}</td>
+          <td class="submission-preview" title="${subPreview}">${subPreview}</td>
+          <td>${hasSubmission ? '✅ Submitted' : '⏳ Pending'}</td>
+          <td>
+            ${hasSubmission ? `<button class="btn-sm btn-success" onclick="viewSubmission('${submission.id}')">View</button>` : ''}
+            <button class="btn-sm btn-danger" onclick="deleteAssignment('${assignment.id}')">Remove</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function updateRoleStats() {
+    const statsEl = document.getElementById('roleStats');
+    if (currentRole === 'student') {
+      const pending = assignments.filter(a => a.userId === currentStudentId && !submissions.find(s => s.assignmentId === a.id && s.studentId === currentStudentId)).length;
+      statsEl.innerHTML = `📚 Pending submissions: ${pending}`;
+    } else {
+      const totalAssignments = assignments.filter(a => a.status !== 'returned').length;
+      const submittedCount = submissions.length;
+      statsEl.innerHTML = `📊 Total assignments: ${totalAssignments} | Submissions: ${submittedCount}`;
+    }
+  }
+
+  // ---------- ROLE SWITCH ----------
+  document.getElementById('studentRoleBtn').addEventListener('click', () => {
+    currentRole = 'student';
+    document.getElementById('studentView').style.display = 'block';
+    document.getElementById('teacherView').style.display = 'none';
+    document.getElementById('studentRoleBtn').classList.add('active');
+    document.getElementById('teacherRoleBtn').classList.remove('active');
+    renderStudentSelector();
+    renderStudentAssignments();
+    updateRoleStats();
+  });
+  document.getElementById('teacherRoleBtn').addEventListener('click', () => {
+    currentRole = 'teacher';
+    document.getElementById('studentView').style.display = 'none';
+    document.getElementById('teacherView').style.display = 'block';
+    document.getElementById('teacherRoleBtn').classList.add('active');
+    document.getElementById('studentRoleBtn').classList.remove('active');
+    renderTeacherSelectors();
+    renderTeacherView();
+    updateRoleStats();
+  });
+
+  // Create assignment button
+  document.getElementById('createAssignmentBtn').addEventListener('click', createAssignment);
+
+  // Toast helper
+  function showToast(msg, color) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerText = msg;
+    toast.style.borderLeftColor = color;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 400);
+    }, 2000);
+  }
+
+  // Expose functions to global scope for onclick
+  window.submitAssignment = submitAssignment;
+  window.viewSubmission = viewSubmission;
+  window.deleteAssignment = deleteAssignment;
+
+  // Initial load
+  loadData();
+  renderStudentSelector();
+  renderStudentAssignments();
+  updateRoleStats();
+</script>
+</body>
+</html>

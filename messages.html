@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Private Messages</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .conversation { background: rgba(255,255,255,0.1); margin: 10px; padding: 15px; border-radius: 20px; cursor: pointer; }
+        .conversation:hover { background: rgba(255,255,255,0.2); }
+        .chat-area { margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px; }
+        .messages { height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 10px; margin-bottom: 10px; }
+        .message { background: #1e293b; margin: 5px; padding: 8px 12px; border-radius: 18px; text-align: left; }
+        .message.me { background: #22c55e; text-align: right; }
+        .chat-input { display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+    <div class="glass-container">
+        <h1>💬 Private Messages</h1>
+        <div id="conversationsList"></div>
+        <div id="chatView" style="display:none;" class="chat-area">
+            <h3>Chat with <span id="chatWithName"></span></h3>
+            <div id="privateMessages" class="messages"></div>
+            <div class="chat-input">
+                <input type="text" id="privateMessageInput" placeholder="Type a message...">
+                <button onclick="sendPrivateMessage()">Send</button>
+            </div>
+            <button onclick="closeChat()" class="back-btn">← Close</button>
+        </div>
+        <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        let currentUser = null;
+        let currentChatWithId = null;
+        let currentChatWithName = null;
+
+        function loadConversations() {
+            const container = document.getElementById("conversationsList");
+            if (!container) return;
+            const privateMessages = JSON.parse(localStorage.getItem("school_private_messages") || "[]");
+            const otherUserIds = new Set();
+            privateMessages.forEach(msg => {
+                if (msg.senderId === currentUser.id) otherUserIds.add(msg.receiverId);
+                if (msg.receiverId === currentUser.id) otherUserIds.add(msg.senderId);
+            });
+            if (otherUserIds.size === 0) {
+                container.innerHTML = "<p>No conversations yet. Start one from the user list!</p>";
+                return;
+            }
+            const users = JSON.parse(localStorage.getItem("school_users") || "[]");
+            const otherUsers = users.filter(u => otherUserIds.has(u.id));
+            container.innerHTML = "<h3>Your Conversations</h3>";
+            otherUsers.forEach(u => {
+                container.innerHTML += `
+                    <div class="conversation" onclick="openChat('${u.id}', '${u.name}')">
+                        💬 ${u.name}
+                    </div>
+                `;
+            });
+        }
+
+        function openChat(otherUserId, otherUserName) {
+            currentChatWithId = otherUserId;
+            currentChatWithName = otherUserName;
+            document.getElementById("chatWithName").innerText = otherUserName;
+            document.getElementById("conversationsList").style.display = "none";
+            document.getElementById("chatView").style.display = "block";
+            loadPrivateMessages();
+        }
+
+        function closeChat() {
+            document.getElementById("conversationsList").style.display = "block";
+            document.getElementById("chatView").style.display = "none";
+            currentChatWithId = null;
+        }
+
+        function loadPrivateMessages() {
+            const messagesDiv = document.getElementById("privateMessages");
+            if (!messagesDiv) return;
+            const privateMessages = JSON.parse(localStorage.getItem("school_private_messages") || "[]");
+            const filtered = privateMessages.filter(msg => 
+                (msg.senderId === currentUser.id && msg.receiverId === currentChatWithId) ||
+                (msg.senderId === currentChatWithId && msg.receiverId === currentUser.id)
+            );
+            messagesDiv.innerHTML = "";
+            filtered.forEach(msg => {
+                const isMe = msg.senderId === currentUser.id;
+                const time = new Date(msg.timestamp).toLocaleTimeString();
+                messagesDiv.innerHTML += `
+                    <div class="message ${isMe ? 'me' : ''}">
+                        <strong>${isMe ? "You" : msg.senderName}</strong> <small>${time}</small><br>
+                        ${msg.text}
+                    </div>
+                `;
+            });
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function sendPrivateMessage() {
+            const input = document.getElementById("privateMessageInput");
+            const text = input.value.trim();
+            if (!text || !currentChatWithId) return;
+            input.value = "";
+            let privateMessages = JSON.parse(localStorage.getItem("school_private_messages") || "[]");
+            privateMessages.push({
+                id: Date.now(),
+                senderId: currentUser.id,
+                senderName: currentUser.name,
+                receiverId: currentChatWithId,
+                text: text,
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem("school_private_messages", JSON.stringify(privateMessages));
+            loadPrivateMessages();
+        }
+
+        // Initialization
+        const user = JSON.parse(localStorage.getItem("currentUser"));
+        if (!user) {
+            window.location.href = "login.html";
+        } else {
+            currentUser = user;
+            const chatWithId = sessionStorage.getItem("chatWithId");
+            const chatWithName = sessionStorage.getItem("chatWithName");
+            if (chatWithId && chatWithName) {
+                openChat(chatWithId, chatWithName);
+                sessionStorage.removeItem("chatWithId");
+                sessionStorage.removeItem("chatWithName");
+            } else {
+                loadConversations();
+            }
+            // Auto-refresh private messages if chat open (simple polling)
+            setInterval(() => {
+                if (currentChatWithId) loadPrivateMessages();
+            }, 2000);
+        }
+    </script>
+    <canvas id="particle-canvas"></canvas>
+<script>
+    // Particle network (same as login)
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, particles = [];
+    const PARTICLE_COUNT = 75, MAX_DIST = 130;
+    function initParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push({
+                x: Math.random() * width, y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.3,
+                radius: Math.random() * 2.2 + 1.2,
+                color: `rgba(0, ${180 + Math.random() * 75}, 255, ${0.2 + Math.random() * 0.5})`
+            });
+        }
+    }
+    function resizeCanvas() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+        initParticles();
+    }
+    function drawParticles() {
+        ctx.clearRect(0, 0, width, height);
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = p.color; ctx.fill();
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 0) p.x = width; if (p.x > width) p.x = 0;
+            if (p.y < 0) p.y = height; if (p.y > height) p.y = 0;
+        }
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < MAX_DIST) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(0, 200, 255, ${0.08 * (1 - dist / MAX_DIST)})`;
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(drawParticles);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    drawParticles();
+</script>
+</body>
+</html>

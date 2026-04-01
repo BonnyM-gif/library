@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>SMUK LOGIN</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 30%, #0a0f1e, #03050b);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, sans-serif;
+      position: relative;
+      overflow: hidden;
+    }
+    #particle-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .orb {
+      position: absolute;
+      width: 50vmax;
+      height: 50vmax;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 242, 255, 0.2), transparent 70%);
+      filter: blur(70px);
+      animation: floatOrb 18s infinite alternate ease-in-out;
+      z-index: 0;
+    }
+    .orb1 { top: -20%; left: -20%; animation-duration: 22s; background: radial-gradient(circle, rgba(0, 180, 255, 0.25), transparent); }
+    .orb2 { bottom: -15%; right: -15%; animation-duration: 19s; background: radial-gradient(circle, rgba(150, 0, 255, 0.2), transparent); }
+    .orb3 { top: 40%; left: 30%; width: 30vmax; height: 30vmax; animation-duration: 26s; background: radial-gradient(circle, rgba(0, 255, 200, 0.15), transparent); }
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+      100% { transform: translate(8%, 12%) scale(1.2); opacity: 0.8; }
+    }
+    .container {
+      position: relative;
+      width: 390px;
+      max-width: 90vw;
+      padding: 2rem 1.8rem;
+      background: rgba(8, 12, 25, 0.55);
+      backdrop-filter: blur(14px);
+      border-radius: 2rem;
+      border: 1px solid rgba(0, 242, 255, 0.35);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 242, 255, 0.1) inset, 0 0 25px rgba(0, 242, 255, 0.3);
+      text-align: center;
+      z-index: 10;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+    .container:hover {
+      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.6), 0 0 0 1.5px rgba(0, 242, 255, 0.5) inset, 0 0 32px #00f2ff66;
+      transform: scale(1.01);
+    }
+    h2 {
+      font-size: 2.1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #e0f2fe, #00f2ff, #2a6eff);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+      text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+      margin-bottom: 0.3rem;
+    }
+    .ai-text {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: #a0e9ff;
+      background: rgba(0, 30, 40, 0.6);
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 30px;
+      backdrop-filter: blur(4px);
+      margin: 0.75rem 0 1.2rem;
+      min-height: 2.8rem;
+      letter-spacing: 0.3px;
+      border-left: 2px solid #0ff;
+      border-right: 2px solid #0ff;
+      box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+    }
+    .input-group {
+      position: relative;
+      margin: 1.2rem 0;
+    }
+    input {
+      width: 100%;
+      padding: 14px 18px;
+      background: rgba(2, 8, 20, 0.7);
+      border: 1.5px solid rgba(0, 242, 255, 0.4);
+      border-radius: 60px;
+      font-size: 1rem;
+      color: #eef5ff;
+      outline: none;
+      transition: all 0.25s ease;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+    input:focus {
+      border-color: #0ff;
+      box-shadow: 0 0 12px #00f2ffaa, 0 0 0 2px rgba(0, 242, 255, 0.2);
+      background: rgba(4, 12, 28, 0.85);
+    }
+    input::placeholder {
+      color: #6c86a3;
+      font-weight: 400;
+      font-size: 0.85rem;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 60px;
+      background: linear-gradient(95deg, #00c3ff, #0077ff, #2a2eff);
+      background-size: 200% auto;
+      color: #ffffff;
+      font-weight: bold;
+      font-size: 1rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 5px 15px rgba(0, 150, 255, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    button::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.6s;
+    }
+    button:hover::before {
+      left: 100%;
+    }
+    button:hover {
+      background-position: right center;
+      transform: scale(1.02);
+      box-shadow: 0 8px 22px rgba(0, 180, 255, 0.6);
+    }
+    .scanner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, transparent, #0ff, #f0f, #0ff, transparent);
+      filter: blur(2px);
+      border-radius: 10px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 20;
+      box-shadow: 0 0 12px #0ff;
+    }
+    .scanner.active {
+      opacity: 1;
+      animation: scanMove 2.2s cubic-bezier(0.2, 0.9, 0.4, 1.1) infinite;
+    }
+    @keyframes scanMove {
+      0% { top: 0%; opacity: 1; }
+      45% { top: 95%; opacity: 1; }
+      55% { top: 95%; opacity: 0.8; }
+      100% { top: 0%; opacity: 1; }
+    }
+    .loading {
+      display: none;
+      margin-top: 1.2rem;
+      color: #0ff;
+      font-size: 0.8rem;
+      font-weight: 500;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 6px 12px;
+      border-radius: 40px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(0, 242, 255, 0.3);
+      border-top: 2px solid #0ff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .shake {
+      animation: glitchShake 0.35s ease-in-out 0s 2;
+    }
+    @keyframes glitchShake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+      100% { transform: translateX(0); }
+    }
+    .glow-error {
+      box-shadow: 0 0 18px #ff3366aa, 0 0 0 1px #ff3366 inset;
+      transition: 0.1s;
+    }
+    .link {
+      color: #0ff;
+      text-decoration: none;
+      font-size: 0.85rem;
+      margin-top: 15px;
+      display: inline-block;
+      cursor: pointer;
+    }
+    .link:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 480px) {
+      .container { padding: 1.5rem; }
+      h2 { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="container" id="loginBox">
+    <div class="scanner" id="scannerLine"></div>
+    <h2>⚡ SMUK</h2>
+    <div class="ai-text" id="aiMessage">⟳ booting AI core...</div>
+    <div class="input-group">
+      <input type="email" id="loginEmail" placeholder="🛡️  email" autocomplete="off">
+    </div>
+    <div class="input-group">
+      <input type="password" id="loginPassword" placeholder="🔒  password">
+    </div>
+    <button id="loginBtn">↯  AUTHENTICATE  ↯</button>
+    <div class="loading" id="loadingIndicator">
+      <div class="spinner"></div>
+      <span>neural scan in progress...</span>
+    </div>
+    <a href="#" onclick="forgotPassword()" class="link">🔐 Forgot password?</a>
+    <p style="color:#aaa; margin-top:15px; font-size:0.8rem;">Don't have an account? <a href="register.html" style="color:#0ff;">Register</a></p>
+  </div>
+  <script src="script.js"></script>
+  <script>
+    // Login function using localStorage
+    async function login() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const scanner = document.getElementById("scannerLine");
+      const loading = document.getElementById("loadingIndicator");
+      const aiMsg = document.getElementById("aiMessage");
+      const container = document.getElementById("loginBox");
+      const btn = document.getElementById("loginBtn");
+
+      if (!email || !password) {
+        aiMsg.innerHTML = "⛔ missing credentials · access rejected";
+        container.classList.add("glow-error", "shake");
+        setTimeout(() => container.classList.remove("glow-error", "shake"), 600);
+        return;
+      }
+
+      scanner.classList.add("active");
+      loading.style.display = "flex";
+      btn.disabled = true;
+      btn.style.opacity = "0.7";
+      aiMsg.innerHTML = "🌀 biometric scan · neural handshake";
+
+      // Simulate async check
+      setTimeout(() => {
+        const users = JSON.parse(localStorage.getItem("school_users") || "[]");
+        const user = users.find(u => u.email === email && u.password === password);
+        scanner.classList.remove("active");
+        loading.style.display = "none";
+        btn.disabled = false;
+        btn.style.opacity = "1";
+
+        if (user) {
+          // Store logged in user
+          localStorage.setItem("currentUser", JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role }));
+          aiMsg.innerHTML = "🚀 GRANTED · redirecting...";
+          setTimeout(() => {
+            if (user.role === "admin") window.location.href = "admin.html";
+            else window.location.href = "dashboard.html";
+          }, 1000);
+        } else {
+          aiMsg.innerHTML = "⛔ ACCESS DENIED · invalid credentials";
+          container.classList.add("glow-error", "shake");
+          setTimeout(() => container.classList.remove("glow-error", "shake"), 800);
+        }
+      }, 2200);
+    }
+
+    function forgotPassword() {
+      const email = document.getElementById("loginEmail").value.trim();
+      if (!email) {
+        alert("Please enter your email address first.");
+        return;
+      }
+      const users = JSON.parse(localStorage.getItem("school_users") || "[]");
+      const user = users.find(u => u.email === email);
+      if (user) {
+        alert(`Your password is: ${user.password}\n(Store it securely next time!)`);
+      } else {
+        alert("No account found with that email.");
+      }
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", login);
+    document.getElementById("loginPassword").addEventListener("keypress", (e) => { if (e.key === "Enter") login(); });
+    document.getElementById("loginEmail").addEventListener("keypress", (e) => { if (e.key === "Enter") login(); });
+
+    // AI typing effect
+    let typingTimer = null;
+    function setAIText(text, isInstant = false) {
+      const aiMsg = document.getElementById("aiMessage");
+      if (typingTimer) clearInterval(typingTimer);
+      if (isInstant) {
+        aiMsg.innerHTML = text;
+        return;
+      }
+      aiMsg.innerHTML = '';
+      let i = 0;
+      typingTimer = setInterval(() => {
+        if (i < text.length) {
+          aiMsg.innerHTML += text[i];
+          i++;
+        } else {
+          clearInterval(typingTimer);
+          typingTimer = null;
+        }
+      }, 28);
+    }
+    setTimeout(() => setAIText('🔮 SMUK online security · watching', false), 800);
+    document.getElementById("loginPassword").addEventListener("input", () => {
+      const pass = document.getElementById("loginPassword").value;
+      if (pass.length === 0) setAIText('⚡ enter secure credentials');
+      else if (pass.length < 4) setAIText('⚠️ too short · vulnerability risk');
+      else if (!/[A-Z]/.test(pass)) setAIText('🛡️ uppercase missing · add defense layer');
+      else if (!/[0-9]/.test(pass)) setAIText('🔢 number required · bypass not allowed');
+      else if (pass.length >= 8 && /[A-Z]/.test(pass) && /[0-9]/.test(pass)) setAIText('✅ neural handshake · strong cipher');
+      else setAIText('🤖 acceptable · proceed with caution');
+    });
+
+    // Particle network (same as original)
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, particles = [];
+    const PARTICLE_COUNT = 75, MAX_DIST = 130;
+    function initParticles() {
+      particles = [];
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push({
+          x: Math.random() * width, y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.3,
+          radius: Math.random() * 2.2 + 1.2,
+          color: `rgba(0, ${180 + Math.random() * 75}, 255, ${0.2 + Math.random() * 0.5})`
+        });
+      }
+    }
+    function resizeCanvas() {
+      width = window.innerWidth; height = window.innerHeight;
+      canvas.width = width; canvas.height = height;
+      initParticles();
+    }
+    function drawParticles() {
+      ctx.clearRect(0, 0, width, height);
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color; ctx.fill();
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = width; if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height; if (p.y > height) p.y = 0;
+      }
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < MAX_DIST) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(0, 200, 255, ${0.08 * (1 - dist / MAX_DIST)})`;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(drawParticles);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    drawParticles();
+  </script>
+</body>
+</html>

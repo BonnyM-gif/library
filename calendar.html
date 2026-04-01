@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SMUK School Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Poppins', sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: radial-gradient(circle at 10% 20%, #0a0f1e, #0b0e17);
+            color: #eef2ff;
+            padding: 24px;
+            position: relative;
+        }
+
+        /* particle canvas (from your login) */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* main container */
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* LEFT PANEL - CALENDAR CARD */
+        .calendar-card {
+            flex: 1.2;
+            min-width: 320px;
+            background: rgba(18, 22, 35, 0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            padding: 1.5rem;
+            box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(72, 187, 255, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        /* RIGHT PANEL - SCHEDULE */
+        .schedule-card {
+            flex: 1.8;
+            min-width: 340px;
+            background: rgba(12, 15, 26, 0.8);
+            backdrop-filter: blur(8px);
+            border-radius: 2rem;
+            padding: 1.6rem;
+            border: 1px solid rgba(0, 198, 255, 0.25);
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.4);
+        }
+
+        /* header */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .month-nav {
+            display: flex;
+            gap: 12px;
+        }
+        .nav-btn {
+            background: rgba(0, 198, 255, 0.12);
+            border: none;
+            font-size: 1.4rem;
+            font-weight: bold;
+            width: 40px;
+            height: 40px;
+            border-radius: 60px;
+            cursor: pointer;
+            color: #00c6ff;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-btn:hover {
+            background: #00c6ff;
+            color: #0a0f1e;
+            transform: scale(1.02);
+        }
+        .month-title {
+            font-size: 1.7rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #FFFFFF, #88ddff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .today-btn {
+            background: rgba(255, 90, 90, 0.2);
+            border: 1px solid #ff5a5a;
+            color: #ff9e8f;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .today-btn:hover {
+            background: #ff5a5a;
+            color: white;
+        }
+
+        /* weekdays grid */
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            margin: 20px 0 12px 0;
+            font-weight: 600;
+            color: #9aa4bf;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* dates grid */
+        .dates-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+        .date-cell {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(25, 30, 45, 0.6);
+            border-radius: 18px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            position: relative;
+            border: 1px solid transparent;
+        }
+        .date-cell:hover {
+            background: #2a3448;
+            transform: translateY(-2px);
+        }
+        .date-cell.today {
+            background: linear-gradient(145deg, #ff5a5a, #e03a3a);
+            color: white;
+            box-shadow: 0 6px 14px rgba(255, 80, 80, 0.3);
+            font-weight: 700;
+        }
+        .date-cell.selected {
+            background: #00c6ff;
+            color: #0a0f1e;
+            border: 1px solid #ffffffcc;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0,198,255,0.4);
+        }
+        .lesson-dot {
+            width: 6px;
+            height: 6px;
+            background: #00e0ff;
+            border-radius: 10px;
+            margin-top: 3px;
+            box-shadow: 0 0 4px #00e0ff;
+        }
+        .date-number {
+            font-weight: 600;
+        }
+        .empty-cell {
+            aspect-ratio: 1 / 1;
+        }
+
+        /* schedule header */
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px dashed #2a3448;
+            padding-bottom: 12px;
+        }
+        .selected-date-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(120deg, #fff, #80dcff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .lesson-count {
+            background: #1e2a3a;
+            padding: 5px 12px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* lesson cards */
+        .lessons-container {
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 6px;
+            margin: 20px 0;
+        }
+        .lesson-card {
+            background: rgba(25, 32, 48, 0.8);
+            border-radius: 1.2rem;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 5px solid #00c6ff;
+            transition: 0.15s;
+        }
+        .lesson-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .lesson-subject {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .lesson-time {
+            font-size: 0.75rem;
+            color: #b9c7e0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .lesson-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 40px;
+            transition: 0.15s;
+            color: #cdd9ff;
+        }
+        .icon-btn:hover {
+            background: #2f3b5c;
+            transform: scale(1.05);
+        }
+        .delete-btn:hover {
+            color: #ff8080;
+        }
+        .empty-message {
+            text-align: center;
+            padding: 2rem;
+            color: #7e89aa;
+            font-style: italic;
+        }
+
+        /* form section */
+        .form-section {
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 1.5rem;
+            padding: 18px;
+        }
+        .form-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        input, select {
+            width: 100%;
+            background: #11161f;
+            border: 1px solid #2c3548;
+            padding: 12px 14px;
+            border-radius: 1rem;
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+            transition: 0.2s;
+        }
+        input:focus {
+            border-color: #00c6ff;
+            box-shadow: 0 0 6px #00c6ff66;
+        }
+        .btn-primary {
+            background: linear-gradient(95deg, #00c6ff, #0077ff);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            color: white;
+            width: 100%;
+        }
+        .btn-secondary {
+            background: #2a3448;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: #ddd;
+        }
+        .btn-secondary:hover {
+            background: #3e4a66;
+        }
+        .flex-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .danger-btn {
+            background: #a13333a0;
+        }
+        .danger-btn:hover {
+            background: #c44545;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e2438;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00c6ff;
+            border-radius: 10px;
+        }
+        @media (max-width: 780px) {
+            body {
+                padding: 16px;
+            }
+            .date-cell {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* back & logout buttons */
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .top-btn {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 40px;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+        }
+        .top-btn:hover {
+            background: rgba(0, 242, 255, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+<canvas id="particle-canvas"></canvas>
+
+<div class="dashboard">
+    <!-- Top bar with back and logout -->
+    <div style="width:100%; margin-bottom: 10px;">
+        <div class="top-bar">
+            <a href="dashboard.html" class="top-btn">← Dashboard</a>
+            <a href="#" onclick="logout()" class="top-btn">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- LEFT CALENDAR PANEL -->
+    <div class="calendar-card">
+        <div class="calendar-header">
+            <div class="month-nav">
+                <button class="nav-btn" id="prevMonthBtn">◀</button>
+                <button class="nav-btn" id="nextMonthBtn">▶</button>
+            </div>
+            <h3 class="month-title" id="monthYearDisplay">March 2026</h3>
+            <button class="today-btn" id="todayBtn">📅 Today</button>
+        </div>
+
+        <div class="weekdays">
+            <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+        </div>
+        <div class="dates-grid" id="datesGrid"></div>
+    </div>
+
+    <!-- RIGHT SCHEDULE PANEL -->
+    <div class="schedule-card">
+        <div class="schedule-header">
+            <div>
+                <span class="selected-date-title" id="selectedDateLabel">📌 No date selected</span>
+            </div>
+            <div class="lesson-count" id="lessonCountBadge">0 lessons</div>
+        </div>
+
+        <div id="lessonsList" class="lessons-container">
+            <div class="empty-message">✨ Click on a date to view or add lessons</div>
+        </div>
+
+        <!-- Admin-only form: hidden for students -->
+        <div id="adminControls" style="display: none;">
+            <div class="form-section">
+                <div class="form-title">
+                    <strong>✏️ Manage Lesson</strong>
+                    <button id="cancelEditBtn" class="btn-secondary" style="display:none;">Cancel Edit</button>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="subjectInput" placeholder="Subject name (e.g., Mathematics)" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="timeInput" placeholder="Time (e.g., 09:30 AM / 14:00)">
+                </div>
+                <button id="saveLessonBtn" class="btn-primary">➕ Add Lesson</button>
+                <div class="flex-btns">
+                    <button id="deleteAllBtn" class="btn-secondary danger-btn" style="background:#882d2d;">🗑️ Delete all for date</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ------------------- AUTHENTICATION -------------------
+    let currentUser = null;
+    let isAdmin = false;
+
+    function checkAuth() {
+        const userStr = localStorage.getItem("currentUser");
+        if (!userStr) {
+            window.location.href = "login.html";
+            return false;
+        }
+        currentUser = JSON.parse(userStr);
+        isAdmin = (currentUser.role === "admin");
+        return true;
+    }
+
+    function logout() {
+        localStorage.removeItem("currentUser");
+        window.location.href = "login.html";
+    }
+
+    // ------------------- CALENDAR LOGIC (adapted from your code) -------------------
+    let currentDisplayDate = new Date();  // month navigation
+    let selectedDateKey = null;           // stored as "YYYY-MM-DD"
+    let editMode = false;
+    let editLessonIndex = null;
+    
+    // timetable storage: key = "YYYY-MM-DD" => array of { subject, time, id }
+    let timetable = {};
+
+    function formatDateKey(year, month, day) {
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+
+    function getTodayKey() {
+        const today = new Date();
+        return formatDateKey(today.getFullYear(), today.getMonth() + 1, today.getDate());
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    function migrateLegacyTimetable() {
+        let raw = localStorage.getItem("timetable");
+        if (!raw) return {};
+        let oldData = JSON.parse(raw);
+        let newData = {};
+        let migrated = false;
+        for (let oldKey in oldData) {
+            const match = oldKey.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+            if (match) {
+                const year = match[1];
+                const month = parseInt(match[2], 10);
+                const day = parseInt(match[3], 10);
+                if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                    const newKey = formatDateKey(parseInt(year), month, day);
+                    if (!newData[newKey]) newData[newKey] = [];
+                    const lessons = oldData[oldKey];
+                    if (Array.isArray(lessons)) {
+                        lessons.forEach(lesson => {
+                            newData[newKey].push({
+                                subject: lesson.subject || "Untitled",
+                                time: lesson.time || "TBD",
+                                id: Date.now() + Math.random() + newKey + Math.random()
+                            });
+                        });
+                    }
+                    migrated = true;
+                } else {
+                    newData[oldKey] = oldData[oldKey];
+                }
+            } else {
+                newData[oldKey] = oldData[oldKey];
+            }
+        }
+        if (migrated) {
+            localStorage.setItem("timetable", JSON.stringify(newData));
+            return newData;
+        }
+        for (let k in oldData) {
+            if (Array.isArray(oldData[k])) {
+                oldData[k] = oldData[k].map((l, idx) => ({
+                    subject: l.subject || "Lesson",
+                    time: l.time || "",
+                    id: l.id || `${k}-${idx}-${Date.now()}-${Math.random()}`
+                }));
+            }
+        }
+        return oldData;
+    }
+
+    function loadTimetable() {
+        const migrated = migrateLegacyTimetable();
+        timetable = migrated;
+        for (let key in timetable) {
+            if (Array.isArray(timetable[key])) {
+                timetable[key] = timetable[key].map(l => {
+                    if (!l.id) l.id = `${key}-${Date.now()}-${Math.random()}`;
+                    return l;
+                });
+            }
+        }
+        persistTimetable();
+    }
+
+    function persistTimetable() {
+        localStorage.setItem("timetable", JSON.stringify(timetable));
+    }
+
+    function renderCalendar() {
+        const year = currentDisplayDate.getFullYear();
+        const month = currentDisplayDate.getMonth(); // 0-index
+        const firstDayOfMonth = new Date(year, month, 1);
+        const startWeekday = firstDayOfMonth.getDay(); // 0 = Sunday
+        let startOffset = startWeekday === 0 ? 6 : startWeekday - 1; // Monday based offset
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        const monthName = currentDisplayDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+        document.getElementById('monthYearDisplay').innerText = monthName;
+
+        const gridContainer = document.getElementById('datesGrid');
+        gridContainer.innerHTML = '';
+
+        const todayKey = getTodayKey();
+
+        for (let i = 0; i < startOffset; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.classList.add('empty-cell');
+            gridContainer.appendChild(emptyDiv);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const cellKey = formatDateKey(year, month + 1, d);
+            const hasLessons = timetable[cellKey] && timetable[cellKey].length > 0;
+            const isToday = (todayKey === cellKey);
+            const isSelected = (selectedDateKey === cellKey);
+
+            const dateDiv = document.createElement('div');
+            dateDiv.className = 'date-cell';
+            if (isToday) dateDiv.classList.add('today');
+            if (isSelected) dateDiv.classList.add('selected');
+            
+            const numberSpan = document.createElement('span');
+            numberSpan.className = 'date-number';
+            numberSpan.innerText = d;
+            dateDiv.appendChild(numberSpan);
+            
+            if (hasLessons) {
+                const dotSpan = document.createElement('div');
+                dotSpan.className = 'lesson-dot';
+                dateDiv.appendChild(dotSpan);
+            }
+            
+            dateDiv.addEventListener('click', (function(key) {
+                return function() { selectDate(key); };
+            })(cellKey));
+            
+            gridContainer.appendChild(dateDiv);
+        }
+    }
+
+    function selectDate(dateKey) {
+        selectedDateKey = dateKey;
+        editMode = false;
+        editLessonIndex = null;
+        const saveBtn = document.getElementById('saveLessonBtn');
+        if (saveBtn) saveBtn.innerText = '➕ Add Lesson';
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        if (cancelBtn) cancelBtn.style.display = 'none';
+        const subjectInput = document.getElementById('subjectInput');
+        const timeInput = document.getElementById('timeInput');
+        if (subjectInput) subjectInput.value = '';
+        if (timeInput) timeInput.value = '';
+        renderCalendar();
+        renderLessonsForDate();
+    }
+
+    function renderLessonsForDate() {
+        const container = document.getElementById('lessonsList');
+        const badge = document.getElementById('lessonCountBadge');
+        const dateLabel = document.getElementById('selectedDateLabel');
+        
+        if (!selectedDateKey) {
+            dateLabel.innerHTML = '📌 No date selected';
+            container.innerHTML = '<div class="empty-message">🗓️ Select a date from calendar to manage lessons</div>';
+            badge.innerText = '0 lessons';
+            return;
+        }
+        
+        const [year, month, day] = selectedDateKey.split('-');
+        const dateObj = new Date(year, month-1, day);
+        const formatted = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        dateLabel.innerHTML = `📅 ${formatted}`;
+        
+        const lessons = timetable[selectedDateKey] || [];
+        badge.innerText = `${lessons.length} lesson${lessons.length !== 1 ? 's' : ''}`;
+        
+        if (lessons.length === 0) {
+            container.innerHTML = '<div class="empty-message">📭 No lessons scheduled. Add one below ✨</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        lessons.forEach((lesson, idx) => {
+            const card = document.createElement('div');
+            card.className = 'lesson-card';
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'lesson-info';
+            const subjectSpan = document.createElement('div');
+            subjectSpan.className = 'lesson-subject';
+            subjectSpan.innerText = escapeHtml(lesson.subject);
+            const timeSpan = document.createElement('div');
+            timeSpan.className = 'lesson-time';
+            timeSpan.innerHTML = `⏰ ${escapeHtml(lesson.time || 'Not specified')}`;
+            infoDiv.appendChild(subjectSpan);
+            infoDiv.appendChild(timeSpan);
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'lesson-actions';
+            
+            // Only show edit/delete for admins
+            if (isAdmin) {
+                const editBtn = document.createElement('button');
+                editBtn.innerHTML = '✏️';
+                editBtn.className = 'icon-btn';
+                editBtn.title = 'Edit lesson';
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    startEditLesson(lesson, idx);
+                });
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '❌';
+                deleteBtn.className = 'icon-btn delete-btn';
+                deleteBtn.title = 'Delete lesson';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Delete "${lesson.subject}" lesson?`)) {
+                        deleteLessonByIdx(idx);
+                    }
+                });
+                
+                actionsDiv.appendChild(editBtn);
+                actionsDiv.appendChild(deleteBtn);
+            }
+            
+            card.appendChild(infoDiv);
+            card.appendChild(actionsDiv);
+            container.appendChild(card);
+        });
+    }
+    
+    function startEditLesson(lesson, index) {
+        if (!isAdmin) return;
+        editMode = true;
+        editLessonIndex = index;
+        document.getElementById('subjectInput').value = lesson.subject;
+        document.getElementById('timeInput').value = lesson.time || '';
+        const saveBtn = document.getElementById('saveLessonBtn');
+        saveBtn.innerText = '🔄 Update Lesson';
+        document.getElementById('cancelEditBtn').style.display = 'inline-block';
+    }
+    
+    function cancelEdit() {
+        if (!isAdmin) return;
+        editMode = false;
+        editLessonIndex = null;
+        document.getElementById('subjectInput').value = '';
+        document.getElementById('timeInput').value = '';
+        const saveBtn = document.getElementById('saveLessonBtn');
+        saveBtn.innerText = '➕ Add Lesson';
+        document.getElementById('cancelEditBtn').style.display = 'none';
+    }
+    
+    function deleteLessonByIdx(index) {
+        if (!isAdmin) return;
+        if (!selectedDateKey) return;
+        if (!timetable[selectedDateKey]) return;
+        timetable[selectedDateKey].splice(index, 1);
+        if (timetable[selectedDateKey].length === 0) {
+            delete timetable[selectedDateKey];
+        }
+        persistTimetable();
+        renderLessonsForDate();
+        renderCalendar();
+    }
+    
+    function deleteAllLessonsForDate() {
+        if (!isAdmin) return;
+        if (!selectedDateKey) {
+            alert("Please select a date first.");
+            return;
+        }
+        if (!timetable[selectedDateKey] || timetable[selectedDateKey].length === 0) {
+            alert("No lessons to delete for this date.");
+            return;
+        }
+        if (confirm(`⚠️ Delete ALL lessons for ${selectedDateKey}? This cannot be undone.`)) {
+            delete timetable[selectedDateKey];
+            persistTimetable();
+            renderLessonsForDate();
+            renderCalendar();
+            cancelEdit();
+        }
+    }
+    
+    function saveLesson() {
+        if (!isAdmin) return;
+        if (!selectedDateKey) {
+            alert("❗ Please select a date from the calendar first.");
+            return;
+        }
+        let subject = document.getElementById('subjectInput').value.trim();
+        let time = document.getElementById('timeInput').value.trim();
+        
+        if (subject === "") {
+            alert("Please enter a subject name.");
+            return;
+        }
+        if (time === "") time = "To be defined";
+        
+        if (editMode && editLessonIndex !== null) {
+            if (timetable[selectedDateKey] && timetable[selectedDateKey][editLessonIndex]) {
+                timetable[selectedDateKey][editLessonIndex].subject = subject;
+                timetable[selectedDateKey][editLessonIndex].time = time;
+                persistTimetable();
+                cancelEdit();
+                renderLessonsForDate();
+                renderCalendar();
+            } else {
+                alert("Lesson not found, re-adding as new.");
+                editMode = false;
+                addNewLesson(subject, time);
+            }
+        } else {
+            addNewLesson(subject, time);
+        }
+    }
+    
+    function addNewLesson(subject, time) {
+        if (!isAdmin) return;
+        if (!timetable[selectedDateKey]) {
+            timetable[selectedDateKey] = [];
+        }
+        const newLesson = {
+            subject: subject,
+            time: time,
+            id: `${selectedDateKey}-${Date.now()}-${Math.random()}`
+        };
+        timetable[selectedDateKey].push(newLesson);
+        persistTimetable();
+        renderLessonsForDate();
+        renderCalendar();
+        document.getElementById('subjectInput').value = '';
+        document.getElementById('timeInput').value = '';
+    }
+    
+    function changeMonth(delta) {
+        currentDisplayDate.setMonth(currentDisplayDate.getMonth() + delta);
+        const [year, month] = [currentDisplayDate.getFullYear(), currentDisplayDate.getMonth()];
+        if (selectedDateKey) {
+            const [selYear, selMonth] = selectedDateKey.split('-');
+            if (parseInt(selYear) !== year || parseInt(selMonth) !== (month + 1)) {
+                selectedDateKey = null;
+                cancelEdit();
+                renderLessonsForDate();
+            }
+        }
+        renderCalendar();
+    }
+    
+    function goToToday() {
+        const today = new Date();
+        currentDisplayDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        renderCalendar();
+        const todayKey = getTodayKey();
+        selectDate(todayKey);
+    }
+    
+    // ------------------- INITIALIZATION -------------------
+    function init() {
+        if (!checkAuth()) return;
+        
+        loadTimetable();
+        
+        // Show admin controls only if admin
+        if (isAdmin) {
+            document.getElementById('adminControls').style.display = 'block';
+        } else {
+            document.getElementById('adminControls').style.display = 'none';
+        }
+        
+        const now = new Date();
+        currentDisplayDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        renderCalendar();
+        const todayKey = getTodayKey();
+        selectDate(todayKey);
+        
+        // event listeners (only if elements exist)
+        const prevBtn = document.getElementById('prevMonthBtn');
+        const nextBtn = document.getElementById('nextMonthBtn');
+        const todayBtn = document.getElementById('todayBtn');
+        const saveBtn = document.getElementById('saveLessonBtn');
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        const deleteAllBtn = document.getElementById('deleteAllBtn');
+        
+        if (prevBtn) prevBtn.addEventListener('click', () => changeMonth(-1));
+        if (nextBtn) nextBtn.addEventListener('click', () => changeMonth(1));
+        if (todayBtn) todayBtn.addEventListener('click', goToToday);
+        if (saveBtn) saveBtn.addEventListener('click', saveLesson);
+        if (cancelBtn) cancelBtn.addEventListener('click', cancelEdit);
+        if (deleteAllBtn) deleteAllBtn.addEventListener('click', deleteAllLessonsForDate);
+    }
+    
+    // ------------------- PARTICLE BACKGROUND (same as login) -------------------
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, particles = [];
+    const PARTICLE_COUNT = 75, MAX_DIST = 130;
+    function initParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push({
+                x: Math.random() * width, y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.3,
+                radius: Math.random() * 2.2 + 1.2,
+                color: `rgba(0, ${180 + Math.random() * 75}, 255, ${0.2 + Math.random() * 0.5})`
+            });
+        }
+    }
+    function resizeCanvas() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+        initParticles();
+    }
+    function drawParticles() {
+        ctx.clearRect(0, 0, width, height);
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = p.color; ctx.fill();
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 0) p.x = width; if (p.x > width) p.x = 0;
+            if (p.y < 0) p.y = height; if (p.y > height) p.y = 0;
+        }
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < MAX_DIST) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(0, 200, 255, ${0.08 * (1 - dist / MAX_DIST)})`;
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(drawParticles);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    drawParticles();
+
+    init();
+</script>
+</body>
+</html>

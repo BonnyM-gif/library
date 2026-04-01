@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Users</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .user-card { background: rgba(255,255,255,0.1); margin: 10px; padding: 15px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .user-card button { width: auto; padding: 8px 16px; }
+    </style>
+</head>
+<body>
+    <div class="glass-container">
+        <h1>👥 All Students</h1>
+        <div id="userList"></div>
+        <a href="dashboard.html" class="back-btn">← Back</a>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        function loadUsers() {
+            const container = document.getElementById("userList");
+            if (!container) return;
+            const users = JSON.parse(localStorage.getItem("school_users") || "[]");
+            const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+            const students = users.filter(u => u.role === "student" && u.id !== currentUser.id);
+            container.innerHTML = "";
+            students.forEach(user => {
+                container.innerHTML += `
+                    <div class="user-card">
+                        <span>${user.name} (${user.email})</span>
+                        <button onclick="startChat('${user.id}', '${user.name}')">💬 Message</button>
+                    </div>
+                `;
+            });
+        }
+
+        function startChat(otherUserId, otherUserName) {
+            sessionStorage.setItem("chatWithId", otherUserId);
+            sessionStorage.setItem("chatWithName", otherUserName);
+            window.location.href = "messages.html";
+        }
+
+        if (!localStorage.getItem("currentUser")) {
+            window.location.href = "login.html";
+        } else {
+            loadUsers();
+        }
+    </script>
+</body>
+</html>

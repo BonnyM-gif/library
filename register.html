@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>SMUK LIB</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 30%, #0a0f1e, #03050b);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, sans-serif;
+      position: relative;
+      overflow: hidden;
+    }
+    #particle-canvas { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 1; }
+    .orb {
+      position: absolute;
+      width: 50vmax;
+      height: 50vmax;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 242, 255, 0.2), transparent 70%);
+      filter: blur(70px);
+      animation: floatOrb 18s infinite alternate ease-in-out;
+      z-index: 0;
+    }
+    .orb1 { top: -20%; left: -20%; animation-duration: 22s; background: radial-gradient(circle, rgba(0, 180, 255, 0.25), transparent); }
+    .orb2 { bottom: -15%; right: -15%; animation-duration: 19s; background: radial-gradient(circle, rgba(150, 0, 255, 0.2), transparent); }
+    .orb3 { top: 40%; left: 30%; width: 30vmax; height: 30vmax; animation-duration: 26s; background: radial-gradient(circle, rgba(0, 255, 200, 0.15), transparent); }
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+      100% { transform: translate(8%, 12%) scale(1.2); opacity: 0.8; }
+    }
+    .container {
+      position: relative;
+      width: 420px;
+      max-width: 90vw;
+      padding: 2rem 1.8rem;
+      background: rgba(8, 12, 25, 0.55);
+      backdrop-filter: blur(14px);
+      border-radius: 2rem;
+      border: 1px solid rgba(0, 242, 255, 0.35);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 242, 255, 0.1) inset, 0 0 25px rgba(0, 242, 255, 0.3);
+      text-align: center;
+      z-index: 10;
+    }
+    h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #e0f2fe, #00f2ff, #2a6eff);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      margin-bottom: 0.3rem;
+    }
+    .ai-text {
+      font-size: 0.85rem;
+      color: #a0e9ff;
+      background: rgba(0, 30, 40, 0.6);
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 30px;
+      margin: 0.75rem 0 1.2rem;
+      border-left: 2px solid #0ff;
+      border-right: 2px solid #0ff;
+    }
+    .input-group { margin: 1.2rem 0; }
+    input {
+      width: 100%;
+      padding: 14px 18px;
+      background: rgba(2, 8, 20, 0.7);
+      border: 1.5px solid rgba(0, 242, 255, 0.4);
+      border-radius: 60px;
+      font-size: 1rem;
+      color: #eef5ff;
+      outline: none;
+      transition: all 0.25s ease;
+    }
+    input:focus {
+      border-color: #0ff;
+      box-shadow: 0 0 12px #00f2ffaa;
+      background: rgba(4, 12, 28, 0.85);
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 60px;
+      background: linear-gradient(95deg, #00c3ff, #0077ff, #2a2eff);
+      background-size: 200% auto;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 5px 15px rgba(0, 150, 255, 0.4);
+    }
+    button:hover {
+      background-position: right center;
+      transform: scale(1.02);
+    }
+    .loading {
+      display: none;
+      margin-top: 1rem;
+      color: #0ff;
+      font-size: 0.8rem;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(0, 242, 255, 0.3);
+      border-top: 2px solid #0ff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .link { color: #0ff; text-decoration: none; font-size: 0.85rem; margin-top: 15px; display: inline-block; }
+    .link:hover { text-decoration: underline; }
+    .glow-error { box-shadow: 0 0 18px #ff3366aa, 0 0 0 1px #ff3366 inset; }
+    .shake { animation: glitchShake 0.35s ease-in-out 0s 2; }
+    @keyframes glitchShake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+      100% { transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+  <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+  <div class="container">
+    <h2>⚡ SMUK REGISTER</h2>
+    <div class="ai-text" id="aiMsg">🌀 create your neural identity</div>
+    <div class="input-group"><input type="text" id="regName" placeholder="full name"></div>
+    <div class="input-group"><input type="email" id="regEmail" placeholder="email"></div>
+    <div class="input-group"><input type="password" id="regPassword" placeholder="password"></div>
+    <div class="input-group"><input type="text" id="adminSecret" placeholder="admin secret (optional)"></div>
+    <button id="registerBtn">↯  REGISTER  ↯</button>
+    <div class="loading" id="loadingIndicator"><div class="spinner"></div><span>processing...</span></div>
+    <p style="color:#aaa; margin-top:15px;">Already have an account? <a href="login.html" style="color:#0ff;">Login</a></p>
+  </div>
+  <script src="script.js"></script>
+  <script>
+    function register() {
+      const name = document.getElementById("regName").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPassword").value;
+      const adminSecret = document.getElementById("adminSecret").value;
+      const aiMsg = document.getElementById("aiMsg");
+      const container = document.querySelector(".container");
+      const loading = document.getElementById("loadingIndicator");
+      const btn = document.getElementById("registerBtn");
+
+      if (!name || !email || !password) {
+        aiMsg.innerHTML = "⛔ all fields required";
+        container.classList.add("glow-error", "shake");
+        setTimeout(() => container.classList.remove("glow-error", "shake"), 600);
+        return;
+      }
+
+      loading.style.display = "flex";
+      btn.disabled = true;
+      aiMsg.innerHTML = "🌀 encrypting identity...";
+
+      setTimeout(() => {
+        let users = JSON.parse(localStorage.getItem("school_users") || "[]");
+        if (users.find(u => u.email === email)) {
+          aiMsg.innerHTML = "⛔ email already exists";
+          container.classList.add("glow-error", "shake");
+          setTimeout(() => container.classList.remove("glow-error", "shake"), 800);
+          loading.style.display = "none";
+          btn.disabled = false;
+          return;
+        }
+
+        const role = (adminSecret === "supersecret2026") ? "admin" : "student";
+        const newUser = {
+          id: Date.now().toString(),
+          name: name,
+          email: email,
+          password: password,
+          role: role
+        };
+        users.push(newUser);
+        localStorage.setItem("school_users", JSON.stringify(users));
+        if (role === "student") {
+          let scores = JSON.parse(localStorage.getItem("school_scores") || "{}");
+          scores[newUser.id] = 0;
+          localStorage.setItem("school_scores", JSON.stringify(scores));
+        }
+        aiMsg.innerHTML = "✅ registration successful! please login.";
+        setTimeout(() => window.location.href = "login.html", 2000);
+      }, 1500);
+    }
+    document.getElementById("registerBtn").addEventListener("click", register);
+
+    // Particle network (same as login)
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, particles = [];
+    const PARTICLE_COUNT = 75, MAX_DIST = 130;
+    function initParticles() {
+      particles = [];
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push({
+          x: Math.random() * width, y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.3,
+          radius: Math.random() * 2.2 + 1.2,
+          color: `rgba(0, ${180 + Math.random() * 75}, 255, ${0.2 + Math.random() * 0.5})`
+        });
+      }
+    }
+    function resizeCanvas() {
+      width = window.innerWidth; height = window.innerHeight;
+      canvas.width = width; canvas.height = height;
+      initParticles();
+    }
+    function drawParticles() {
+      ctx.clearRect(0, 0, width, height);
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color; ctx.fill();
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = width; if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height; if (p.y > height) p.y = 0;
+      }
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < MAX_DIST) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(0, 200, 255, ${0.08 * (1 - dist / MAX_DIST)})`;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(drawParticles);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    drawParticles();
+  </script>
+</body>
+</html>

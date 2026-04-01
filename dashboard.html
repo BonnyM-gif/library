@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>SMUK DASHBOARD</title>
+  <style>
+    /* ---------- GLOBAL RESET & CUSTOM PROPERTIES ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-dark: #0a0c12;
+      --card-bg: rgba(18, 22, 35, 0.65);
+      --card-border: rgba(66, 153, 225, 0.25);
+      --glow-primary: #00e0ff;
+      --glow-accent: #a855f7;
+      --text-primary: #eef2ff;
+      --text-secondary: #9ca3af;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --radius-lg: 1.5rem;
+      --radius-md: 1rem;
+      --transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 20% 30%, #0c0f1c, #03050b);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      padding: 2rem;
+      position: relative;
+      overflow-x: hidden;
+      color: var(--text-primary);
+    }
+
+    /* advanced animated particle field */
+    .particle-field {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: 
+        radial-gradient(circle at 25% 40%, rgba(0,224,255,0.08) 1px, transparent 1px),
+        radial-gradient(circle at 75% 85%, rgba(168,85,247,0.08) 1px, transparent 1px);
+      background-size: 48px 48px, 64px 64px;
+      animation: driftParticles 120s linear infinite;
+    }
+
+    @keyframes driftParticles {
+      0% { background-position: 0 0, 0 0; }
+      100% { background-position: 200px 200px, -150px 150px; }
+    }
+
+    /* grid overlay (scientific graph paper) */
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(0,224,255,0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,224,255,0.12) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* main dashboard container */
+    .dashboard {
+      position: relative;
+      z-index: 10;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
+
+    /* header with animated gradient */
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .title-section h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(125deg, #fff, #00e0ff, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.02em;
+    }
+    .title-section p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+    .live-badge {
+      background: rgba(0,224,255,0.2);
+      backdrop-filter: blur(8px);
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border: 1px solid var(--glow-primary);
+      box-shadow: 0 0 8px rgba(0,224,255,0.3);
+    }
+
+    /* user info row (custom) */
+    .user-stats {
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(8px);
+      border-radius: 2rem;
+      padding: 0.8rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border: 1px solid rgba(66,153,225,0.3);
+    }
+    .user-greeting {
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    .user-greeting strong {
+      background: linear-gradient(135deg, #00e0ff, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .riddle-score {
+      background: rgba(0,0,0,0.5);
+      padding: 0.4rem 1rem;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      border-left: 3px solid var(--glow-primary);
+    }
+
+    /* card grid layout */
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* modern glass card with hover 3D tilt */
+    .phys-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--card-border);
+      padding: 1.5rem;
+      transition: var(--transition);
+      transform-style: preserve-3d;
+      perspective: 800px;
+    }
+    .phys-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(0,224,255,0.6);
+      box-shadow: 0 20px 35px -15px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,224,255,0.2);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--glow-primary);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .constant-value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      background: linear-gradient(135deg, #fff, #a5f3ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin: 0.5rem 0;
+    }
+    .constant-unit {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+    .trend {
+      font-size: 0.8rem;
+      margin-top: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* large card for visualization */
+    .viz-card {
+      grid-column: span 2;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--card-border);
+      padding: 1.5rem;
+    }
+    @media (max-width: 800px) {
+      .viz-card { grid-column: span 1; }
+    }
+
+    /* canvas styling */
+    .canvas-container {
+      width: 100%;
+      height: 260px;
+      margin-top: 1rem;
+      background: rgba(0,0,0,0.3);
+      border-radius: var(--radius-md);
+      position: relative;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: var(--radius-md);
+    }
+
+    /* stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.2rem;
+    }
+    .stat-item {
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(4px);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      text-align: center;
+      transition: var(--transition);
+      border: 1px solid rgba(66,153,225,0.2);
+    }
+    .stat-item:hover {
+      border-color: var(--glow-accent);
+      transform: scale(1.02);
+    }
+    .stat-number {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(145deg, #f0f9ff, #b0e0ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* navigation grid (school links) */
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .nav-card {
+      background: rgba(18, 22, 35, 0.7);
+      backdrop-filter: blur(8px);
+      padding: 0.8rem;
+      border-radius: 1rem;
+      text-align: center;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      border: 1px solid rgba(66,153,225,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .nav-card:hover {
+      background: rgba(0,224,255,0.15);
+      border-color: var(--glow-primary);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 16px -8px rgba(0,224,255,0.2);
+    }
+    .logout {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+    }
+    .logout:hover {
+      background: rgba(239, 68, 68, 0.4);
+      border-color: #ef4444;
+    }
+
+    /* interactive button */
+    .simulate-btn {
+      background: linear-gradient(95deg, #0f172a, #1e293b);
+      border: 1px solid var(--glow-primary);
+      padding: 0.6rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 1rem;
+      width: 100%;
+      font-size: 0.85rem;
+    }
+    .simulate-btn:hover {
+      background: linear-gradient(95deg, #1e293b, #2d3a5e);
+      box-shadow: 0 0 12px rgba(0,224,255,0.5);
+      transform: translateY(-2px);
+    }
+
+    /* ripple effect */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,224,255,0.6) 0%, rgba(168,85,247,0) 80%);
+      transform: scale(0);
+      animation: rippleAnim 0.6s linear forwards;
+      pointer-events: none;
+    }
+    @keyframes rippleAnim {
+      to { transform: scale(6); opacity: 0; }
+    }
+
+    /* advanced scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      background: #0a0c12;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(#00e0ff, #a855f7);
+      border-radius: 10px;
+    }
+
+    /* responsiveness */
+    @media (max-width: 680px) {
+      body { padding: 1rem; }
+      .constant-value { font-size: 1.5rem; }
+      .title-section h1 { font-size: 1.8rem; }
+    }
+
+    /* special glow effect for cards */
+    .glow-text {
+      text-shadow: 0 0 8px rgba(0,224,255,0.5);
+    }
+
+    /* dynamic glare effect */
+    .phys-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .phys-card::after {
+      content: '';
+      position: absolute;
+      top: var(--y, 50%);
+      left: var(--x, 50%);
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(0,224,255,0.15) 0%, rgba(0,0,0,0) 70%);
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 0.2s ease-out;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .phys-card:hover::after {
+      transform: translate(-50%, -50%) scale(1);
+    }
+  </style>
+</head>
+<body>
+  <div class="particle-field"></div>
+  <div class="grid-overlay"></div>
+
+  <div class="dashboard">
+    <div class="dashboard-header">
+      <div class="title-section">
+        <h1>⚛️ St Kalemba SS villaMaria </h1>
+        <p>DER HERR IST MEIN HIRT</p>
+      </div>
+      <div class="live-badge">
+        <span>🔬 SMUK Dashboard</span>
+      </div>
+    </div>
+
+    <!-- USER INFO + RIDDLE SCORE (school integration) -->
+    <div class="user-stats">
+      <div class="user-greeting">
+        👤 <strong id="userName">Seeker</strong> · SMUK Academic Giant
+      </div>
+      <div class="riddle-score">
+        🧠 Riddle Score: <span id="dashboardScore">0</span> wisdom points
+      </div>
+    </div>
+
+    <!-- SCHOOL NAVIGATION GRID -->
+    <div class="nav-grid">
+      <a href="library.html" class="nav-card">📚 Library</a>
+      <a href="calendar.html" class="nav-card">📅 Calendar</a>
+      <a href="riddles.html" class="nav-card">🧩 Riddles</a>
+      <a href="chat.html" class="nav-card">💬 Chat</a>
+      <a href="user_list.html" class="nav-card">👥 Students</a>
+      <a href="messages.html" class="nav-card">📬 Messages</a>
+      <a href="assignments.html" class="nav-card">📁 Assignments</a>
+      <a href="#" onclick="logout()" class="nav-card logout">🚪 Logout</a>
+    </div>
+
+    <!-- Constants Grid -->
+    <div class="grid-cards">
+      <div class="phys-card" data-tilt>
+        <div class="card-title">💡 SPEED OF LIGHT</div>
+        <div class="constant-value" id="cVal">299,792,458</div>
+        <div class="constant-unit">m/s (exact)</div>
+        <div class="trend">🌌 c = 1 in natural units</div>
+      </div>
+      <div class="phys-card">
+        <div class="card-title">⚖️ PLANCK CONSTANT</div>
+        <div class="constant-value" id="hVal">6.62607015 × 10⁻³⁴</div>
+        <div class="constant-unit">J·s (exact)</div>
+        <div class="trend">📐 ħ = h/2π</div>
+      </div>
+      <div class="phys-card">
+        <div class="card-title">🌌 GRAVITATIONAL CONSTANT</div>
+        <div class="constant-value" id="gVal">6.67430 × 10⁻¹¹</div>
+        <div class="constant-unit">m³·kg⁻¹·s⁻²</div>
+        <div class="trend">📉 uncertainty ±0.00015</div>
+      </div>
+      <div class="phys-card">
+        <div class="card-title">⚡ ELECTRON MASS</div>
+        <div class="constant-value">9.1093837 × 10⁻³¹</div>
+        <div class="constant-unit">kg</div>
+        <div class="trend">🔄 mₑ = 0.511 MeV/c²</div>
+      </div>
+    </div>
+
+    <!-- Interactive Visualization + Relativity Section -->
+    <div class="viz-card">
+      <div class="card-title">📈 RELATIVISTIC γ FACTOR | v/c → γ</div>
+      <div class="canvas-container">
+        <canvas id="gammaCanvas" width="800" height="240" style="width:100%; height:auto; max-height:240px"></canvas>
+      </div>
+      <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+        <div style="font-size: 0.8rem;">γ = 1/√(1 - v²/c²)</div>
+        <button class="simulate-btn" id="updateGammaBtn">🔄 SIMULATE PARTICLE ENERGY</button>
+      </div>
+    </div>
+
+    <!-- Quantum Stats + E=mc² Widget -->
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="card-title" style="justify-content: center;">💥 ENERGY EQUIVALENCE</div>
+        <div class="stat-number" id="emcResult">E = mc²</div>
+        <div style="margin-top: 0.5rem;">
+          <input type="number" id="massInput" value="1.0" step="0.1" style="background: #1e293b; border:1px solid #4299e1; border-radius: 20px; padding: 6px 12px; width: 100px; color:white;">
+          <span style="font-size:0.7rem;"> kg → </span>
+          <span id="energyOutput" style="font-weight:bold; color:#a855f7;">8.99e16 J</span>
+        </div>
+        <button class="simulate-btn" id="calcEnergyBtn" style="margin-top: 0.8rem;">⚛️ CALCULATE ENERGY</button>
+      </div>
+      <div class="stat-item">
+        <div class="card-title" style="justify-content: center;">🌀 QUANTUM UNCERTAINTY</div>
+        <div class="stat-number">Δx·Δp ≥ ħ/2</div>
+        <div style="font-size: 0.75rem; margin-top: 0.5rem;">simulated fluctuation: <span id="uncertaintyVal">0.527</span> × 10⁻³⁴</div>
+        <div style="height: 4px; background:#334155; border-radius: 4px; margin-top: 8px;">
+          <div id="uncertaintyBar" style="width: 52%; height: 4px; background: linear-gradient(90deg,#00e0ff,#a855f7); border-radius: 4px;"></div>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="card-title" style="justify-content: center;">⏳ FINE-STRUCTURE CONSTANT</div>
+        <div class="stat-number">α ≈ 1/137.036</div>
+        <div class="trend" style="justify-content: center;">electromagnetic coupling strength</div>
+      </div>
+    </div>
+
+    <!-- additional advanced metrics: vacuum energy, planck units -->
+    <div class="grid-cards">
+      <div class="phys-card">
+        <div class="card-title">🔭 PLANCK LENGTH</div>
+        <div class="constant-value">1.616255 × 10⁻³⁵</div>
+        <div class="constant-unit">meters</div>
+        <div class="trend">ℓₚ = √(ħG/c³)</div>
+      </div>
+      <div class="phys-card">
+        <div class="card-title">🌡️ COSMIC MICROWAVE BACKGROUND</div>
+        <div class="constant-value">2.72548 K</div>
+        <div class="constant-unit">temperature</div>
+        <div class="trend">📡 relic radiation</div>
+      </div>
+      <div class="phys-card">
+        <div class="card-title">⚛️ HIGGS FIELD VEV</div>
+        <div class="constant-value">246.22 GeV</div>
+        <div class="constant-unit">vacuum expectation</div>
+        <div class="trend">🔹 electroweak symmetry breaking</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- SCHOOL DASHBOARD INTEGRATION ----------
+    function loadDashboard() {
+      const user = JSON.parse(localStorage.getItem("currentUser"));
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      document.getElementById("userName").innerText = user.name;
+      const scores = JSON.parse(localStorage.getItem("school_scores") || "{}");
+      const score = scores[user.id] || 0;
+      document.getElementById("dashboardScore").innerText = score;
+    }
+
+    function logout() {
+      localStorage.removeItem("currentUser");
+      window.location.href = "login.html";
+    }
+
+    // ---------- PHYSICS WIDGETS (unchanged from original) ----------
+    (function() {
+      // 1) GAMMA FACTOR CANVAS
+      const canvas = document.getElementById('gammaCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      function resizeCanvas() {
+        const container = canvas.parentElement;
+        const containerWidth = container.clientWidth;
+        canvas.width = containerWidth;
+        canvas.height = 240;
+        drawGammaCurve();
+      }
+      
+      function drawGammaCurve() {
+        if (!ctx) return;
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        
+        // grid
+        ctx.strokeStyle = 'rgba(0,224,255,0.2)';
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i <= 10; i++) {
+          const x = (i / 10) * w;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+          const y = (i / 10) * h;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+        
+        // axes
+        ctx.beginPath();
+        ctx.strokeStyle = '#00e0ff';
+        ctx.lineWidth = 1.5;
+        ctx.moveTo(0, h - 20);
+        ctx.lineTo(w, h - 20);
+        ctx.moveTo(40, 0);
+        ctx.lineTo(40, h);
+        ctx.stroke();
+        
+        // labels
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '10px "Inter"';
+        ctx.fillText('v/c →', w - 30, h - 8);
+        ctx.fillText('γ', 15, 20);
+        
+        // draw γ = 1 / sqrt(1 - x^2)
+        ctx.beginPath();
+        ctx.strokeStyle = '#a855f7';
+        ctx.lineWidth = 3;
+        let first = true;
+        for (let px = 0; px <= w; px++) {
+          const vc = px / w; // 0 to 1
+          let gamma = 1;
+          if (vc < 0.99) {
+            gamma = 1 / Math.sqrt(1 - vc * vc);
+          } else if (vc >= 0.99) {
+            gamma = 1 / Math.sqrt(1 - 0.99*0.99);
+            if(vc > 0.995) gamma = 7.0888 + (vc-0.995)*50;
+          }
+          const yVal = h - 20 - (gamma / 12) * (h - 40);
+          const clampedY = Math.min(h - 20, Math.max(20, yVal));
+          if (first) {
+            ctx.moveTo(px, clampedY);
+            first = false;
+          } else {
+            ctx.lineTo(px, clampedY);
+          }
+        }
+        ctx.stroke();
+        
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillText('asymptote at v→c', w-100, 40);
+      }
+      
+      window.addEventListener('resize', () => { resizeCanvas(); });
+      resizeCanvas();
+      
+      document.getElementById('updateGammaBtn')?.addEventListener('click', () => {
+        const flash = document.createElement('div');
+        flash.style.position = 'fixed';
+        flash.style.top = '50%';
+        flash.style.left = '50%';
+        flash.style.width = '80px';
+        flash.style.height = '80px';
+        flash.style.background = 'radial-gradient(circle, #00e0ff, transparent)';
+        flash.style.borderRadius = '50%';
+        flash.style.transform = 'translate(-50%, -50%) scale(0)';
+        flash.style.pointerEvents = 'none';
+        flash.style.zIndex = '999';
+        flash.style.transition = 'transform 0.4s ease-out, opacity 0.3s';
+        document.body.appendChild(flash);
+        requestAnimationFrame(() => {
+          flash.style.transform = 'translate(-50%, -50%) scale(4)';
+          flash.style.opacity = '0';
+        });
+        setTimeout(() => flash.remove(), 400);
+        drawGammaCurve();
+      });
+      
+      // 2) E = mc² interactive
+      const massInput = document.getElementById('massInput');
+      const energyOutput = document.getElementById('energyOutput');
+      const calcBtn = document.getElementById('calcEnergyBtn');
+      const c = 299792458;
+      
+      function updateEnergy() {
+        let m = parseFloat(massInput.value);
+        if (isNaN(m)) m = 0;
+        const energyJoules = m * c * c;
+        const exponent = Math.floor(Math.log10(energyJoules));
+        const mantissa = energyJoules / Math.pow(10, exponent);
+        if (energyJoules >= 1e15) {
+          energyOutput.innerText = `${mantissa.toFixed(3)} × 10^${exponent} J`;
+        } else {
+          energyOutput.innerText = `${energyJoules.toExponential(3)} J`;
+        }
+        createRipple(calcBtn);
+      }
+      
+      function createRipple(el) {
+        const rect = el.getBoundingClientRect();
+        const ripple = document.createElement('span');
+        const diameter = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = `${diameter}px`;
+        ripple.style.left = `${rect.left + rect.width/2 - diameter/2}px`;
+        ripple.style.top = `${rect.top + rect.height/2 - diameter/2}px`;
+        ripple.classList.add('ripple');
+        document.body.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+      }
+      
+      calcBtn.addEventListener('click', () => updateEnergy());
+      massInput.addEventListener('input', updateEnergy);
+      updateEnergy();
+      
+      // 3) Uncertainty simulation
+      const uncertaintySpan = document.getElementById('uncertaintyVal');
+      const uncertaintyBar = document.getElementById('uncertaintyBar');
+      function randomizeUncertainty() {
+        const minUnc = 0.32;
+        const maxUnc = 0.89;
+        const val = (Math.random() * (maxUnc - minUnc) + minUnc).toFixed(3);
+        uncertaintySpan.innerText = val;
+        const percent = (val / 0.89) * 100;
+        uncertaintyBar.style.width = `${percent}%`;
+      }
+      setInterval(randomizeUncertainty, 2800);
+      randomizeUncertainty();
+      
+      // 4) dynamic glare on phys cards
+      const cards = document.querySelectorAll('.phys-card');
+      cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          card.style.setProperty('--x', `${x}px`);
+          card.style.setProperty('--y', `${y}px`);
+        });
+      });
+      
+      // canvas click to show gamma value
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const ratio = x / rect.width;
+        const vc = Math.min(0.99, Math.max(0, ratio));
+        const gamma = 1 / Math.sqrt(1 - vc*vc);
+        const toast = document.createElement('div');
+        toast.innerText = `γ = ${gamma.toFixed(3)} at v/c = ${vc.toFixed(3)}`;
+        toast.style.position = 'fixed';
+        toast.style.bottom = '20px';
+        toast.style.left = '20px';
+        toast.style.background = 'rgba(0,0,0,0.7)';
+        toast.style.backdropFilter = 'blur(12px)';
+        toast.style.padding = '8px 18px';
+        toast.style.borderRadius = '40px';
+        toast.style.borderLeft = `4px solid #a855f7`;
+        toast.style.fontSize = '0.8rem';
+        toast.style.zIndex = '999';
+        toast.style.color = '#eef2ff';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+      });
+    })();
+
+    // Load dashboard data
+    loadDashboard();
+  </script>
+</body>
+</html>

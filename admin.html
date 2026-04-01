@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Smuk admin | Control Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* all existing styles – keep the same as in the previous admin.html */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg-dark: #0a0c12;
+      --card-bg: rgba(18, 22, 35, 0.7);
+      --card-border: rgba(66, 153, 225, 0.3);
+      --glow-primary: #00e0ff;
+      --glow-accent: #a855f7;
+      --text-primary: #eef2ff;
+      --text-secondary: #9ca3af;
+      --radius-lg: 1.5rem;
+      --radius-md: 1rem;
+      --transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+    body {
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 20% 30%, #0c0f1c, #03050b);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      padding: 2rem;
+      position: relative;
+      overflow-x: hidden;
+      color: var(--text-primary);
+    }
+    .particle-field {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: radial-gradient(circle at 25% 40%, rgba(0,224,255,0.08) 1px, transparent 1px), radial-gradient(circle at 75% 85%, rgba(168,85,247,0.08) 1px, transparent 1px);
+      background-size: 48px 48px, 64px 64px;
+      animation: driftParticles 120s linear infinite;
+    }
+    @keyframes driftParticles {
+      0% { background-position: 0 0, 0 0; }
+      100% { background-position: 200px 200px, -150px 150px; }
+    }
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(0,224,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(0,224,255,0.12) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .admin-container {
+      position: relative;
+      z-index: 10;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .title-section h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(125deg, #fff, #00e0ff, #a855f7);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .title-section p {
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+    .action-links {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .action-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(0,224,255,0.3);
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      color: white;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.2s;
+      font-size: 0.85rem;
+    }
+    .action-btn:hover {
+      background: rgba(0,224,255,0.2);
+      transform: translateY(-2px);
+    }
+    .logout-btn {
+      background: rgba(239,68,68,0.2);
+      border-color: #ef4444;
+      color: #ffb4a2;
+    }
+    .logout-btn:hover {
+      background: rgba(239,68,68,0.4);
+      color: white;
+    }
+    /* tabs and panels – same as before */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid rgba(66,153,225,0.3);
+      padding-bottom: 0.5rem;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab-btn.active {
+      background: rgba(0,224,255,0.2);
+      color: var(--glow-primary);
+      border: 1px solid var(--glow-primary);
+    }
+    .tab-btn:hover:not(.active) {
+      background: rgba(255,255,255,0.05);
+      color: white;
+    }
+    .panel {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .panel.active-panel {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+        * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-dark: #0a0c12;
+      --card-bg: rgba(18, 22, 35, 0.7);
+      --card-border: rgba(66, 153, 225, 0.3);
+      --glow-primary: #00e0ff;
+      --glow-accent: #a855f7;
+      --text-primary: #eef2ff;
+      --text-secondary: #9ca3af;
+      --radius-lg: 1.5rem;
+      --radius-md: 1rem;
+      --transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 20% 30%, #0c0f1c, #03050b);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      padding: 2rem;
+      position: relative;
+      overflow-x: hidden;
+      color: var(--text-primary);
+    }
+
+    .particle-field {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: 
+        radial-gradient(circle at 25% 40%, rgba(0,224,255,0.08) 1px, transparent 1px),
+        radial-gradient(circle at 75% 85%, rgba(168,85,247,0.08) 1px, transparent 1px);
+      background-size: 48px 48px, 64px 64px;
+      animation: driftParticles 120s linear infinite;
+    }
+
+    @keyframes driftParticles {
+      0% { background-position: 0 0, 0 0; }
+      100% { background-position: 200px 200px, -150px 150px; }
+    }
+
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(0,224,255,0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,224,255,0.12) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .admin-container {
+      position: relative;
+      z-index: 10;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .title-section h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(125deg, #fff, #00e0ff, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .title-section p {
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+    .logout-btn {
+      background: rgba(239,68,68,0.2);
+      border: 1px solid #ef4444;
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      color: #ffb4a2;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.2s;
+    }
+    .logout-btn:hover {
+      background: rgba(239,68,68,0.4);
+      color: white;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid rgba(66,153,225,0.3);
+      padding-bottom: 0.5rem;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab-btn.active {
+      background: rgba(0,224,255,0.2);
+      color: var(--glow-primary);
+      border: 1px solid var(--glow-primary);
+    }
+    .tab-btn:hover:not(.active) {
+      background: rgba(255,255,255,0.05);
+      color: white;
+    }
+
+    /* Panels */
+    .panel {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .panel.active-panel {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards & Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius-md);
+      padding: 1.2rem;
+      text-align: center;
+      border: 1px solid var(--card-border);
+      transition: 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--glow-accent);
+    }
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, #00e0ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.3rem;
+    }
+
+    /* Forms and lists */
+    .admin-section {
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--card-border);
+    }
+    .admin-section h3 {
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .form-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      flex: 1;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--card-border);
+      padding: 0.7rem 1rem;
+      border-radius: 2rem;
+      color: white;
+      outline: none;
+    }
+    button {
+      background: var(--glow-primary);
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      transform: scale(0.98);
+      background: #00a0cc;
+    }
+    .item-list {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 1rem;
+    }
+    .list-item {
+      background: rgba(0,0,0,0.3);
+      padding: 0.8rem;
+      border-radius: 1rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .delete-item {
+      background: rgba(255,80,80,0.3);
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      color: #ffb4a2;
+      cursor: pointer;
+    }
+    .delete-item:hover {
+      background: rgba(255,80,80,0.6);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .tabs { justify-content: center; }
+      .tab-btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
+    }
+    /* rest of styles – keep all previous (stats, forms, lists, etc.) */
+    /* ... (copy all existing styles from the previous admin.html) ... */
+    /* For brevity, I'll include only the essential changes, but you must keep the full CSS from your working admin.html */
+  </style>
+</head>
+<body>
+  <div class="particle-field"></div>
+  <div class="grid-overlay"></div>
+
+  <div class="admin-container">
+    <div class="header">
+      <div class="title-section">
+        <h1><i class="fas fa-crown"></i> SMUK ADMIN HUB</h1>
+        <p>Smuk · Manage books, events, announcements, assignments</p>
+      </div>
+      <div class="action-links">
+        <a href="admin-library.html" class="action-btn"><i class="fas fa-book"></i> Manage Books</a>
+        <a href="dashboard.html" class="action-btn logout-btn"><i class="fas fa-arrow-left"></i> View Dashboard</a>
+      </div>
+    </div>
+
+    <!-- Tabs (same as before) -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="overview"><i class="fas fa-chart-line"></i> Overview</button>
+      <button class="tab-btn" data-tab="events"><i class="fas fa-calendar-alt"></i> Events</button>
+      <button class="tab-btn" data-tab="announcements"><i class="fas fa-bullhorn"></i> Announcements</button>
+      <button class="tab-btn" data-tab="assignments"><i class="fas fa-tasks"></i> Assignments</button>
+      <button class="tab-btn" data-tab="messages"><i class="fas fa-comments"></i> Messages</button>
+      <button class="tab-btn" data-tab="users"><i class="fas fa-users"></i> Users</button>
+    </div>
+
+    <!-- Panels – keep all the existing panels from previous admin.html -->
+    <!-- ... (same content for overview, events, announcements, etc.) ... -->
+    <!-- Since they are unchanged, I won't repeat them here to save space. -->
+    <!-- You must copy the full panel content from your current admin.html. -->
+     <body>
+  <div class="particle-field"></div>
+  <div class="grid-overlay"></div>
+
+    <!-- Overview Panel -->
+    <div id="overviewPanel" class="panel active-panel">
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="admin-section">
+        <h3><i class="fas fa-chart-simple"></i> Recent Activity</h3>
+        <div id="recentActivity" style="font-size:0.9rem; color: var(--text-secondary);"></div>
+      </div>
+    </div>
+
+    <!-- Books Panel -->
+    <div id="booksPanel" class="panel">
+      <div class="admin-section">
+        <h3><i class="fas fa-plus-circle"></i> Add New Book</h3>
+        <div class="form-group">
+          <input type="text" id="bookTitle" placeholder="Title">
+          <input type="text" id="bookAuthor" placeholder="Author">
+          <input type="text" id="bookYear" placeholder="Year">
+        </div>
+        <div class="form-group">
+          <textarea id="bookDesc" rows="2" placeholder="Description"></textarea>
+          <input type="text" id="bookIcon" placeholder="Icon emoji (optional)">
+        </div>
+        <button id="addBookBtn">➕ Add Book</button>
+      </div>
+      <div class="admin-section">
+        <h3><i class="fas fa-list"></i> Manage Books</h3>
+        <div id="booksList" class="item-list"></div>
+      </div>
+    </div>
+
+    <!-- Events Panel -->
+    <div id="eventsPanel" class="panel">
+      <div class="admin-section">
+        <h3><i class="fas fa-plus-circle"></i> Add New Event</h3>
+        <div class="form-group">
+          <input type="date" id="eventDate">
+          <input type="text" id="eventText" placeholder="Event description">
+        </div>
+        <button id="addEventBtn">➕ Add Event</button>
+      </div>
+      <div class="admin-section">
+        <h3><i class="fas fa-calendar-week"></i> Manage Events</h3>
+        <div id="eventsList" class="item-list"></div>
+      </div>
+    </div>
+
+    <!-- Announcements Panel -->
+    <div id="announcementsPanel" class="panel">
+      <div class="admin-section">
+        <h3><i class="fas fa-bullhorn"></i> Post Announcement</h3>
+        <textarea id="announcementText" rows="3" placeholder="Announcement text..."></textarea>
+        <button id="postAnnouncementBtn" style="margin-top: 1rem;">📢 Post Announcement</button>
+      </div>
+      <div class="admin-section">
+        <h3><i class="fas fa-history"></i> Recent Announcements</h3>
+        <div id="announcementsList" class="item-list"></div>
+      </div>
+    </div>
+
+    <!-- Assignments Panel -->
+    <div id="assignmentsPanel" class="panel">
+      <div class="admin-section">
+        <h3><i class="fas fa-file-alt"></i> All Submissions</h3>
+        <div id="assignmentsList" class="item-list"></div>
+      </div>
+    </div>
+
+    <!-- Messages Panel -->
+    <div id="messagesPanel" class="panel">
+      <div class="admin-section">
+        <h3><i class="fas fa-comment-dots"></i> Public Chat Messages</h3>
+        <div id="messagesList" class="item-list"></div>
+      </div>
+    </div>
+
+    <!-- Users Panel -->
+    <div id="usersPanel" class="panel">
+      <div class="admin-section">
+        <h3><i class="fas fa-user-graduate"></i> Registered Students</h3>
+        <div id="usersList" class="item-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+   // ---------- AUTHENTICATION ----------
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (!currentUser || currentUser.role !== "admin") {
+      alert("Access denied. Redirecting to dashboard.");
+      window.location.href = "dashboard.html";
+    }
+
+    // ---------- DATA REFERENCES ----------
+    let books = JSON.parse(localStorage.getItem("school_books")) || [];
+    let events = JSON.parse(localStorage.getItem("school_events")) || [];
+    let messages = JSON.parse(localStorage.getItem("school_messages")) || [];
+    let assignments = JSON.parse(localStorage.getItem("school_assignments")) || [];
+    let users = JSON.parse(localStorage.getItem("school_users")) || [];
+
+    // Helper: save functions
+    function saveBooks() { localStorage.setItem("school_books", JSON.stringify(books)); }
+    function saveEvents() { localStorage.setItem("school_events", JSON.stringify(events)); }
+    function saveMessages() { localStorage.setItem("school_messages", JSON.stringify(messages)); }
+    function saveAssignments() { localStorage.setItem("school_assignments", JSON.stringify(assignments)); }
+
+    // Seed default data if empty
+    if (books.length === 0) {
+      books = [
+        { id: Date.now()+1, title: "The Feynman Lectures on Physics", author: "Richard P. Feynman", year: "1963", desc: "Classic physics lectures.", icon: "📖" },
+        { id: Date.now()+2, title: "Gravitation", author: "Misner, Thorne, Wheeler", year: "1973", desc: "Definitive relativity text.", icon: "🌌" }
+      ];
+      saveBooks();
+    }
+    if (events.length === 0) {
+      events = [
+        { id: Date.now()+1, date: "2025-04-15", text: "Physics Symposium" },
+        { id: Date.now()+2, date: "2025-04-20", text: "Assignment Deadline" }
+      ];
+      saveEvents();
+    }
+    if (messages.length === 0) {
+      messages = [
+        { id: Date.now()+1, text: "Welcome to the chat!", name: "System", type: "message", timestamp: Date.now() - 3600000 }
+      ];
+      saveMessages();
+    }
+    if (assignments.length === 0) {
+      // placeholder
+    }
+
+    // ---------- RENDER FUNCTIONS ----------
+    function renderOverview() {
+      const statsGrid = document.getElementById("statsGrid");
+      statsGrid.innerHTML = `
+        <div class="stat-card"><div class="stat-number">${books.length}</div><div class="stat-label">Total Books</div></div>
+        <div class="stat-card"><div class="stat-number">${events.length}</div><div class="stat-label">Upcoming Events</div></div>
+        <div class="stat-card"><div class="stat-number">${messages.length}</div><div class="stat-label">Chat Messages</div></div>
+        <div class="stat-card"><div class="stat-number">${assignments.length}</div><div class="stat-label">Assignments</div></div>
+        <div class="stat-card"><div class="stat-number">${users.filter(u => u.role === "student").length}</div><div class="stat-label">Students</div></div>
+      `;
+
+      const recent = document.getElementById("recentActivity");
+      const latestMessages = [...messages].sort((a,b) => b.timestamp - a.timestamp).slice(0, 5);
+      recent.innerHTML = latestMessages.map(msg => `
+        <div style="margin-bottom:0.5rem;">📢 ${msg.name}: ${msg.text.substring(0, 60)}...</div>
+      `).join("");
+      if (latestMessages.length === 0) recent.innerHTML = "No recent activity.";
+    }
+
+    function renderBooks() {
+      const container = document.getElementById("booksList");
+      container.innerHTML = books.map(book => `
+        <div class="list-item">
+          <div><strong>${book.title}</strong><br><small>${book.author} (${book.year})</small></div>
+          <button class="delete-item" onclick="deleteBook(${book.id})">Delete</button>
+        </div>
+      `).join("");
+    }
+
+    function renderEvents() {
+      const container = document.getElementById("eventsList");
+      container.innerHTML = events.map(ev => `
+        <div class="list-item">
+          <div><strong>📅 ${ev.date}</strong> – ${ev.text}</div>
+          <button class="delete-item" onclick="deleteEvent(${ev.id})">Delete</button>
+        </div>
+      `).join("");
+    }
+
+    function renderAnnouncements() {
+      const container = document.getElementById("announcementsList");
+      const announcements = messages.filter(m => m.type === "announcement").sort((a,b) => b.timestamp - a.timestamp);
+      container.innerHTML = announcements.map(ann => `
+        <div class="list-item">
+          <div><strong>📢 ${ann.name}</strong><br><small>${new Date(ann.timestamp).toLocaleString()}</small><br>${ann.text}</div>
+          <button class="delete-item" onclick="deleteMessage(${ann.id})">Delete</button>
+        </div>
+      `).join("");
+      if (announcements.length === 0) container.innerHTML = "<div>No announcements yet.</div>";
+    }
+
+    function renderAssignments() {
+      const container = document.getElementById("assignmentsList");
+      const usersMap = Object.fromEntries(users.map(u => [u.id, u.name]));
+      container.innerHTML = assignments.map(a => `
+        <div class="list-item">
+          <div><strong>${a.title}</strong><br>by ${usersMap[a.studentId] || "Unknown"}<br><a href="${a.fileUrl}" target="_blank">View File</a></div>
+          <button class="delete-item" onclick="deleteAssignment(${a.id})">Delete</button>
+        </div>
+      `).join("");
+      if (assignments.length === 0) container.innerHTML = "<div>No assignments submitted.</div>";
+    }
+
+    function renderMessages() {
+      const container = document.getElementById("messagesList");
+      const allMessages = [...messages].sort((a,b) => b.timestamp - a.timestamp);
+      container.innerHTML = allMessages.map(msg => `
+        <div class="list-item">
+          <div><strong>${msg.name}</strong> <small>${new Date(msg.timestamp).toLocaleString()}</small><br>${msg.text}</div>
+          <button class="delete-item" onclick="deleteMessage(${msg.id})">Delete</button>
+        </div>
+      `).join("");
+    }
+
+    function renderUsers() {
+      const container = document.getElementById("usersList");
+      const students = users.filter(u => u.role === "student");
+      container.innerHTML = students.map(u => `
+        <div class="list-item">
+          <div><strong>${u.name}</strong><br>${u.email}</div>
+        </div>
+      `).join("");
+      if (students.length === 0) container.innerHTML = "<div>No students registered.</div>";
+    }
+
+    // ---------- CRUD Operations ----------
+    window.deleteBook = (id) => {
+      books = books.filter(b => b.id !== id);
+      saveBooks();
+      renderBooks();
+      renderOverview();
+    };
+    window.deleteEvent = (id) => {
+      events = events.filter(e => e.id !== id);
+      saveEvents();
+      renderEvents();
+      renderOverview();
+    };
+    window.deleteMessage = (id) => {
+      messages = messages.filter(m => m.id !== id);
+      saveMessages();
+      renderAnnouncements();
+      renderMessages();
+      renderOverview();
+    };
+    window.deleteAssignment = (id) => {
+      assignments = assignments.filter(a => a.id !== id);
+      saveAssignments();
+      renderAssignments();
+      renderOverview();
+    };
+
+    function addBook() {
+      const title = document.getElementById("bookTitle").value.trim();
+      const author = document.getElementById("bookAuthor").value.trim();
+      const year = document.getElementById("bookYear").value.trim();
+      const desc = document.getElementById("bookDesc").value.trim();
+      const icon = document.getElementById("bookIcon").value.trim() || "📘";
+      if (!title || !author || !year || !desc) {
+        alert("Please fill all fields.");
+        return;
+      }
+      books.push({ id: Date.now(), title, author, year, desc, icon });
+      saveBooks();
+      renderBooks();
+      renderOverview();
+      // Clear form
+      document.getElementById("bookTitle").value = "";
+      document.getElementById("bookAuthor").value = "";
+      document.getElementById("bookYear").value = "";
+      document.getElementById("bookDesc").value = "";
+      document.getElementById("bookIcon").value = "";
+      alert("Book added.");
+    }
+
+    function addEvent() {
+      const date = document.getElementById("eventDate").value;
+      const text = document.getElementById("eventText").value.trim();
+      if (!date || !text) {
+        alert("Fill both date and description.");
+        return;
+      }
+      events.push({ id: Date.now(), date, text });
+      saveEvents();
+      renderEvents();
+      renderOverview();
+      document.getElementById("eventDate").value = "";
+      document.getElementById("eventText").value = "";
+      alert("Event added.");
+    }
+
+    function postAnnouncement() {
+      const text = document.getElementById("announcementText").value.trim();
+      if (!text) return alert("Enter announcement text.");
+      const newAnn = {
+        id: Date.now(),
+        text: text,
+        name: currentUser.name,
+        type: "announcement",
+        timestamp: Date.now()
+      };
+      messages.push(newAnn);
+      saveMessages();
+      renderAnnouncements();
+      renderMessages();
+      renderOverview();
+      document.getElementById("announcementText").value = "";
+      alert("Announcement posted.");
+    }
+
+    // ---------- Tab Switching ----------
+    const tabs = document.querySelectorAll(".tab-btn");
+    const panels = {
+      overview: document.getElementById("overviewPanel"),
+      books: document.getElementById("booksPanel"),
+      events: document.getElementById("eventsPanel"),
+      announcements: document.getElementById("announcementsPanel"),
+      assignments: document.getElementById("assignmentsPanel"),
+      messages: document.getElementById("messagesPanel"),
+      users: document.getElementById("usersPanel")
+    };
+
+    function switchTab(tabId) {
+      Object.values(panels).forEach(panel => panel.classList.remove("active-panel"));
+      panels[tabId].classList.add("active-panel");
+      tabs.forEach(btn => btn.classList.remove("active"));
+      document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add("active");
+    }
+
+    tabs.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const tab = btn.getAttribute("data-tab");
+        switchTab(tab);
+        // re-render the active panel to ensure fresh data
+        if (tab === "overview") renderOverview();
+        if (tab === "books") renderBooks();
+        if (tab === "events") renderEvents();
+        if (tab === "announcements") renderAnnouncements();
+        if (tab === "assignments") renderAssignments();
+        if (tab === "messages") renderMessages();
+        if (tab === "users") renderUsers();
+      });
+    });
+
+    // Event listeners
+    document.getElementById("addBookBtn").addEventListener("click", addBook);
+    document.getElementById("addEventBtn").addEventListener("click", addEvent);
+    document.getElementById("postAnnouncementBtn").addEventListener("click", postAnnouncement);
+
+    // Initial render of all panels
+    renderOverview();
+    renderBooks();
+    renderEvents();
+    renderAnnouncements();
+    renderAssignments();
+    renderMessages();
+    renderUsers();
+  </script>
+</body>
+</html>
