@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Cosmic Library | Student View</title>
+  <title>SMUK Library | Student View</title>
   <style>
-    /* same styles as before, but simplified for public view */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     :root {
       --bg-dark: #0a0c12;
       --card-bg: rgba(18, 22, 35, 0.75);
@@ -19,45 +23,78 @@
       --radius-md: 1rem;
       --transition: all 0.2s ease;
     }
+
     body {
       min-height: 100vh;
       background: radial-gradient(ellipse at 20% 30%, #0c0f1c, #03050b);
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
       padding: 2rem;
-      position: relative;
       color: var(--text-primary);
+      position: relative;
     }
+
+    /* background layers */
     .bg-particles {
       position: fixed;
       inset: 0;
-      background-image: radial-gradient(circle at 25% 40%, rgba(0,224,255,0.05) 1px, transparent 1px), radial-gradient(circle at 75% 85%, rgba(168,85,247,0.05) 1px, transparent 1px);
+      background-image: 
+        radial-gradient(circle at 25% 40%, rgba(0,224,255,0.05) 1px, transparent 1px),
+        radial-gradient(circle at 75% 85%, rgba(168,85,247,0.05) 1px, transparent 1px);
       background-size: 48px 48px, 64px 64px;
       animation: drift 120s linear infinite;
       pointer-events: none;
+      z-index: 0;
     }
-    @keyframes drift { 0% { background-position: 0 0, 0 0; } 100% { background-position: 200px 200px, -150px 150px; } }
+
+    @keyframes drift {
+      0% { background-position: 0 0, 0 0; }
+      100% { background-position: 200px 200px, -150px 150px; }
+    }
+
     .grid-overlay {
       position: fixed;
       inset: 0;
-      background-image: linear-gradient(rgba(0,224,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,224,255,0.08) 1px, transparent 1px);
+      background-image: 
+        linear-gradient(rgba(0,224,255,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,224,255,0.08) 1px, transparent 1px);
       background-size: 40px 40px;
       pointer-events: none;
+      z-index: 0;
     }
+
     .library-container {
       position: relative;
       z-index: 10;
       max-width: 1400px;
       margin: 0 auto;
     }
-    .library-header { text-align: center; margin-bottom: 2rem; }
+
+    .library-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
     .library-header h1 {
       font-size: 3rem;
+      font-weight: 700;
       background: linear-gradient(125deg, #fff, #00e0ff, #a855f7);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
     }
-    .search-section { display: flex; justify-content: center; margin: 2rem 0; }
+    .library-header p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .search-section {
+      display: flex;
+      justify-content: center;
+      margin: 2rem 0;
+    }
     #searchInput {
       width: 100%;
       max-width: 400px;
@@ -68,13 +105,19 @@
       color: white;
       font-size: 0.9rem;
       outline: none;
+      transition: 0.2s;
     }
-    #searchInput:focus { border-color: var(--glow-primary); box-shadow: 0 0 12px rgba(0,224,255,0.3); }
+    #searchInput:focus {
+      border-color: var(--glow-primary);
+      box-shadow: 0 0 12px rgba(0,224,255,0.3);
+    }
+
     .book-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 2rem;
     }
+
     .book-card {
       background: var(--card-bg);
       backdrop-filter: blur(12px);
@@ -103,12 +146,51 @@
       border-radius: 50%;
       pointer-events: none;
     }
-    .book-card:hover::after { transform: translate(-50%, -50%) scale(1); }
-    .book-cover-icon { font-size: 3rem; text-align: center; background: rgba(0,0,0,0.3); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.2rem; }
-    .book-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .book-author { font-size: 0.85rem; color: var(--glow-primary); margin-bottom: 0.75rem; }
-    .book-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem; }
-    .book-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; border-top: 1px dashed rgba(66,153,225,0.3); padding-top: 0.75rem; font-size: 0.75rem; }
+    .book-card:hover::after {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .book-cover-icon {
+      font-size: 3rem;
+      text-align: center;
+      background: rgba(0,0,0,0.3);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-bottom: 1.2rem;
+      transition: transform 0.2s;
+    }
+    .book-card:hover .book-cover-icon {
+      transform: scale(1.02);
+    }
+
+    .book-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      line-height: 1.3;
+    }
+    .book-author {
+      font-size: 0.85rem;
+      color: var(--glow-primary);
+      letter-spacing: 0.5px;
+      margin-bottom: 0.75rem;
+    }
+    .book-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+    .book-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      border-top: 1px dashed rgba(66,153,225,0.3);
+      padding-top: 0.75rem;
+    }
     .read-link {
       background: transparent;
       border: 1px solid var(--glow-accent);
@@ -133,12 +215,32 @@
       color: white;
       text-decoration: none;
       margin-bottom: 1rem;
+      transition: 0.2s;
       border: 1px solid rgba(0,224,255,0.3);
     }
-    .back-btn:hover { background: rgba(255,255,255,0.2); transform: translateX(-3px); }
-    @media (max-width: 680px) { body { padding: 1rem; } .library-header h1 { font-size: 2rem; } }
-    ::-webkit-scrollbar { width: 6px; background: #0a0c12; }
-    ::-webkit-scrollbar-thumb { background: linear-gradient(#00e0ff, #a855f7); border-radius: 10px; }
+    .back-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateX(-3px);
+    }
+
+    @media (max-width: 680px) {
+      body { padding: 1rem; }
+      .library-header h1 { font-size: 2rem; }
+      .book-grid { gap: 1.2rem; }
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      background: #0a0c12;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(#00e0ff, #a855f7);
+      border-radius: 10px;
+    }
+    ::selection {
+      background: #a855f7;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -148,37 +250,102 @@
 <div class="library-container">
   <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
   <div class="library-header">
-    <h1>📚 Cosmic Library</h1>
-    <p>Explore books added by your admin — click "Read" to open the book link</p>
+    <h1>📚 SMUK Library</h1>
+    <p>Explore books and PDFs added by your admin</p>
   </div>
   <div class="search-section">
-    <input type="text" id="searchInput" placeholder="🔍 Search by title, author, or description..." autocomplete="off">
+    <input type="text" id="searchInput" placeholder="🔍 Search by title, author, or description...">
   </div>
-  <div class="book-grid" id="bookGrid"></div>
-  <div class="library-footer" style="text-align:center; margin-top:3rem; padding-top:1rem; border-top:1px solid rgba(66,153,225,0.2); color:var(--text-secondary);">
-    <span>✦ curated collection · timeless insights ✦</span>
+  <div class="book-grid" id="bookGrid">
+    <div style="text-align:center; padding:2rem;">Loading books...</div>
   </div>
 </div>
 
 <script>
-  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-  if (!currentUser) window.location.href = "login.html";
+  // ---------- IndexedDB helper for PDFs ----------
+  const DB_NAME = "LibraryAdminDB";
+  const DB_VERSION = 1;
+  const STORE_NAME = "pdf_documents";
+  let db = null;
 
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      if (db) { resolve(db); return; }
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        db = request.result;
+        resolve(db);
+      };
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+        }
+      };
+    });
+  }
+
+  async function getPDFBlobById(pdfId) {
+    const database = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction(STORE_NAME, "readonly");
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(pdfId);
+      request.onsuccess = () => {
+        const record = request.result;
+        if (record && record.fileData) {
+          const blob = new Blob([record.fileData], { type: "application/pdf" });
+          resolve(blob);
+        } else {
+          reject(new Error("PDF data not found"));
+        }
+      };
+      request.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  // ---------- Books data ----------
+  const BOOKS_KEY = 'admin_library_books';
   let books = [];
 
   function loadBooks() {
-    const stored = localStorage.getItem('admin_library_books');
+    const stored = localStorage.getItem(BOOKS_KEY);
     if (stored) {
       books = JSON.parse(stored);
     } else {
-      // fallback default if none exist
-      books = [
-        { id: '1', title: 'The Feynman Lectures on Physics', author: 'Feynman, Leighton, Sands', year: 1963, description: 'Classic three-volume set.', icon: '📖', url: 'https://www.feynmanlectures.caltech.edu/' },
-        { id: '2', title: 'Gravitation', author: 'Misner, Thorne, Wheeler', year: 1973, description: 'Definitive relativity text.', icon: '🌌', url: 'https://press.princeton.edu/books/hardcover/9780691177798/gravitation' }
-      ];
-      localStorage.setItem('admin_library_books', JSON.stringify(books));
+      books = []; // no default books – only what admin uploads
     }
     renderBooks();
+  }
+
+  // Open book depending on type
+  async function openBook(book) {
+    if (book.type === 'pdf' && book.pdfId) {
+      try {
+        const blob = await getPDFBlobById(book.pdfId);
+        const url = URL.createObjectURL(blob);
+        const win = window.open();
+        // For PDFs, embed in an iframe for better viewing
+        win.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head><title>${escapeHtml(book.title)}</title>
+          <style>body { margin:0; padding:0; } iframe { width:100%; height:100vh; border:none; }</style>
+          </head>
+          <body><iframe src="${url}"></iframe></body>
+          </html>
+        `);
+        win.document.title = book.title;
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      } catch (err) {
+        alert('Could not open PDF: ' + err.message);
+      }
+    } else if (book.type === 'link' && book.url) {
+      window.open(book.url, '_blank');
+    } else {
+      alert('This book has no readable content.');
+    }
   }
 
   function renderBooks() {
@@ -189,25 +356,24 @@
       (book.description && book.description.toLowerCase().includes(searchTerm))
     );
     const grid = document.getElementById('bookGrid');
-    if (filtered.length === 0) {
+    if (!filtered.length) {
       grid.innerHTML = '<div style="text-align:center; padding:2rem;">📭 No books match your search.</div>';
       return;
     }
     grid.innerHTML = filtered.map(book => `
-      <div class="book-card" data-id="${book.id}">
-        <div class="book-cover-icon">${escapeHtml(book.icon) || '📖'}</div>
+      <div class="book-card">
+        <div class="book-cover-icon">${escapeHtml(book.icon) || (book.type === 'pdf' ? '📄' : '📖')}</div>
         <div class="book-title">${escapeHtml(book.title)}</div>
         <div class="book-author">${escapeHtml(book.author)}</div>
         <div class="book-desc">${escapeHtml(book.description || 'No description available.')}</div>
         <div class="book-meta">
           <span>📅 ${book.year || '—'}</span>
-          ${book.url && book.url.trim() !== '' 
-            ? `<a href="${escapeHtml(book.url)}" target="_blank" rel="noopener noreferrer" class="read-link">📖 Read →</a>` 
-            : '<span class="read-link" style="opacity:0.5; cursor:default;">No link</span>'}
+          <button class="read-link" onclick="openBook(${JSON.stringify(book).replace(/\\/g, '\\\\')})">📖 Read →</button>
         </div>
       </div>
     `).join('');
-    // Re‑attach mouse move effect for glare
+
+    // reattach mouse move effect for 3D glare
     document.querySelectorAll('.book-card').forEach(card => {
       card.addEventListener('mousemove', (e) => {
         const rect = card.getBoundingClientRect();
@@ -229,7 +395,10 @@
     });
   }
 
+  // Search listener
   document.getElementById('searchInput').addEventListener('input', renderBooks);
+
+  // Initial load
   loadBooks();
 </script>
 </body>
