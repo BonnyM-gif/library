@@ -3,485 +3,299 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Admin Library | Book Management with URLs</title>
+  <title>PDF Library Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    :root {
-      --bg-dark: #0a0c12;
-      --card-bg: rgba(18, 22, 35, 0.75);
-      --card-border: rgba(66, 153, 225, 0.3);
-      --glow-primary: #00e0ff;
-      --glow-accent: #a855f7;
-      --text-primary: #eef2ff;
-      --text-secondary: #9ca3af;
-      --danger: #ff4d6d;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --radius-lg: 1.5rem;
-      --radius-md: 1rem;
-      --transition: all 0.2s ease;
-    }
-
     body {
-      min-height: 100vh;
       background: radial-gradient(ellipse at 20% 30%, #0c0f1c, #03050b);
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-      padding: 1.5rem;
-      color: var(--text-primary);
+      font-family: 'Inter', system-ui, sans-serif;
     }
-
-    /* animated background */
-    .bg-particles {
-      position: fixed;
-      inset: 0;
-      background-image: 
-        radial-gradient(circle at 25% 40%, rgba(0,224,255,0.05) 1px, transparent 1px),
-        radial-gradient(circle at 75% 85%, rgba(168,85,247,0.05) 1px, transparent 1px);
-      background-size: 48px 48px, 64px 64px;
-      animation: drift 120s linear infinite;
-      pointer-events: none;
-      z-index: 0;
+    .drop-zone-active {
+      background-color: #eef2ff;
+      border-color: #3b82f6;
     }
-
-    @keyframes drift {
-      0% { background-position: 0 0, 0 0; }
-      100% { background-position: 200px 200px, -150px 150px; }
+    .pdf-card {
+      transition: all 0.2s ease;
     }
-
-    .grid-overlay {
-      position: fixed;
-      inset: 0;
-      background-image: 
-        linear-gradient(rgba(0,224,255,0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,224,255,0.08) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
+    .pdf-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
     }
-
-    /* main container */
-    .admin-container {
-      position: relative;
-      z-index: 10;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    /* header */
-    .admin-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid rgba(66,153,225,0.3);
-    }
-    .admin-header h1 {
-      font-size: 2rem;
-      background: linear-gradient(125deg, #fff, #00e0ff, #a855f7);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .stats-badge {
-      background: rgba(0,224,255,0.2);
-      backdrop-filter: blur(8px);
-      padding: 0.5rem 1rem;
-      border-radius: 40px;
-      font-size: 0.85rem;
-      border: 1px solid var(--glow-primary);
-    }
-
-    /* two-column layout */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 1.8rem;
-    }
-
-    /* form card */
-    .form-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--card-border);
-      padding: 1.5rem;
-      transition: var(--transition);
-    }
-    .form-card h2 {
-      font-size: 1.3rem;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    .form-group label {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 500;
-      margin-bottom: 0.3rem;
-      color: var(--text-secondary);
-    }
-    .form-group input, .form-group textarea {
-      width: 100%;
-      background: rgba(0,0,0,0.4);
-      border: 1px solid rgba(66,153,225,0.4);
-      border-radius: var(--radius-md);
-      padding: 0.7rem 1rem;
-      color: var(--text-primary);
-      font-size: 0.9rem;
-      transition: var(--transition);
-    }
-    .form-group input:focus, .form-group textarea:focus {
-      outline: none;
-      border-color: var(--glow-primary);
-      box-shadow: 0 0 0 2px rgba(0,224,255,0.2);
-    }
-    .form-actions {
-      display: flex;
-      gap: 0.8rem;
-      margin-top: 1rem;
-    }
-    button {
-      background: linear-gradient(95deg, #1e293b, #0f172a);
-      border: 1px solid var(--glow-primary);
-      padding: 0.6rem 1.2rem;
-      border-radius: 40px;
-      font-weight: 600;
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: var(--transition);
-      font-size: 0.85rem;
-    }
-    button:hover {
-      background: linear-gradient(95deg, #2d3a5e, #1e293b);
-      box-shadow: 0 0 10px rgba(0,224,255,0.4);
-      transform: translateY(-1px);
-    }
-    .btn-danger {
-      border-color: var(--danger);
-    }
-    .btn-danger:hover {
-      box-shadow: 0 0 10px rgba(255,77,109,0.4);
-    }
-    .btn-success {
-      border-color: var(--success);
-    }
-    .btn-success:hover {
-      box-shadow: 0 0 10px rgba(16,185,129,0.4);
-    }
-
-    /* books table */
-    .books-section {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--card-border);
-      padding: 1.5rem;
-      overflow-x: auto;
-    }
-    .books-section h2 {
-      font-size: 1.3rem;
-      margin-bottom: 1rem;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      text-align: left;
-      padding: 0.9rem 0.5rem;
-      border-bottom: 1px solid rgba(66,153,225,0.2);
-    }
-    th {
-      color: var(--glow-primary);
-      font-weight: 600;
-      font-size: 0.85rem;
-    }
-    td {
-      font-size: 0.85rem;
-      vertical-align: middle;
-    }
-    .action-buttons {
-      display: flex;
-      gap: 0.5rem;
-    }
-    .action-buttons button {
-      padding: 0.3rem 0.8rem;
-      font-size: 0.75rem;
-      background: rgba(0,0,0,0.5);
-    }
-    .url-link {
-      color: var(--glow-accent);
-      text-decoration: none;
-      font-size: 0.8rem;
-      transition: var(--transition);
-    }
-    .url-link:hover {
-      color: var(--glow-primary);
-      text-decoration: underline;
-    }
-    .empty-row td {
-      text-align: center;
-      padding: 2rem;
-      color: var(--text-secondary);
-    }
-    @media (max-width: 800px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-      }
-      .admin-header {
-        flex-direction: column;
-        align-items: start;
-      }
-    }
-    /* scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      background: #0a0c12;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: linear-gradient(#00e0ff, #a855f7);
-      border-radius: 10px;
-    }
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(12px);
-      padding: 0.7rem 1.5rem;
-      border-radius: 40px;
-      font-size: 0.85rem;
-      border-left: 3px solid var(--glow-primary);
-      z-index: 1000;
-      transition: opacity 0.3s;
-      pointer-events: none;
+    .pdf-list-container {
+      max-height: 55vh;
+      overflow-y: auto;
     }
   </style>
 </head>
-<body>
-<div class="bg-particles"></div>
-<div class="grid-overlay"></div>
-
-<div class="admin-container">
-  <div class="admin-header">
-    <h1>📚 Admin Library · Book Management</h1>
-    <div class="stats-badge" id="totalBooksStat">Total books: 0</div>
+<body class="antialiased">
+<div class="max-w-6xl mx-auto px-4 py-6 md:py-8">
+  <!-- Header with back button -->
+  <div class="flex flex-wrap justify-between items-center border-b border-slate-700 pb-4 mb-6">
+    <div class="flex items-center gap-3">
+      <a href="admin.html" class="text-indigo-400 hover:text-indigo-300 transition text-sm flex items-center gap-1">
+        <i class="fas fa-arrow-left"></i> Back to Admin
+      </a>
+      <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-sm">
+        <i class="fas fa-landmark text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">PDF Library <span class="text-indigo-400">Manager</span></h1>
+        <p class="text-slate-400 text-sm mt-0.5">Upload PDFs – they'll appear in the student library</p>
+      </div>
+    </div>
+    <div class="mt-2 sm:mt-0 flex items-center gap-2 bg-slate-800/50 backdrop-blur px-3 py-1.5 rounded-full text-slate-300 text-sm">
+      <i class="fas fa-database text-indigo-400"></i>
+      <span>local storage · IndexedDB</span>
+    </div>
   </div>
 
-  <div class="dashboard-grid">
-    <!-- Book form (add / edit) -->
-    <div class="form-card">
-      <h2>
-        <span id="formIcon">➕</span>
-        <span id="formTitle">Add New Book</span>
-      </h2>
-      <form id="bookForm">
-        <input type="hidden" id="bookId" value="">
-        <div class="form-group">
-          <label>Title *</label>
-          <input type="text" id="title" required placeholder="e.g., The Elegant Universe">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <div class="lg:col-span-1">
+      <div class="bg-slate-800/50 backdrop-blur rounded-2xl shadow-md border border-slate-700 overflow-hidden">
+        <div class="bg-slate-800/70 px-5 py-3 border-b border-slate-700">
+          <h2 class="font-semibold text-slate-200 flex items-center gap-2"><i class="fas fa-cloud-upload-alt text-indigo-400"></i> Upload PDF</h2>
         </div>
-        <div class="form-group">
-          <label>Author *</label>
-          <input type="text" id="author" required placeholder="Brian Greene">
+        <div class="p-5">
+          <div id="dropZone" class="border-2 border-dashed border-slate-600 rounded-xl p-6 text-center cursor-pointer transition bg-slate-800/30 hover:bg-indigo-900/20">
+            <i class="fas fa-file-pdf text-4xl text-indigo-400 mb-2"></i>
+            <p class="text-slate-300 font-medium">Drag & drop PDF here</p>
+            <p class="text-xs text-slate-400 mt-1">or click to browse</p>
+            <input type="file" id="fileInput" accept="application/pdf" multiple class="hidden" />
+            <button id="browseBtn" class="mt-3 text-sm bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition inline-flex items-center gap-1 shadow-sm"><i class="fas fa-folder-open"></i> Browse files</button>
+          </div>
+          <div class="mt-4 text-xs text-slate-400 flex justify-between items-center">
+            <span><i class="far fa-check-circle text-green-400"></i> PDF only, max 20MB each</span>
+            <span><i class="fas fa-layer-group"></i> multiple uploads allowed</span>
+          </div>
+          <div id="uploadStatus" class="mt-3 text-sm font-medium text-center"></div>
         </div>
-        <div class="form-group">
-          <label>Year</label>
-          <input type="number" id="year" placeholder="1999">
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea id="description" rows="3" placeholder="Brief description..."></textarea>
-        </div>
-        <div class="form-group">
-          <label>Icon (emoji)</label>
-          <input type="text" id="icon" placeholder="📖" value="📖">
-        </div>
-        <div class="form-group">
-          <label>URL (link to book page)</label>
-          <input type="url" id="url" placeholder="https://example.com/book">
-        </div>
-        <div class="form-actions">
-          <button type="submit" id="submitBtn">➕ Add Book</button>
-          <button type="button" id="cancelBtn" class="btn-danger" style="display: none;">Cancel Edit</button>
-        </div>
-      </form>
+      </div>
     </div>
 
-    <!-- Books list -->
-    <div class="books-section">
-      <h2>📖 Book Inventory</h2>
-      <div style="overflow-x: auto;">
-        <table id="booksTable">
-          <thead>
-            <tr><th>Icon</th><th>Title</th><th>Author</th><th>Year</th><th>URL</th><th>Actions</th> </tr>
-          </thead>
-          <tbody id="booksTableBody">
-            <tr class="empty-row"><td colspan="6">Loading books...<\/td><\/tr>
-          </tbody>
-        <\/table>
-      <\/div>
-    <\/div>
-  <\/div>
-<\/div>
+    <div class="lg:col-span-2">
+      <div class="bg-slate-800/50 backdrop-blur rounded-2xl shadow-md border border-slate-700 p-5 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="bg-indigo-900/50 p-3 rounded-xl">
+            <i class="fas fa-book-open text-indigo-400 text-2xl"></i>
+          </div>
+          <div>
+            <p class="text-slate-400 text-sm">Total PDF documents</p>
+            <p id="totalCount" class="text-3xl font-bold text-white">0</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button id="refreshListBtn" class="text-indigo-300 bg-indigo-900/30 px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-800/50 transition flex items-center gap-1"><i class="fas fa-sync-alt"></i> Refresh</button>
+          <button id="deleteAllBtn" class="text-rose-300 bg-rose-900/30 px-4 py-2 rounded-xl text-sm font-medium hover:bg-rose-800/50 transition flex items-center gap-1"><i class="fas fa-trash-alt"></i> Delete all</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-slate-800/50 backdrop-blur rounded-2xl shadow-md border border-slate-700 overflow-hidden">
+    <div class="bg-slate-800/70 px-5 py-3 border-b border-slate-700 flex justify-between items-center flex-wrap gap-2">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-list-ul text-indigo-400"></i>
+        <h2 class="font-semibold text-slate-200">PDF Inventory</h2>
+        <span id="itemCountBadge" class="bg-slate-700 text-slate-300 text-xs rounded-full px-2 py-0.5">0 items</span>
+      </div>
+      <div class="text-xs text-slate-400">
+        <i class="fas fa-info-circle"></i> PDFs appear in student library automatically
+      </div>
+    </div>
+    <div id="pdfListContainer" class="pdf-list-container p-4 divide-y divide-slate-700"></div>
+  </div>
+
+  <div class="mt-6 text-center text-xs text-slate-500 border-t border-slate-700 pt-5">
+    <i class="fas fa-database"></i> PDFs are stored locally and appear in the student library.
+  </div>
+</div>
 
 <script>
-  // Book data store (localStorage)
-  let books = [];
+  // ---------- IndexedDB Setup ----------
+  const DB_NAME = "LibraryAdminDB";
+  const DB_VERSION = 1;
+  const STORE_NAME = "pdf_documents";
+  const BOOKS_KEY = 'admin_library_books';  // same as admin-library.html
 
-  // Load from localStorage
-  function loadBooks() {
-    const stored = localStorage.getItem('admin_library_books');
-    if (stored) {
-      books = JSON.parse(stored);
-    } else {
-      // seed some demo books with URLs
-      books = [
-        { id: '1', title: 'The Feynman Lectures on Physics', author: 'Feynman, Leighton, Sands', year: 1963, description: 'Classic three-volume set covering all of physics.', icon: '📖', url: 'https://www.feynmanlectures.caltech.edu/' },
-        { id: '2', title: 'Gravitation', author: 'Misner, Thorne, Wheeler', year: 1973, description: 'The definitive reference on general relativity.', icon: '🌌', url: 'https://press.princeton.edu/books/hardcover/9780691177798/gravitation' },
-        { id: '3', title: 'Quantum Mechanics and Path Integrals', author: 'Feynman & Hibbs', year: 1965, description: 'Elegant formulation of quantum theory.', icon: '⚛️', url: '' }
-      ];
-      saveBooks();
-    }
-    renderBooksTable();
-    updateStats();
-  }
+  let dbInstance = null;
 
-  function saveBooks() {
-    localStorage.setItem('admin_library_books', JSON.stringify(books));
-  }
-
-  function updateStats() {
-    document.getElementById('totalBooksStat').innerText = `Total books: ${books.length}`;
-  }
-
-  // generate simple ID
-  function generateId() {
-    return Date.now().toString() + '-' + Math.random().toString(36).substr(2, 6);
-  }
-
-  // add or update
-  function handleSubmit(e) {
-    e.preventDefault();
-    const id = document.getElementById('bookId').value;
-    const title = document.getElementById('title').value.trim();
-    const author = document.getElementById('author').value.trim();
-    const year = parseInt(document.getElementById('year').value);
-    const description = document.getElementById('description').value.trim();
-    const icon = document.getElementById('icon').value.trim() || '📖';
-    const url = document.getElementById('url').value.trim();
-
-    if (!title || !author) {
-      showToast('Title and Author are required', '#ff4d6d');
-      return;
-    }
-
-    if (id) {
-      // update existing
-      const index = books.findIndex(b => b.id === id);
-      if (index !== -1) {
-        books[index] = { ...books[index], title, author, year: isNaN(year) ? '' : year, description, icon, url };
-        showToast('Book updated successfully', '#10b981');
+  function openDatabase() {
+    return new Promise((resolve, reject) => {
+      if (dbInstance && dbInstance.name === DB_NAME) {
+        resolve(dbInstance);
+        return;
       }
-    } else {
-      // add new
-      const newBook = {
-        id: generateId(),
-        title,
-        author,
-        year: isNaN(year) ? '' : year,
-        description,
-        icon,
-        url: url || ''
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onerror = () => reject("IndexedDB error: " + request.error);
+      request.onsuccess = () => {
+        dbInstance = request.result;
+        resolve(dbInstance);
       };
-      books.push(newBook);
-      showToast('Book added successfully', '#10b981');
-    }
-    saveBooks();
-    renderBooksTable();
-    updateStats();
-    resetForm();
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+        }
+      };
+    });
   }
 
-  function editBook(id) {
-    const book = books.find(b => b.id === id);
-    if (!book) return;
-    document.getElementById('bookId').value = book.id;
-    document.getElementById('title').value = book.title;
-    document.getElementById('author').value = book.author;
-    document.getElementById('year').value = book.year || '';
-    document.getElementById('description').value = book.description || '';
-    document.getElementById('icon').value = book.icon || '📖';
-    document.getElementById('url').value = book.url || '';
-    document.getElementById('formTitle').innerText = '✏️ Edit Book';
-    document.getElementById('formIcon').innerText = '✏️';
-    document.getElementById('submitBtn').innerHTML = '✏️ Update Book';
-    document.getElementById('cancelBtn').style.display = 'inline-block';
+  // Get all PDFs from IndexedDB
+  async function getAllPDFs() {
+    const db = await openDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], "readonly");
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.getAll();
+      request.onsuccess = () => {
+        const docs = request.result || [];
+        docs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+        resolve(docs);
+      };
+      request.onerror = (e) => reject(e.target.error);
+    });
   }
 
-  function deleteBook(id) {
-    if (confirm('Are you sure you want to delete this book?')) {
-      books = books.filter(b => b.id !== id);
-      saveBooks();
-      renderBooksTable();
-      updateStats();
-      resetForm();
-      showToast('Book deleted', '#ff4d6d');
-    }
+  // Save PDF file (blob) to IndexedDB and add book entry to localStorage
+  async function savePDFToDB(file) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const db = await openDatabase();
+        if (file.type !== "application/pdf") {
+          reject(new Error(`"${file.name}" is not a valid PDF file.`));
+          return;
+        }
+        const MAX_SIZE = 20 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+          reject(new Error(`"${file.name}" exceeds 20MB limit.`));
+          return;
+        }
+        const fileData = await file.arrayBuffer();
+        const metadata = {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          uploadedAt: new Date().toISOString(),
+          fileData: fileData,
+        };
+        const transaction = db.transaction([STORE_NAME], "readwrite");
+        const store = transaction.objectStore(STORE_NAME);
+        const addRequest = store.add(metadata);
+        addRequest.onsuccess = async () => {
+          const pdfId = addRequest.result;
+          // Now add a corresponding book entry to localStorage
+          const books = JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]');
+          const newBook = {
+            id: `pdf_${pdfId}`,  // prefix to avoid collision
+            title: file.name.replace(/\.pdf$/i, ''),
+            author: "PDF Document",
+            year: new Date().getFullYear(),
+            description: `Uploaded PDF: ${file.name}`,
+            icon: "📄",
+            type: "pdf",
+            pdfId: pdfId,          // reference to IndexedDB record
+            fileName: file.name,
+          };
+          books.push(newBook);
+          localStorage.setItem(BOOKS_KEY, JSON.stringify(books));
+          resolve({ id: pdfId, name: file.name });
+        };
+        addRequest.onerror = (e) => reject(e.target.error);
+        transaction.onerror = (e) => reject(e.target.error);
+      } catch (err) {
+        reject(err);
+      }
+    });
   }
 
-  function resetForm() {
-    document.getElementById('bookForm').reset();
-    document.getElementById('bookId').value = '';
-    document.getElementById('formTitle').innerText = 'Add New Book';
-    document.getElementById('formIcon').innerText = '➕';
-    document.getElementById('submitBtn').innerHTML = '➕ Add Book';
-    document.getElementById('cancelBtn').style.display = 'none';
-    // optional: set default icon
-    document.getElementById('icon').value = '📖';
+  // Delete PDF by id and remove its book entry
+  async function deletePDFById(id) {
+    const db = await openDatabase();
+    return new Promise(async (resolve, reject) => {
+      // First delete from IndexedDB
+      const transaction = db.transaction([STORE_NAME], "readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.delete(id);
+      request.onsuccess = async () => {
+        // Remove the corresponding book entry from localStorage
+        const books = JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]');
+        const filtered = books.filter(book => !(book.type === "pdf" && book.pdfId === id));
+        localStorage.setItem(BOOKS_KEY, JSON.stringify(filtered));
+        resolve(true);
+      };
+      request.onerror = (e) => reject(e.target.error);
+      transaction.onerror = (e) => reject(e.target.error);
+    });
   }
 
-  function renderBooksTable() {
-    const tbody = document.getElementById('booksTableBody');
-    if (!books.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No books yet. Add your first book! 📚<\/td><\/tr>';
-      return;
-    }
-    tbody.innerHTML = books.map(book => {
-      const urlCell = book.url && book.url.trim() !== '' 
-        ? `<a href="${escapeHtml(book.url)}" target="_blank" rel="noopener noreferrer" class="url-link">🔗 Visit</a>` 
-        : '—';
-      return `
-        <tr>
-          <td style="font-size:1.5rem;">${escapeHtml(book.icon) || '📖'}<\/td>
-          <td><strong>${escapeHtml(book.title)}<\/strong><\/td>
-          <td>${escapeHtml(book.author)}<\/td>
-          <td>${book.year || '—'}<\/td>
-          <td>${urlCell}<\/td>
-          <td class="action-buttons">
-            <button class="btn-success" onclick="editBook('${book.id}')">Edit</button>
-            <button class="btn-danger" onclick="deleteBook('${book.id}')">Delete</button>
-          <\/td>
-        <\/tr>
-      `;
-    }).join('');
+  // Delete all PDFs
+  async function deleteAllPDFs() {
+    const db = await openDatabase();
+    return new Promise(async (resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], "readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+      const clearRequest = store.clear();
+      clearRequest.onsuccess = async () => {
+        // Remove all PDF book entries
+        const books = JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]');
+        const filtered = books.filter(book => book.type !== "pdf");
+        localStorage.setItem(BOOKS_KEY, JSON.stringify(filtered));
+        resolve(true);
+      };
+      clearRequest.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  // Get blob for viewing/downloading
+  async function getPDFBlobById(id) {
+    const db = await openDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], "readonly");
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(id);
+      request.onsuccess = () => {
+        const record = request.result;
+        if (record && record.fileData) {
+          const blob = new Blob([record.fileData], { type: "application/pdf" });
+          resolve(blob);
+        } else {
+          reject(new Error("PDF data not found"));
+        }
+      };
+      request.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  // ---------- UI Rendering ----------
+  const pdfContainer = document.getElementById("pdfListContainer");
+  const totalCountSpan = document.getElementById("totalCount");
+  const itemCountBadge = document.getElementById("itemCountBadge");
+  const uploadStatusDiv = document.getElementById("uploadStatus");
+
+  function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  function formatDate(isoString) {
+    const date = new Date(isoString);
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' });
+  }
+
+  let toastTimeout = null;
+  function showMessage(msg, isError = false) {
+    if (toastTimeout) clearTimeout(toastTimeout);
+    uploadStatusDiv.innerHTML = `<span class="${isError ? 'text-rose-300 bg-rose-900/30' : 'text-emerald-300 bg-emerald-900/30'} px-3 py-1.5 rounded-lg inline-flex items-center gap-1 text-sm shadow-sm"><i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}</span>`;
+    toastTimeout = setTimeout(() => {
+      if (uploadStatusDiv) uploadStatusDiv.innerHTML = "";
+    }, 2800);
   }
 
   function escapeHtml(str) {
-    if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
       if (m === '&') return '&amp;';
       if (m === '<') return '&lt;';
@@ -490,24 +304,229 @@
     });
   }
 
-  function showToast(message, color = '#00e0ff') {
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.innerText = message;
-    toast.style.borderLeftColor = color;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      setTimeout(() => toast.remove(), 400);
-    }, 2000);
+  async function renderPDFList() {
+    try {
+      const allDocs = await getAllPDFs();
+      const count = allDocs.length;
+      totalCountSpan.innerText = count;
+      itemCountBadge.innerText = `${count} item${count !== 1 ? 's' : ''}`;
+      if (count === 0) {
+        pdfContainer.innerHTML = `
+          <div class="text-center py-12 text-slate-400 flex flex-col items-center gap-2">
+            <i class="fas fa-folder-open text-5xl opacity-40"></i>
+            <p>No PDF documents yet. Upload your first library resource ✨</p>
+          </div>
+        `;
+        return;
+      }
+      let html = `<div class="space-y-2">`;
+      for (const doc of allDocs) {
+        const id = doc.id;
+        const fileName = doc.name;
+        const fileSize = formatFileSize(doc.size);
+        const uploadDate = formatDate(doc.uploadedAt);
+        const safeName = escapeHtml(fileName);
+        html += `
+          <div class="pdf-card bg-slate-800/30 rounded-xl border border-slate-700 p-4 hover:shadow-md transition-all" data-id="${id}">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-start gap-3 flex-1 min-w-0">
+                <div class="bg-rose-900/30 p-2 rounded-lg text-rose-400 flex-shrink-0">
+                  <i class="fas fa-file-pdf text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h3 class="font-medium text-slate-200 truncate pr-2" title="${safeName}">${safeName}</h3>
+                  <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400 mt-1">
+                    <span><i class="fas fa-database text-slate-500 text-xs"></i> ${fileSize}</span>
+                    <span><i class="far fa-calendar-alt text-slate-500"></i> ${uploadDate}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-2 ml-8 sm:ml-0 flex-shrink-0">
+                <button class="view-pdf-btn text-blue-400 hover:bg-blue-900/30 p-2 rounded-lg transition" data-id="${id}" title="Preview PDF">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="download-pdf-btn text-indigo-400 hover:bg-indigo-900/30 p-2 rounded-lg transition" data-id="${id}" title="Download PDF">
+                  <i class="fas fa-download"></i>
+                </button>
+                <button class="delete-pdf-btn text-rose-400 hover:bg-rose-900/30 p-2 rounded-lg transition" data-id="${id}" title="Delete document">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      html += `</div>`;
+      pdfContainer.innerHTML = html;
+
+      document.querySelectorAll('.view-pdf-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = parseInt(btn.getAttribute('data-id'));
+          viewPDFById(id);
+        });
+      });
+      document.querySelectorAll('.download-pdf-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = parseInt(btn.getAttribute('data-id'));
+          downloadPDFById(id);
+        });
+      });
+      document.querySelectorAll('.delete-pdf-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const id = parseInt(btn.getAttribute('data-id'));
+          if (confirm("Permanently delete this PDF from library? It will also be removed from student view.")) {
+            try {
+              await deletePDFById(id);
+              showMessage("PDF deleted successfully", false);
+              renderPDFList();
+            } catch (err) {
+              showMessage("Delete failed: " + err.message, true);
+            }
+          }
+        });
+      });
+    } catch (error) {
+      console.error(error);
+      showMessage("Error loading PDF list: " + error.message, true);
+      pdfContainer.innerHTML = `<div class="text-center text-rose-400 py-8"><i class="fas fa-exclamation-triangle"></i> Failed to load library.</div>`;
+    }
   }
 
-  // event listeners
-  document.getElementById('bookForm').addEventListener('submit', handleSubmit);
-  document.getElementById('cancelBtn').addEventListener('click', resetForm);
+  async function viewPDFById(id) {
+    try {
+      const blob = await getPDFBlobById(id);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      showMessage("Cannot open PDF: " + err.message, true);
+    }
+  }
 
-  // initial load
-  loadBooks();
-<\/script>
-<\/body>
-<\/html>
+  async function downloadPDFById(id) {
+    try {
+      const blob = await getPDFBlobById(id);
+      const allDocs = await getAllPDFs();
+      const doc = allDocs.find(d => d.id === id);
+      const fileName = doc ? doc.name : `library_document_${id}.pdf`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showMessage(`Downloaded: ${fileName}`, false);
+    } catch (err) {
+      showMessage("Download failed: " + err.message, true);
+    }
+  }
+
+  async function handleUploadFiles(files) {
+    if (!files || files.length === 0) return;
+    let successCount = 0;
+    let failCount = 0;
+    for (let file of files) {
+      try {
+        await savePDFToDB(file);
+        successCount++;
+      } catch (err) {
+        failCount++;
+        showMessage(err.message, true);
+      }
+    }
+    if (successCount > 0) {
+      showMessage(`✅ ${successCount} PDF(s) uploaded and added to library.`, false);
+      await renderPDFList();
+    } else if (failCount > 0 && successCount === 0) {
+      showMessage(`No valid PDF uploaded. Check format/size.`, true);
+    } else {
+      if (failCount) showMessage(`Uploaded ${successCount}, ${failCount} failed.`, false);
+    }
+  }
+
+  function setupDragAndDrop() {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const browseBtn = document.getElementById('browseBtn');
+
+    dropZone.addEventListener('click', (e) => {
+      if (e.target === browseBtn || browseBtn.contains(e.target)) {
+        e.stopPropagation();
+      }
+      fileInput.click();
+    });
+    browseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.click();
+    });
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) {
+        handleUploadFiles(Array.from(e.target.files));
+        fileInput.value = '';
+      }
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drop-zone-active');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drop-zone-active');
+    });
+    dropZone.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drop-zone-active');
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        const pdfFiles = Array.from(files).filter(f => f.type === 'application/pdf');
+        if (pdfFiles.length === 0) {
+          showMessage("Only PDF files are allowed in the library.", true);
+          return;
+        }
+        await handleUploadFiles(pdfFiles);
+      }
+    });
+  }
+
+  async function setupGlobalActions() {
+    const refreshBtn = document.getElementById('refreshListBtn');
+    const deleteAllBtn = document.getElementById('deleteAllBtn');
+    refreshBtn.addEventListener('click', async () => {
+      await renderPDFList();
+      showMessage("Library refreshed", false);
+    });
+    deleteAllBtn.addEventListener('click', async () => {
+      const confirmDelete = confirm("⚠️ DELETE ALL PDFs? This action cannot be undone.");
+      if (confirmDelete) {
+        try {
+          await deleteAllPDFs();
+          await renderPDFList();
+          showMessage("All PDF documents have been removed.", false);
+        } catch (err) {
+          showMessage("Error clearing library: " + err.message, true);
+        }
+      }
+    });
+  }
+
+  async function init() {
+    try {
+      await openDatabase();
+      setupDragAndDrop();
+      await renderPDFList();
+      setupGlobalActions();
+    } catch (error) {
+      console.error(error);
+      uploadStatusDiv.innerHTML = `<span class="text-rose-300 bg-rose-900/30 p-2 rounded">⚠️ Failed to initialize local database. Storage may be disabled.</span>`;
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
