@@ -75,84 +75,48 @@
   </div>
 
   <div class="mt-8 text-center text-xs text-slate-400 border-t border-indigo-100 pt-5 flex justify-between items-center flex-wrap gap-2">
-    <span><i class="fas fa-database"></i> Books are stored locally (admin library & PDF manager)</span>
+    <span><i class="fas fa-database"></i> Books are stored in the cloud – access from anywhere</span>
     <span><i class="fas fa-graduation-cap"></i> Student access · read only</span>
   </div>
 </div>
 
-<script>
-  // ---------- IndexedDB setup for PDF blobs ----------
-  const DB_NAME = "LibraryAdminDB";
-  const DB_VERSION = 1;
-  const STORE_NAME = "pdf_documents";
-  let dbInstance = null;
+<script type="module">
+  // ---------- Firebase Configuration ----------
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-  function openDatabase() {
-    return new Promise((resolve, reject) => {
-      if (dbInstance && dbInstance.name === DB_NAME) {
-        resolve(dbInstance);
-        return;
-      }
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
-      request.onerror = () => reject("IndexedDB error: " + request.error);
-      request.onsuccess = (event) => {
-        dbInstance = event.target.result;
-        resolve(dbInstance);
-      };
-      request.onupgradeneeded = (event) => {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
-        }
-      };
-    });
-  }
+  const firebaseConfig = {
+    apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
+    authDomain: "smuk-library.firebaseapp.com",
+    projectId: "smuk-library",
+    storageBucket: "smuk-library.firebasestorage.app",
+    messagingSenderId: "101518774671",
+    appId: "1:101518774671:web:24c6c9c2574f230639fbfa",
+    measurementId: "G-9M8VW7EL0B"
+  };
 
-  async function getPDFBlobById(pdfId) {
-    const db = await openDatabase();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([STORE_NAME], "readonly");
-      const store = transaction.objectStore(STORE_NAME);
-      const request = store.get(pdfId);
-      request.onsuccess = () => {
-        const record = request.result;
-        if (record && record.fileData) {
-          const blob = new Blob([record.fileData], { type: "application/pdf" });
-          resolve(blob);
-        } else {
-          reject(new Error("PDF data not found"));
-        }
-      };
-      request.onerror = (e) => reject(e.target.error);
-    });
-  }
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  // ---------- Book data from admin library (localStorage) ----------
-  const BOOKS_KEY = 'admin_library_books';
+  // DOM elements
+  const booksContainer = document.getElementById('booksContainer');
+  const bookCountSpan = document.getElementById('bookCount');
+  const searchInput = document.getElementById('searchInput');
+  const refreshBtn = document.getElementById('refreshBtn');
 
-  let allBooks = [];
+  let allBooks = []; // store current books for search filtering
+  let unsubscribeBooks = null;
 
-  async function loadBooks() {
-    const stored = localStorage.getItem(BOOKS_KEY);
-    if (stored) {
-      allBooks = JSON.parse(stored);
-    } else {
-      allBooks = []; // no default books
-    }
-    renderBooks();
-  }
-
+  // Helper: format file size (if needed)
   function formatFileSize(bytes) {
+    if (!bytes) return '';
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  }
-
-  function formatDate(isoString) {
-    const date = new Date(isoString);
-    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   function escapeHtml(str) {
@@ -165,40 +129,20 @@
     });
   }
 
-  async function openBook(book) {
-    // PDF book (type = "pdf")
-    if (book.type === 'pdf' && book.pdfId) {
-      try {
-        const blob = await getPDFBlobById(book.pdfId);
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
-      } catch (err) {
-        alert('Could not open PDF: ' + err.message);
-      }
-      return;
-    }
-
-    // Link book (type = "link")
-    if (book.type === 'link' && book.url) {
+  // Open book based on type
+  function openBook(book) {
+    if (book.type === 'pdf' && book.url) {
+      // PDF stored in Firebase Storage – url is the download URL
       window.open(book.url, '_blank');
-      return;
-    }
-
-    // Legacy books with a direct URL (from old admin-library)
-    if (book.url) {
+    } else if (book.type === 'link' && book.url) {
       window.open(book.url, '_blank');
-      return;
+    } else {
+      alert('This book has no readable content. Please contact admin.');
     }
-
-    // Fallback
-    alert('This book has no readable content. Please contact admin.');
   }
 
+  // Render books with search filter
   function renderBooks(searchTerm = '') {
-    const container = document.getElementById('booksContainer');
-    const bookCountSpan = document.getElementById('bookCount');
-
     let filtered = allBooks;
     if (searchTerm.trim() !== '') {
       const term = searchTerm.trim().toLowerCase();
@@ -212,7 +156,7 @@
     bookCountSpan.innerText = `${filtered.length} book${filtered.length !== 1 ? 's' : ''} available`;
 
     if (filtered.length === 0) {
-      container.innerHTML = `
+      booksContainer.innerHTML = `
         <div class="text-center py-16 text-slate-400 flex flex-col items-center gap-3">
           <i class="fas fa-search text-5xl opacity-40"></i>
           <p class="text-lg">No matching books found.</p>
@@ -254,22 +198,40 @@
       `;
     }
     gridHtml += `</div>`;
-    container.innerHTML = gridHtml;
+    booksContainer.innerHTML = gridHtml;
 
     // Attach click handlers to each Read button
     document.querySelectorAll('.view-book-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const book = JSON.parse(btn.getAttribute('data-book'));
-        await openBook(book);
+        openBook(book);
       });
     });
   }
 
-  // Search and refresh
+  // Set up real-time listener to Firestore 'books' collection
+  function subscribeToBooks() {
+    if (unsubscribeBooks) unsubscribeBooks();
+    const q = query(collection(db, "books"), orderBy("timestamp", "desc"));
+    unsubscribeBooks = onSnapshot(q, (snapshot) => {
+      allBooks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderBooks(searchInput.value);
+    }, (error) => {
+      console.error("Error loading books:", error);
+      booksContainer.innerHTML = `
+        <div class="text-center py-16 text-rose-500">
+          <i class="fas fa-exclamation-triangle text-3xl mb-2"></i>
+          <p>Failed to load library from cloud.</p>
+          <p class="text-xs mt-1">${error.message}</p>
+        </div>
+      `;
+    });
+  }
+
+  // Debounced search
+  let debounceTimer;
   function setupSearch() {
-    const searchInput = document.getElementById('searchInput');
-    let debounceTimer;
     searchInput.addEventListener('input', (e) => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
@@ -278,28 +240,23 @@
     });
   }
 
-  document.getElementById('refreshBtn').addEventListener('click', async () => {
-    await loadBooks();
-    renderBooks(document.getElementById('searchInput').value);
+  // Refresh button: manually re-run listener (already real-time, but we can re-fetch)
+  refreshBtn.addEventListener('click', () => {
+    // Force re-subscribe (optional)
+    subscribeToBooks();
   });
 
-  // Initialize
-  (async () => {
-    try {
-      await openDatabase(); // ensure DB is ready for PDF blobs
-      await loadBooks();
-      setupSearch();
-    } catch (err) {
-      console.error(err);
-      document.getElementById('booksContainer').innerHTML = `
-        <div class="text-center py-16 text-rose-500">
-          <i class="fas fa-exclamation-triangle text-3xl mb-2"></i>
-          <p>Failed to load library. Please check your browser storage.</p>
-          <p class="text-xs mt-1">${err.message}</p>
-        </div>
-      `;
+  // Authentication guard
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      // Not logged in – redirect to login page
+      window.location.href = "login.html";
+      return;
     }
-  })();
+    // User is logged in – start loading books
+    subscribeToBooks();
+    setupSearch();
+  });
 </script>
 </body>
 </html>
