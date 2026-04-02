@@ -254,6 +254,9 @@
   </div>
   <script src="script.js"></script>
   <script>
+
+    <script type="module">
+    import { loginUser, resetPassword, onAuthState } from "./firebase-config.js";
     // Login function using localStorage
     async function login() {
       const email = document.getElementById("loginEmail").value.trim();
