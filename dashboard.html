@@ -3,719 +3,364 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>SMUK DASHBOARD</title>
+  <title>ST KALEMBA SS VILAMARIA | Central Dashboard</title>
+  <!-- TailwindCSS + Font Awesome + Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    /* ---------- GLOBAL RESET & CUSTOM PROPERTIES ---------- */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    :root {
-      --bg-dark: #0a0c12;
-      --card-bg: rgba(18, 22, 35, 0.65);
-      --card-border: rgba(66, 153, 225, 0.25);
-      --glow-primary: #00e0ff;
-      --glow-accent: #a855f7;
-      --text-primary: #eef2ff;
-      --text-secondary: #9ca3af;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --radius-lg: 1.5rem;
-      --radius-md: 1rem;
-      --transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-    }
-
-    body {
-      min-height: 100vh;
-      background: radial-gradient(ellipse at 20% 30%, #0c0f1c, #03050b);
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-      padding: 2rem;
-      position: relative;
-      overflow-x: hidden;
-      color: var(--text-primary);
-    }
-
-    /* advanced animated particle field */
-    .particle-field {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background-image: 
-        radial-gradient(circle at 25% 40%, rgba(0,224,255,0.08) 1px, transparent 1px),
-        radial-gradient(circle at 75% 85%, rgba(168,85,247,0.08) 1px, transparent 1px);
-      background-size: 48px 48px, 64px 64px;
-      animation: driftParticles 120s linear infinite;
-    }
-
-    @keyframes driftParticles {
-      0% { background-position: 0 0, 0 0; }
-      100% { background-position: 200px 200px, -150px 150px; }
-    }
-
-    /* grid overlay (scientific graph paper) */
-    .grid-overlay {
-      position: fixed;
-      inset: 0;
-      background-image: 
-        linear-gradient(rgba(0,224,255,0.12) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,224,255,0.12) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    /* main dashboard container */
-    .dashboard {
-      position: relative;
-      z-index: 10;
-      max-width: 1400px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 1.8rem;
-    }
-
-    /* header with animated gradient */
-    .dashboard-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 0.5rem;
-    }
-    .title-section h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      background: linear-gradient(125deg, #fff, #00e0ff, #a855f7);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      letter-spacing: -0.02em;
-    }
-    .title-section p {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      margin-top: 0.25rem;
-    }
-    .live-badge {
-      background: rgba(0,224,255,0.2);
-      backdrop-filter: blur(8px);
-      padding: 0.5rem 1.2rem;
-      border-radius: 40px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      border: 1px solid var(--glow-primary);
-      box-shadow: 0 0 8px rgba(0,224,255,0.3);
-    }
-
-    /* user info row (custom) */
-    .user-stats {
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(8px);
-      border-radius: 2rem;
-      padding: 0.8rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      border: 1px solid rgba(66,153,225,0.3);
-    }
-    .user-greeting {
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-    .user-greeting strong {
-      background: linear-gradient(135deg, #00e0ff, #a855f7);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .riddle-score {
-      background: rgba(0,0,0,0.5);
-      padding: 0.4rem 1rem;
-      border-radius: 40px;
-      font-size: 0.9rem;
-      border-left: 3px solid var(--glow-primary);
-    }
-
-    /* card grid layout */
-    .grid-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-    }
-
-    /* modern glass card with hover 3D tilt */
-    .phys-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--card-border);
-      padding: 1.5rem;
-      transition: var(--transition);
-      transform-style: preserve-3d;
-      perspective: 800px;
-    }
-    .phys-card:hover {
-      transform: translateY(-6px);
-      border-color: rgba(0,224,255,0.6);
-      box-shadow: 0 20px 35px -15px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,224,255,0.2);
-    }
-
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--glow-primary);
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
-    .constant-value {
-      font-size: 2.2rem;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-      background: linear-gradient(135deg, #fff, #a5f3ff);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      margin: 0.5rem 0;
-    }
-    .constant-unit {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      margin-top: 0.25rem;
-    }
-    .trend {
-      font-size: 0.8rem;
-      margin-top: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    /* large card for visualization */
-    .viz-card {
-      grid-column: span 2;
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--card-border);
-      padding: 1.5rem;
-    }
-    @media (max-width: 800px) {
-      .viz-card { grid-column: span 1; }
-    }
-
-    /* canvas styling */
-    .canvas-container {
-      width: 100%;
-      height: 260px;
-      margin-top: 1rem;
-      background: rgba(0,0,0,0.3);
-      border-radius: var(--radius-md);
-      position: relative;
-    }
-    canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      border-radius: var(--radius-md);
-    }
-
-    /* stats row */
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1.2rem;
-    }
-    .stat-item {
-      background: rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(4px);
-      border-radius: var(--radius-md);
-      padding: 1rem;
-      text-align: center;
-      transition: var(--transition);
-      border: 1px solid rgba(66,153,225,0.2);
-    }
-    .stat-item:hover {
-      border-color: var(--glow-accent);
-      transform: scale(1.02);
-    }
-    .stat-number {
-      font-size: 1.8rem;
-      font-weight: 800;
-      background: linear-gradient(145deg, #f0f9ff, #b0e0ff);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    /* navigation grid (school links) */
-    .nav-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 1rem;
-      margin: 1rem 0;
-    }
-    .nav-card {
-      background: rgba(18, 22, 35, 0.7);
-      backdrop-filter: blur(8px);
-      padding: 0.8rem;
-      border-radius: 1rem;
-      text-align: center;
-      color: var(--text-primary);
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 0.9rem;
-      transition: all 0.2s;
-      border: 1px solid rgba(66,153,225,0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .nav-card:hover {
-      background: rgba(0,224,255,0.15);
-      border-color: var(--glow-primary);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 16px -8px rgba(0,224,255,0.2);
-    }
-    .logout {
-      background: rgba(239, 68, 68, 0.2);
-      border-color: #ef4444;
-    }
-    .logout:hover {
-      background: rgba(239, 68, 68, 0.4);
-      border-color: #ef4444;
-    }
-
-    /* interactive button */
-    .simulate-btn {
-      background: linear-gradient(95deg, #0f172a, #1e293b);
-      border: 1px solid var(--glow-primary);
-      padding: 0.6rem 1.2rem;
-      border-radius: 40px;
-      font-weight: 600;
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-top: 1rem;
-      width: 100%;
-      font-size: 0.85rem;
-    }
-    .simulate-btn:hover {
-      background: linear-gradient(95deg, #1e293b, #2d3a5e);
-      box-shadow: 0 0 12px rgba(0,224,255,0.5);
-      transform: translateY(-2px);
-    }
-
-    /* ripple effect */
-    .ripple {
-      position: absolute;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0,224,255,0.6) 0%, rgba(168,85,247,0) 80%);
-      transform: scale(0);
-      animation: rippleAnim 0.6s linear forwards;
-      pointer-events: none;
-    }
-    @keyframes rippleAnim {
-      to { transform: scale(6); opacity: 0; }
-    }
-
-    /* advanced scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      background: #0a0c12;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: linear-gradient(#00e0ff, #a855f7);
-      border-radius: 10px;
-    }
-
-    /* responsiveness */
-    @media (max-width: 680px) {
-      body { padding: 1rem; }
-      .constant-value { font-size: 1.5rem; }
-      .title-section h1 { font-size: 1.8rem; }
-    }
-
-    /* special glow effect for cards */
-    .glow-text {
-      text-shadow: 0 0 8px rgba(0,224,255,0.5);
-    }
-
-    /* dynamic glare effect */
-    .phys-card {
-      position: relative;
-      overflow: hidden;
-    }
-    .phys-card::after {
-      content: '';
-      position: absolute;
-      top: var(--y, 50%);
-      left: var(--x, 50%);
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(0,224,255,0.15) 0%, rgba(0,0,0,0) 70%);
-      transform: translate(-50%, -50%) scale(0);
-      transition: transform 0.2s ease-out;
-      border-radius: 50%;
-      pointer-events: none;
-    }
-    .phys-card:hover::after {
-      transform: translate(-50%, -50%) scale(1);
-    }
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #f1f5f9; }
+    .dashboard-card { transition: all 0.25s ease; }
+    .dashboard-card:hover { transform: translateY(-3px); box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.1); }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .status-dot.online { background-color: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,0.2); }
+    .status-dot.offline { background-color: #9ca3af; }
+    .book-grid { max-height: 55vh; overflow-y: auto; scrollbar-width: thin; }
+    .user-list { max-height: 280px; overflow-y: auto; }
+    .nav-card { transition: all 0.2s; }
+    .nav-card:hover { transform: translateY(-2px); background-color: #eef2ff; }
   </style>
 </head>
-<body>
-  <div class="particle-field"></div>
-  <div class="grid-overlay"></div>
+<body class="antialiased">
 
-  <div class="dashboard">
-    <div class="dashboard-header">
-      <div class="title-section">
-        <h1>⚛️ St Kalemba SS villaMaria </h1>
-        <p>DER HERR IST MEIN HIRT</p>
-      </div>
-      <div class="live-badge">
-        <span>🔬 SMUK Dashboard</span>
-      </div>
-    </div>
-
-    <!-- USER INFO + RIDDLE SCORE (school integration) -->
-    <div class="user-stats">
-      <div class="user-greeting">
-        👤 <strong id="userName">Seeker</strong> · SMUK Academic Giant
-      </div>
-      <div class="riddle-score">
-        🧠 Riddle Score: <span id="dashboardScore">0</span> wisdom points
-      </div>
-    </div>
-
-    <!-- SCHOOL NAVIGATION GRID -->
-    <div class="nav-grid">
-      <a href="library.html" class="nav-card">📚 Library</a>
-      <a href="calendar.html" class="nav-card">📅 Calendar</a>
-      <a href="riddles.html" class="nav-card">🧩 Riddles</a>
-      <a href="chat.html" class="nav-card">💬 Chat</a>
-      <a href="user_list.html" class="nav-card">👥 Students</a>
-      <a href="messages.html" class="nav-card">📬 Messages</a>
-      <a href="assignments.html" class="nav-card">📁 Assignments</a>
-      <a href="#" onclick="logout()" class="nav-card logout">🚪 Logout</a>
-    </div>
-
-    <!-- Constants Grid -->
-    <div class="grid-cards">
-      <div class="phys-card" data-tilt>
-        <div class="card-title">💡 SPEED OF LIGHT</div>
-        <div class="constant-value" id="cVal">299,792,458</div>
-        <div class="constant-unit">m/s (exact)</div>
-        <div class="trend">🌌 c = 1 in natural units</div>
-      </div>
-      <div class="phys-card">
-        <div class="card-title">⚖️ PLANCK CONSTANT</div>
-        <div class="constant-value" id="hVal">6.62607015 × 10⁻³⁴</div>
-        <div class="constant-unit">J·s (exact)</div>
-        <div class="trend">📐 ħ = h/2π</div>
-      </div>
-      <div class="phys-card">
-        <div class="card-title">🌌 GRAVITATIONAL CONSTANT</div>
-        <div class="constant-value" id="gVal">6.67430 × 10⁻¹¹</div>
-        <div class="constant-unit">m³·kg⁻¹·s⁻²</div>
-        <div class="trend">📉 uncertainty ±0.00015</div>
-      </div>
-      <div class="phys-card">
-        <div class="card-title">⚡ ELECTRON MASS</div>
-        <div class="constant-value">9.1093837 × 10⁻³¹</div>
-        <div class="constant-unit">kg</div>
-        <div class="trend">🔄 mₑ = 0.511 MeV/c²</div>
-      </div>
-    </div>
-
-    <!-- Interactive Visualization + Relativity Section -->
-    <div class="viz-card">
-      <div class="card-title">📈 RELATIVISTIC γ FACTOR | v/c → γ</div>
-      <div class="canvas-container">
-        <canvas id="gammaCanvas" width="800" height="240" style="width:100%; height:auto; max-height:240px"></canvas>
-      </div>
-      <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
-        <div style="font-size: 0.8rem;">γ = 1/√(1 - v²/c²)</div>
-        <button class="simulate-btn" id="updateGammaBtn">🔄 SIMULATE PARTICLE ENERGY</button>
-      </div>
-    </div>
-
-    <!-- Quantum Stats + E=mc² Widget -->
-    <div class="stats-row">
-      <div class="stat-item">
-        <div class="card-title" style="justify-content: center;">💥 ENERGY EQUIVALENCE</div>
-        <div class="stat-number" id="emcResult">E = mc²</div>
-        <div style="margin-top: 0.5rem;">
-          <input type="number" id="massInput" value="1.0" step="0.1" style="background: #1e293b; border:1px solid #4299e1; border-radius: 20px; padding: 6px 12px; width: 100px; color:white;">
-          <span style="font-size:0.7rem;"> kg → </span>
-          <span id="energyOutput" style="font-weight:bold; color:#a855f7;">8.99e16 J</span>
+  <div class="max-w-7xl mx-auto px-4 py-6 md:py-8">
+    <!-- Header with school branding & realtime clock -->
+    <div class="flex flex-wrap justify-between items-center mb-6 pb-3 border-b border-indigo-200">
+      <div class="flex items-center gap-3">
+        <div class="bg-indigo-700 text-white p-2.5 rounded-2xl shadow-md">
+          <i class="fas fa-chalkboard-user text-xl"></i>
         </div>
-        <button class="simulate-btn" id="calcEnergyBtn" style="margin-top: 0.8rem;">⚛️ CALCULATE ENERGY</button>
-      </div>
-      <div class="stat-item">
-        <div class="card-title" style="justify-content: center;">🌀 QUANTUM UNCERTAINTY</div>
-        <div class="stat-number">Δx·Δp ≥ ħ/2</div>
-        <div style="font-size: 0.75rem; margin-top: 0.5rem;">simulated fluctuation: <span id="uncertaintyVal">0.527</span> × 10⁻³⁴</div>
-        <div style="height: 4px; background:#334155; border-radius: 4px; margin-top: 8px;">
-          <div id="uncertaintyBar" style="width: 52%; height: 4px; background: linear-gradient(90deg,#00e0ff,#a855f7); border-radius: 4px;"></div>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-indigo-800 to-purple-800 bg-clip-text text-transparent">ST KALEMBA SS VILAMARIA</h1>
+          <p class="text-slate-500 text-sm flex items-center gap-1"><i class="fas fa-tachometer-alt"></i> Central Dashboard · Library & Live Presence</p>
         </div>
       </div>
-      <div class="stat-item">
-        <div class="card-title" style="justify-content: center;">⏳ FINE-STRUCTURE CONSTANT</div>
-        <div class="stat-number">α ≈ 1/137.036</div>
-        <div class="trend" style="justify-content: center;">electromagnetic coupling strength</div>
+      <div class="flex items-center gap-3">
+        <div class="bg-white/70 backdrop-blur rounded-full px-4 py-2 shadow-sm text-indigo-700 text-sm font-medium">
+          <i class="far fa-clock"></i> <span id="liveClock">--:--:--</span>
+        </div>
+        <button id="logoutBtn" class="bg-rose-100 text-rose-700 px-3 py-2 rounded-full text-sm font-medium hover:bg-rose-200 transition"><i class="fas fa-sign-out-alt"></i> Logout</button>
       </div>
     </div>
 
-    <!-- additional advanced metrics: vacuum energy, planck units -->
-    <div class="grid-cards">
-      <div class="phys-card">
-        <div class="card-title">🔭 PLANCK LENGTH</div>
-        <div class="constant-value">1.616255 × 10⁻³⁵</div>
-        <div class="constant-unit">meters</div>
-        <div class="trend">ℓₚ = √(ħG/c³)</div>
+    <!-- User Greeting Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-indigo-100 p-4 mb-6 flex flex-wrap justify-between items-center">
+      <div>
+        <p class="text-slate-500 text-sm">Logged in as</p>
+        <p class="text-xl font-bold text-indigo-800" id="userNameDisplay">Loading...</p>
+        <p class="text-xs text-slate-400" id="userRoleDisplay"></p>
       </div>
-      <div class="phys-card">
-        <div class="card-title">🌡️ COSMIC MICROWAVE BACKGROUND</div>
-        <div class="constant-value">2.72548 K</div>
-        <div class="constant-unit">temperature</div>
-        <div class="trend">📡 relic radiation</div>
+      <div class="text-right">
+        <p class="text-sm text-slate-500"><i class="fas fa-graduation-cap"></i> Sanctus · Sapientia · Dignitas</p>
       </div>
-      <div class="phys-card">
-        <div class="card-title">⚛️ HIGGS FIELD VEV</div>
-        <div class="constant-value">246.22 GeV</div>
-        <div class="constant-unit">vacuum expectation</div>
-        <div class="trend">🔹 electroweak symmetry breaking</div>
+    </div>
+
+    <!-- Stats Grid: Books, Online Users, Total Users -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <div class="dashboard-card bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 flex items-center justify-between">
+        <div><p class="text-slate-500 text-sm">📚 Total Books</p><p id="totalBooksStat" class="text-3xl font-bold text-indigo-700">0</p></div>
+        <i class="fas fa-book-open text-4xl text-indigo-300"></i>
+      </div>
+      <div class="dashboard-card bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 flex items-center justify-between">
+        <div><p class="text-slate-500 text-sm"><i class="fas fa-circle text-green-500 text-xs"></i> Online Now</p><p id="onlineUsersStat" class="text-3xl font-bold text-emerald-600">0</p></div>
+        <i class="fas fa-users-viewfinder text-4xl text-indigo-300"></i>
+      </div>
+      <div class="dashboard-card bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 flex items-center justify-between">
+        <div><p class="text-slate-500 text-sm">👥 Total Registered</p><p id="totalUsersStat" class="text-3xl font-bold text-slate-700">0</p></div>
+        <i class="fas fa-user-friends text-4xl text-indigo-300"></i>
+      </div>
+      <div class="dashboard-card bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 flex items-center justify-between">
+        <div><p class="text-slate-500 text-sm">📅 Last Upload</p><p id="lastUploadStat" class="text-sm font-semibold text-slate-600 truncate">—</p></div>
+        <i class="fas fa-cloud-upload-alt text-3xl text-indigo-400"></i>
+      </div>
+    </div>
+
+    <!-- Navigation Cards (all platform links) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
+      <a href="library.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-book text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Library</span></a>
+      <a href="calendar.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-calendar-alt text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Calendar</span></a>
+      <a href="riddles.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-puzzle-piece text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Riddles</span></a>
+      <a href="chat.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-comments text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Chat</span></a>
+      <a href="user_list.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-users text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Students</span></a>
+      <a href="messages.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-envelope text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Messages</span></a>
+      <a href="assignments.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-tasks text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Assignments</span></a>
+      <a href="admin.html" id="adminLink" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition hidden"><i class="fas fa-crown text-amber-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Admin Panel</span></a>
+    </div>
+
+    <!-- Two column layout: Left (Library Collection) | Right (Live Users) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- LEFT COLUMN: Book Library (Read‑only) -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100">
+          <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex justify-between items-center flex-wrap gap-2">
+            <div><i class="fas fa-book text-indigo-500"></i> <span class="font-semibold text-slate-700">Digital Collection</span> <span id="bookCountBadge" class="ml-2 text-xs bg-slate-200 px-2 py-0.5 rounded-full">0 items</span></div>
+            <button id="refreshLibraryBtn" class="text-indigo-600 text-sm bg-indigo-50 px-3 py-1 rounded-lg hover:bg-indigo-100"><i class="fas fa-sync-alt"></i> Refresh</button>
+          </div>
+          <div id="booksContainer" class="book-grid p-4 divide-y divide-slate-100">
+            <div class="text-center py-10 text-slate-400"><i class="fas fa-spinner fa-pulse"></i> Loading books...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Real-time User List -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl shadow-md border border-indigo-100 overflow-hidden">
+          <div class="bg-indigo-50/60 px-5 py-3 border-b border-indigo-100 flex justify-between items-center">
+            <h2 class="font-semibold text-slate-700"><i class="fas fa-users text-indigo-500"></i> Live Activity</h2>
+            <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full"><i class="fas fa-broadcast-tower"></i> real-time</span>
+          </div>
+          <div class="p-3 user-list" id="liveUsersList">
+            <div class="text-center py-6 text-slate-400 text-sm">Waiting for users...</div>
+          </div>
+          <div class="bg-slate-50 px-4 py-2 text-xs text-slate-500 border-t border-slate-100 flex justify-between">
+            <span><i class="fas fa-user-tag"></i> You: <span id="myPresenceName">—</span></span>
+            <button id="setNameQuickBtn" class="text-indigo-500 hover:text-indigo-700"><i class="fas fa-pen"></i> set name</button>
+          </div>
+        </div>
+        <div class="bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-5 shadow-sm border border-indigo-100">
+          <div class="flex items-center gap-2 mb-2">
+            <i class="fas fa-landmark text-indigo-600 text-xl"></i>
+            <h3 class="font-bold text-slate-800">Sanctus · Sapientia · Dignitas</h3>
+          </div>
+          <p class="text-slate-600 text-sm">Welcome to the central dashboard. Browse books, chat with peers, and access all learning tools.</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <script>
-    // ---------- SCHOOL DASHBOARD INTEGRATION ----------
-    function loadDashboard() {
-      const user = JSON.parse(localStorage.getItem("currentUser"));
+  <!-- Firebase SDKs -->
+  <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js",
+        "firebase/auth": "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "firebase/app";
+    import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+    import { getFirestore, doc, getDoc } from "firebase/firestore";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
+      authDomain: "smuk-library.firebaseapp.com",
+      projectId: "smuk-library",
+      storageBucket: "smuk-library.firebasestorage.app",
+      messagingSenderId: "101518774671",
+      appId: "1:101518774671:web:24c6c9c2574f230639fbfa",
+      measurementId: "G-9M8VW7EL0B"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // DOM elements
+    const userNameDisplay = document.getElementById("userNameDisplay");
+    const userRoleDisplay = document.getElementById("userRoleDisplay");
+    const adminLink = document.getElementById("adminLink");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // Check authentication and load user data
+    onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "login.html";
         return;
       }
-      document.getElementById("userName").innerText = user.name;
-      const scores = JSON.parse(localStorage.getItem("school_scores") || "{}");
-      const score = scores[user.id] || 0;
-      document.getElementById("dashboardScore").innerText = score;
-    }
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        userNameDisplay.textContent = userData.name;
+        userRoleDisplay.textContent = userData.role === "admin" ? "Administrator" : "Student";
+        if (userData.role === "admin") {
+          adminLink.classList.remove("hidden");
+        }
+      } else {
+        userNameDisplay.textContent = user.email;
+        userRoleDisplay.textContent = "User";
+      }
+    });
 
-    function logout() {
-      localStorage.removeItem("currentUser");
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
       window.location.href = "login.html";
+    });
+
+    // ======================== INDEXED DB (Books – read-only) ========================
+    const DB_NAME = "LibraryAdminDB";
+    const DB_VERSION = 1;
+    const STORE_NAME = "pdf_documents";
+    let dbInstance = null;
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        if (dbInstance && dbInstance.name === DB_NAME) { resolve(dbInstance); return; }
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onerror = e => reject("DB error");
+        req.onsuccess = e => { dbInstance = e.target.result; resolve(dbInstance); };
+        req.onupgradeneeded = e => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+        };
+      });
     }
 
-    // ---------- PHYSICS WIDGETS (unchanged from original) ----------
-    (function() {
-      // 1) GAMMA FACTOR CANVAS
-      const canvas = document.getElementById('gammaCanvas');
-      const ctx = canvas.getContext('2d');
-      
-      function resizeCanvas() {
-        const container = canvas.parentElement;
-        const containerWidth = container.clientWidth;
-        canvas.width = containerWidth;
-        canvas.height = 240;
-        drawGammaCurve();
-      }
-      
-      function drawGammaCurve() {
-        if (!ctx) return;
-        const w = canvas.width;
-        const h = canvas.height;
-        ctx.clearRect(0, 0, w, h);
-        
-        // grid
-        ctx.strokeStyle = 'rgba(0,224,255,0.2)';
-        ctx.lineWidth = 0.5;
-        for (let i = 0; i <= 10; i++) {
-          const x = (i / 10) * w;
-          ctx.beginPath();
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, h);
-          ctx.stroke();
-          const y = (i / 10) * h;
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(w, y);
-          ctx.stroke();
-        }
-        
-        // axes
-        ctx.beginPath();
-        ctx.strokeStyle = '#00e0ff';
-        ctx.lineWidth = 1.5;
-        ctx.moveTo(0, h - 20);
-        ctx.lineTo(w, h - 20);
-        ctx.moveTo(40, 0);
-        ctx.lineTo(40, h);
-        ctx.stroke();
-        
-        // labels
-        ctx.fillStyle = '#9ca3af';
-        ctx.font = '10px "Inter"';
-        ctx.fillText('v/c →', w - 30, h - 8);
-        ctx.fillText('γ', 15, 20);
-        
-        // draw γ = 1 / sqrt(1 - x^2)
-        ctx.beginPath();
-        ctx.strokeStyle = '#a855f7';
-        ctx.lineWidth = 3;
-        let first = true;
-        for (let px = 0; px <= w; px++) {
-          const vc = px / w; // 0 to 1
-          let gamma = 1;
-          if (vc < 0.99) {
-            gamma = 1 / Math.sqrt(1 - vc * vc);
-          } else if (vc >= 0.99) {
-            gamma = 1 / Math.sqrt(1 - 0.99*0.99);
-            if(vc > 0.995) gamma = 7.0888 + (vc-0.995)*50;
-          }
-          const yVal = h - 20 - (gamma / 12) * (h - 40);
-          const clampedY = Math.min(h - 20, Math.max(20, yVal));
-          if (first) {
-            ctx.moveTo(px, clampedY);
-            first = false;
-          } else {
-            ctx.lineTo(px, clampedY);
-          }
-        }
-        ctx.stroke();
-        
-        ctx.fillStyle = '#f59e0b';
-        ctx.fillText('asymptote at v→c', w-100, 40);
-      }
-      
-      window.addEventListener('resize', () => { resizeCanvas(); });
-      resizeCanvas();
-      
-      document.getElementById('updateGammaBtn')?.addEventListener('click', () => {
-        const flash = document.createElement('div');
-        flash.style.position = 'fixed';
-        flash.style.top = '50%';
-        flash.style.left = '50%';
-        flash.style.width = '80px';
-        flash.style.height = '80px';
-        flash.style.background = 'radial-gradient(circle, #00e0ff, transparent)';
-        flash.style.borderRadius = '50%';
-        flash.style.transform = 'translate(-50%, -50%) scale(0)';
-        flash.style.pointerEvents = 'none';
-        flash.style.zIndex = '999';
-        flash.style.transition = 'transform 0.4s ease-out, opacity 0.3s';
-        document.body.appendChild(flash);
-        requestAnimationFrame(() => {
-          flash.style.transform = 'translate(-50%, -50%) scale(4)';
-          flash.style.opacity = '0';
-        });
-        setTimeout(() => flash.remove(), 400);
-        drawGammaCurve();
+    async function getAllPDFs() {
+      const db = await openDatabase();
+      return new Promise((res, rej) => {
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.getAll();
+        req.onsuccess = () => res(req.result || []);
+        req.onerror = e => rej(e);
       });
-      
-      // 2) E = mc² interactive
-      const massInput = document.getElementById('massInput');
-      const energyOutput = document.getElementById('energyOutput');
-      const calcBtn = document.getElementById('calcEnergyBtn');
-      const c = 299792458;
-      
-      function updateEnergy() {
-        let m = parseFloat(massInput.value);
-        if (isNaN(m)) m = 0;
-        const energyJoules = m * c * c;
-        const exponent = Math.floor(Math.log10(energyJoules));
-        const mantissa = energyJoules / Math.pow(10, exponent);
-        if (energyJoules >= 1e15) {
-          energyOutput.innerText = `${mantissa.toFixed(3)} × 10^${exponent} J`;
-        } else {
-          energyOutput.innerText = `${energyJoules.toExponential(3)} J`;
-        }
-        createRipple(calcBtn);
-      }
-      
-      function createRipple(el) {
-        const rect = el.getBoundingClientRect();
-        const ripple = document.createElement('span');
-        const diameter = Math.max(rect.width, rect.height);
-        ripple.style.width = ripple.style.height = `${diameter}px`;
-        ripple.style.left = `${rect.left + rect.width/2 - diameter/2}px`;
-        ripple.style.top = `${rect.top + rect.height/2 - diameter/2}px`;
-        ripple.classList.add('ripple');
-        document.body.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 600);
-      }
-      
-      calcBtn.addEventListener('click', () => updateEnergy());
-      massInput.addEventListener('input', updateEnergy);
-      updateEnergy();
-      
-      // 3) Uncertainty simulation
-      const uncertaintySpan = document.getElementById('uncertaintyVal');
-      const uncertaintyBar = document.getElementById('uncertaintyBar');
-      function randomizeUncertainty() {
-        const minUnc = 0.32;
-        const maxUnc = 0.89;
-        const val = (Math.random() * (maxUnc - minUnc) + minUnc).toFixed(3);
-        uncertaintySpan.innerText = val;
-        const percent = (val / 0.89) * 100;
-        uncertaintyBar.style.width = `${percent}%`;
-      }
-      setInterval(randomizeUncertainty, 2800);
-      randomizeUncertainty();
-      
-      // 4) dynamic glare on phys cards
-      const cards = document.querySelectorAll('.phys-card');
-      cards.forEach(card => {
-        card.addEventListener('mousemove', (e) => {
-          const rect = card.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          card.style.setProperty('--x', `${x}px`);
-          card.style.setProperty('--y', `${y}px`);
-        });
-      });
-      
-      // canvas click to show gamma value
-      canvas.addEventListener('click', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const ratio = x / rect.width;
-        const vc = Math.min(0.99, Math.max(0, ratio));
-        const gamma = 1 / Math.sqrt(1 - vc*vc);
-        const toast = document.createElement('div');
-        toast.innerText = `γ = ${gamma.toFixed(3)} at v/c = ${vc.toFixed(3)}`;
-        toast.style.position = 'fixed';
-        toast.style.bottom = '20px';
-        toast.style.left = '20px';
-        toast.style.background = 'rgba(0,0,0,0.7)';
-        toast.style.backdropFilter = 'blur(12px)';
-        toast.style.padding = '8px 18px';
-        toast.style.borderRadius = '40px';
-        toast.style.borderLeft = `4px solid #a855f7`;
-        toast.style.fontSize = '0.8rem';
-        toast.style.zIndex = '999';
-        toast.style.color = '#eef2ff';
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2000);
-      });
-    })();
+    }
 
-    // Load dashboard data
-    loadDashboard();
+    async function getPDFBlobById(id) {
+      const db = await openDatabase();
+      return new Promise((res, rej) => {
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.get(id);
+        req.onsuccess = () => {
+          if (req.result && req.result.fileData) res(new Blob([req.result.fileData], { type: "application/pdf" }));
+          else rej("No data");
+        };
+        req.onerror = e => rej(e);
+      });
+    }
+
+    function formatSize(bytes) { if (!bytes) return '0 KB'; const k = 1024; const sizes = ['Bytes','KB','MB']; const i = Math.floor(Math.log(bytes)/Math.log(k)); return parseFloat((bytes/Math.pow(k,i)).toFixed(1)) + ' ' + sizes[i]; }
+    function formatDate(iso) { if(!iso) return ''; return new Date(iso).toLocaleDateString() + ' ' + new Date(iso).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    async function renderBookLibrary() {
+      const books = await getAllPDFs();
+      const total = books.length;
+      document.getElementById('totalBooksStat').innerText = total;
+      document.getElementById('bookCountBadge').innerText = `${total} item${total!==1?'s':''}`;
+      if (books.length > 0) {
+        const last = books.sort((a,b)=>new Date(b.uploadedAt)-new Date(a.uploadedAt))[0];
+        document.getElementById('lastUploadStat').innerHTML = `<span title="${last.name}">${last.name.substring(0,20)}${last.name.length>20?'...':''}</span>`;
+      } else { document.getElementById('lastUploadStat').innerHTML = '—'; }
+      const container = document.getElementById('booksContainer');
+      if (books.length === 0) { container.innerHTML = `<div class="text-center py-8 text-slate-400"><i class="fas fa-folder-open"></i> No PDFs uploaded yet</div>`; return; }
+      container.innerHTML = `<div class="space-y-2">` + books.map(book => `
+        <div class="flex flex-wrap sm:flex-nowrap justify-between items-center p-3 bg-white rounded-lg border border-slate-100 hover:shadow-sm">
+          <div class="flex items-center gap-3 min-w-0 flex-1"><i class="fas fa-file-pdf text-red-500 text-xl"></i><div class="truncate"><p class="font-medium text-slate-700 truncate">${escapeHtml(book.name)}</p><p class="text-xs text-slate-400">${formatSize(book.size)} · ${formatDate(book.uploadedAt)}</p></div></div>
+          <div class="flex gap-2 mt-2 sm:mt-0"><button class="viewBookBtn text-blue-600 hover:bg-blue-50 p-1.5 rounded" data-id="${book.id}"><i class="fas fa-eye"></i></button><button class="downloadBookBtn text-indigo-600 hover:bg-indigo-50 p-1.5 rounded" data-id="${book.id}"><i class="fas fa-download"></i></button></div>
+        </div>`).join('') + `</div>`;
+      attachBookEvents();
+    }
+
+    function attachBookEvents() {
+      document.querySelectorAll('.viewBookBtn').forEach(btn => btn.addEventListener('click', async e => { const id = parseInt(btn.dataset.id); const blob = await getPDFBlobById(id); const url = URL.createObjectURL(blob); window.open(url, '_blank'); setTimeout(()=>URL.revokeObjectURL(url), 60000); }));
+      document.querySelectorAll('.downloadBookBtn').forEach(btn => btn.addEventListener('click', async e => { const id = parseInt(btn.dataset.id); const blob = await getPDFBlobById(id); const books=await getAllPDFs(); const name=books.find(b=>b.id===id)?.name||'document.pdf'; const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),100); }));
+    }
+
+    document.getElementById('refreshLibraryBtn').addEventListener('click', () => renderBookLibrary());
+
+    // ======================== REAL-TIME PRESENCE (BroadcastChannel) ========================
+    const TAB_ID = crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(36).substr(2,6);
+    let currentUserName = localStorage.getItem('dashboard_username') || `User_${TAB_ID.slice(0,4)}`;
+    let usersMap = new Map();
+    const channel = new BroadcastChannel('livewire_user_presence');
+
+    function broadcastPresence() {
+      channel.postMessage({ type: 'HEARTBEAT', userId: TAB_ID, name: currentUserName, timestamp: Date.now(), online: true });
+      updateSelfMap(true, Date.now());
+    }
+    function updateSelfMap(online, timestamp) {
+      usersMap.set(TAB_ID, { userId: TAB_ID, name: currentUserName, online: online, lastSeen: timestamp, lastHeartbeatTime: timestamp });
+      renderUserList();
+    }
+    function handleChannelMessage(ev) {
+      const msg = ev.data;
+      if (!msg || !msg.userId) return;
+      const { userId, name, timestamp, type } = msg;
+      if (type === 'HEARTBEAT') {
+        const existing = usersMap.get(userId) || {};
+        usersMap.set(userId, { userId, name: name || 'Anonymous', online: true, lastSeen: timestamp, lastHeartbeatTime: timestamp });
+        renderUserList();
+      } else if (type === 'NAME_UPDATE') {
+        const user = usersMap.get(userId);
+        if (user) { user.name = name; usersMap.set(userId, user); renderUserList(); }
+      } else if (type === 'USER_OFFLINE') {
+        const user = usersMap.get(userId);
+        if (user) { user.online = false; user.lastSeen = timestamp; usersMap.set(userId, user); renderUserList(); }
+      }
+    }
+    function pruneStaleUsers() {
+      const now = Date.now();
+      let changed = false;
+      for (let [id, user] of usersMap.entries()) {
+        if (id === TAB_ID) continue;
+        if (user.online && (now - (user.lastHeartbeatTime || 0) > 12000)) {
+          user.online = false; user.lastSeen = user.lastHeartbeatTime; changed = true;
+        }
+      }
+      if (changed) renderUserList();
+    }
+    function broadcastNameChange(newName) {
+      channel.postMessage({ type: 'NAME_UPDATE', userId: TAB_ID, name: newName, timestamp: Date.now() });
+      const self = usersMap.get(TAB_ID);
+      if (self) { self.name = newName; usersMap.set(TAB_ID, self); renderUserList(); }
+    }
+    function sendOfflineSignal() { channel.postMessage({ type: 'USER_OFFLINE', userId: TAB_ID, timestamp: Date.now() }); }
+    function renderUserList() {
+      const users = Array.from(usersMap.values());
+      const onlineCount = users.filter(u => u.online).length;
+      document.getElementById('onlineUsersStat').innerText = onlineCount;
+      document.getElementById('totalUsersStat').innerText = users.length;
+      document.getElementById('myPresenceName').innerText = currentUserName;
+      const container = document.getElementById('liveUsersList');
+      if (users.length === 0) { container.innerHTML = '<div class="text-center py-4 text-slate-400 text-sm">No active sessions</div>'; return; }
+      const sorted = [...users].sort((a,b)=> (b.online?1:0)-(a.online?1:0));
+      container.innerHTML = `<div class="space-y-2">` + sorted.map(u => `
+        <div class="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50">
+          <div class="flex items-center gap-2"><span class="status-dot ${u.online ? 'online' : 'offline'}"></span><span class="text-sm font-medium ${u.userId === TAB_ID ? 'text-indigo-600' : 'text-slate-700'}">${escapeHtml(u.name)}</span>${u.userId === TAB_ID ? '<span class="text-[10px] bg-indigo-100 px-1.5 rounded-full">you</span>' : ''}</div>
+          <span class="text-xs text-slate-400">${u.online ? 'online now' : 'last seen ' + formatLastSeen(u.lastSeen)}</span>
+        </div>
+      `).join('') + `</div>`;
+    }
+    function formatLastSeen(ts) { if(!ts) return 'unknown'; const diff = Math.floor((Date.now()-ts)/1000); if(diff<5) return 'just now'; if(diff<60) return `${diff}s ago`; const mins=Math.floor(diff/60); if(mins<60) return `${mins}m ago`; return new Date(ts).toLocaleTimeString(); }
+
+    function initPresence() {
+      usersMap.set(TAB_ID, { userId: TAB_ID, name: currentUserName, online: true, lastSeen: Date.now(), lastHeartbeatTime: Date.now() });
+      renderUserList();
+      setInterval(() => { broadcastPresence(); }, 5000);
+      setInterval(() => pruneStaleUsers(), 4000);
+      channel.onmessage = handleChannelMessage;
+      window.addEventListener('beforeunload', () => sendOfflineSignal());
+      broadcastPresence();
+    }
+
+    function promptSetName() {
+      const newName = prompt('Enter your display name (visible to all):', currentUserName);
+      if (newName && newName.trim()) {
+        currentUserName = newName.trim().substring(0, 30);
+        localStorage.setItem('dashboard_username', currentUserName);
+        broadcastNameChange(currentUserName);
+        broadcastPresence();
+        renderUserList();
+      }
+    }
+    document.getElementById('setNameQuickBtn').addEventListener('click', promptSetName);
+
+    // Clock
+    function updateClock() { document.getElementById('liveClock').innerText = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+    setInterval(updateClock, 1000); updateClock();
+
+    // Initialise
+    openDatabase().then(() => {
+      renderBookLibrary();
+    });
+    initPresence();
   </script>
 </body>
 </html>
