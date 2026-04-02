@@ -1,50 +1,386 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Users</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        .user-card { background: rgba(255,255,255,0.1); margin: 10px; padding: 15px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .user-card button { width: auto; padding: 8px 16px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>LiveWire | Real‑time User List</title>
+  <!-- TailwindCSS + Font Awesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    .user-card {
+      transition: all 0.2s ease;
+    }
+    .online-badge {
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+    .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .status-dot.online {
+      background-color: #22c55e;
+      box-shadow: 0 0 0 2px rgba(34,197,94,0.2);
+    }
+    .status-dot.offline {
+      background-color: #9ca3af;
+    }
+  </style>
 </head>
-<body>
-    <div class="glass-container">
-        <h1>👥 All Students</h1>
-        <div id="userList"></div>
-        <a href="dashboard.html" class="back-btn">← Back</a>
+<body class="bg-gradient-to-br from-indigo-100 via-white to-purple-50 font-sans antialiased">
+
+<div class="max-w-5xl mx-auto px-4 py-6 md:py-10">
+  <!-- header -->
+  <div class="flex flex-wrap justify-between items-center mb-6 border-b border-indigo-200 pb-4">
+    <div class="flex items-center gap-3">
+      <div class="bg-indigo-700 text-white p-3 rounded-2xl shadow-md">
+        <i class="fas fa-users-viewfinder text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold text-slate-800">👥 Live Roster</h1>
+        <p class="text-slate-500 text-sm">Real‑time presence · school users only</p>
+      </div>
     </div>
-    <script src="script.js"></script>
-    <script>
-        function loadUsers() {
-            const container = document.getElementById("userList");
-            if (!container) return;
-            const users = JSON.parse(localStorage.getItem("school_users") || "[]");
-            const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-            const students = users.filter(u => u.role === "student" && u.id !== currentUser.id);
-            container.innerHTML = "";
-            students.forEach(user => {
-                container.innerHTML += `
-                    <div class="user-card">
-                        <span>${user.name} (${user.email})</span>
-                        <button onclick="startChat('${user.id}', '${user.name}')">💬 Message</button>
-                    </div>
-                `;
-            });
-        }
+    <div class="mt-2 sm:mt-0 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm text-indigo-700 text-sm font-medium">
+      <i class="fas fa-globe"></i> <span id="activeTabsCount">0</span> active now
+    </div>
+  </div>
 
-        function startChat(otherUserId, otherUserName) {
-            sessionStorage.setItem("chatWithId", otherUserId);
-            sessionStorage.setItem("chatWithName", otherUserName);
-            window.location.href = "messages.html";
-        }
+  <!-- user list container -->
+  <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+    <div class="bg-gradient-to-r from-indigo-50 to-white px-5 py-3 border-b border-indigo-100 flex justify-between items-center flex-wrap gap-2">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-user-friends text-indigo-600"></i>
+        <h2 class="font-semibold text-slate-700">All users</h2>
+        <span id="totalUsersBadge" class="bg-slate-200 text-slate-700 text-xs rounded-full px-2 py-0.5">0 total</span>
+      </div>
+      <div class="text-xs text-slate-400 flex gap-3">
+        <span><i class="fas fa-circle text-green-500 text-[10px]"></i> online</span>
+        <span><i class="fas fa-circle text-gray-400 text-[10px]"></i> offline</span>
+      </div>
+    </div>
 
-        if (!localStorage.getItem("currentUser")) {
-            window.location.href = "login.html";
-        } else {
-            loadUsers();
+    <div id="usersContainer" class="max-h-[60vh] overflow-y-auto p-4 divide-y divide-slate-100">
+      <!-- dynamic content -->
+    </div>
+  </div>
+
+  <div class="mt-6 text-xs text-slate-400 border-t border-indigo-100 pt-5 flex justify-between items-center flex-wrap gap-2">
+    <span><i class="fas fa-broadcast-tower"></i> Real‑time sync across tabs · status based on active sessions</span>
+    <span><i class="fas fa-user-check"></i> Only registered school users appear</span>
+  </div>
+</div>
+
+<script>
+  // ---------- SCHOOL PLATFORM INTEGRATION ----------
+  const USERS_KEY = 'school_users';
+  const CURRENT_USER_KEY = 'currentUser';
+
+  // Get all registered users from localStorage
+  function getAllSchoolUsers() {
+    const stored = localStorage.getItem(USERS_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    return []; // no demo accounts
+  }
+
+  // Get currently logged-in user
+  function getCurrentUser() {
+    const stored = localStorage.getItem(CURRENT_USER_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    return null;
+  }
+
+  // ---------- REAL-TIME PRESENCE SYSTEM ----------
+  // Each tab broadcasts its user ID (if logged in) via BroadcastChannel.
+  // We maintain a map: userId -> { online: true, lastSeen: timestamp, name, role, email }
+  // If no heartbeat from any tab for a user within 12 seconds, they become offline.
+
+  const channel = new BroadcastChannel('school_user_presence');
+  let heartbeatInterval = null;
+
+  // Map of user presence data (key: user id, value: presence object)
+  let presenceMap = new Map();
+
+  // Current logged-in user (if any)
+  let currentUser = getCurrentUser();
+  let currentUserId = currentUser ? currentUser.id : null;
+  let currentUserName = currentUser ? currentUser.name : null;
+
+  // DOM elements
+  const usersContainer = document.getElementById('usersContainer');
+  const totalUsersBadge = document.getElementById('totalUsersBadge');
+  const activeTabsCountSpan = document.getElementById('activeTabsCount');
+
+  // Helper: format last seen time
+  function formatLastSeen(timestamp) {
+    if (!timestamp) return 'unknown';
+    const now = Date.now();
+    const diffSec = Math.floor((now - timestamp) / 1000);
+    if (diffSec < 5) return 'just now';
+    if (diffSec < 60) return `${diffSec} sec ago`;
+    const mins = Math.floor(diffSec / 60);
+    if (mins < 60) return `${mins} min ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    return new Date(timestamp).toLocaleDateString();
+  }
+
+  // Render the user list from presenceMap + school users data
+  function renderUserList() {
+    const allSchoolUsers = getAllSchoolUsers();
+    if (allSchoolUsers.length === 0) {
+      usersContainer.innerHTML = `
+        <div class="text-center py-12 text-slate-400 flex flex-col items-center gap-2">
+          <i class="fas fa-user-slash text-5xl opacity-40"></i>
+          <p>No users registered yet.</p>
+          <p class="text-xs">Users will appear here after they register and log in.</p>
+        </div>
+      `;
+      totalUsersBadge.innerText = '0 total';
+      activeTabsCountSpan.innerText = '0';
+      return;
+    }
+
+    // Build presence-enhanced user list
+    const enhancedUsers = allSchoolUsers.map(user => {
+      const presence = presenceMap.get(user.id);
+      if (presence) {
+        return {
+          ...user,
+          online: presence.online,
+          lastSeen: presence.lastSeen,
+          lastHeartbeat: presence.lastHeartbeat
+        };
+      } else {
+        // No active presence → offline, last seen unknown (or we could use last login? but not stored)
+        return {
+          ...user,
+          online: false,
+          lastSeen: null
+        };
+      }
+    });
+
+    // Sort: online first, then by name
+    enhancedUsers.sort((a, b) => {
+      if (a.online === b.online) return a.name.localeCompare(b.name);
+      return a.online ? -1 : 1;
+    });
+
+    const onlineCount = enhancedUsers.filter(u => u.online).length;
+    totalUsersBadge.innerText = `${enhancedUsers.length} user${enhancedUsers.length !== 1 ? 's' : ''}`;
+    activeTabsCountSpan.innerText = onlineCount;
+
+    let html = `<div class="space-y-2">`;
+    for (const user of enhancedUsers) {
+      const isOnline = user.online === true;
+      const isCurrentUser = (currentUserId === user.id);
+      const lastSeenText = isOnline ? 'online now' : (user.lastSeen ? `last seen ${formatLastSeen(user.lastSeen)}` : 'never seen');
+      const roleIcon = user.role === 'admin' ? '<i class="fas fa-crown text-amber-500"></i>' : '<i class="fas fa-user-graduate text-indigo-400"></i>';
+      html += `
+        <div class="user-card bg-white rounded-xl border ${isOnline ? 'border-green-200 shadow-sm' : 'border-slate-200'} p-4 transition-all hover:shadow-md">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold shadow-sm">
+                  ${escapeHtml(user.name.charAt(0).toUpperCase())}
+                </div>
+                <span class="status-dot absolute -bottom-0.5 -right-0.5 ${isOnline ? 'online' : 'offline'} ring-2 ring-white"></span>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold text-slate-800">${escapeHtml(user.name)}</span>
+                  ${isCurrentUser ? '<span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">you</span>' : ''}
+                  ${roleIcon}
+                </div>
+                <div class="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
+                  <i class="far fa-envelope"></i> ${escapeHtml(user.email)}
+                  <span class="mx-1">•</span>
+                  <i class="far fa-clock"></i> ${lastSeenText}
+                </div>
+              </div>
+            </div>
+            <div class="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
+              ${user.role === 'admin' ? 'Admin' : 'Student'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    html += `</div>`;
+    usersContainer.innerHTML = html;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // Broadcast heartbeat for current user (if logged in)
+  function broadcastHeartbeat() {
+    if (!currentUserId) return;
+    const message = {
+      type: 'HEARTBEAT',
+      userId: currentUserId,
+      name: currentUserName,
+      timestamp: Date.now(),
+      online: true
+    };
+    channel.postMessage(message);
+    // Update own presence locally
+    updatePresence(currentUserId, currentUserName, true, Date.now());
+  }
+
+  // Update presence map for a user
+  function updatePresence(userId, name, online, timestamp) {
+    const existing = presenceMap.get(userId) || {};
+    presenceMap.set(userId, {
+      userId: userId,
+      name: name,
+      online: online,
+      lastSeen: timestamp,
+      lastHeartbeat: timestamp
+    });
+    renderUserList();
+  }
+
+  // Handle incoming messages from other tabs
+  function handleChannelMessage(event) {
+    const msg = event.data;
+    if (!msg || !msg.userId) return;
+
+    const { userId, name, timestamp, type, online } = msg;
+
+    if (type === 'HEARTBEAT') {
+      // Update presence for this user
+      const existing = presenceMap.get(userId) || {};
+      presenceMap.set(userId, {
+        userId: userId,
+        name: name || (existing.name || 'Unknown'),
+        online: true,
+        lastSeen: timestamp,
+        lastHeartbeat: timestamp
+      });
+      renderUserList();
+    } else if (type === 'USER_OFFLINE') {
+      const user = presenceMap.get(userId);
+      if (user) {
+        user.online = false;
+        user.lastSeen = timestamp;
+        presenceMap.set(userId, user);
+        renderUserList();
+      }
+    }
+  }
+
+  // Prune stale users: mark offline if no heartbeat for >12 seconds
+  function pruneStaleUsers() {
+    const now = Date.now();
+    let changed = false;
+    for (let [userId, user] of presenceMap.entries()) {
+      if (user.online === true && (now - user.lastHeartbeat > 12000)) {
+        user.online = false;
+        user.lastSeen = user.lastHeartbeat;
+        changed = true;
+      }
+    }
+    if (changed) renderUserList();
+  }
+
+  // Send offline signal when tab closes
+  function sendOfflineSignal() {
+    if (!currentUserId) return;
+    const message = {
+      type: 'USER_OFFLINE',
+      userId: currentUserId,
+      timestamp: Date.now()
+    };
+    channel.postMessage(message);
+    // Update local presence
+    const user = presenceMap.get(currentUserId);
+    if (user) {
+      user.online = false;
+      user.lastSeen = Date.now();
+      presenceMap.set(currentUserId, user);
+    }
+  }
+
+  // Start heartbeat interval (only if logged in)
+  function startHeartbeat() {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    heartbeatInterval = setInterval(() => {
+      broadcastHeartbeat();
+    }, 5000);
+  }
+
+  // Initialize: load current user, start heartbeat, set up listeners
+  function init() {
+    // Refresh current user from localStorage (in case it changes)
+    currentUser = getCurrentUser();
+    currentUserId = currentUser ? currentUser.id : null;
+    currentUserName = currentUser ? currentUser.name : null;
+
+    if (currentUserId) {
+      startHeartbeat();
+      broadcastHeartbeat(); // immediate
+    }
+
+    // Listen for messages
+    channel.onmessage = handleChannelMessage;
+
+    // Prune stale every 4 seconds
+    setInterval(pruneStaleUsers, 4000);
+
+    // Re-check current user on storage changes (e.g., login/logout in another tab)
+    window.addEventListener('storage', (e) => {
+      if (e.key === CURRENT_USER_KEY) {
+        const newUser = getCurrentUser();
+        if (newUser && (!currentUserId || newUser.id !== currentUserId)) {
+          // New login or switched user
+          currentUser = newUser;
+          currentUserId = currentUser.id;
+          currentUserName = currentUser.name;
+          startHeartbeat();
+          broadcastHeartbeat();
+        } else if (!newUser && currentUserId) {
+          // Logged out
+          sendOfflineSignal();
+          if (heartbeatInterval) clearInterval(heartbeatInterval);
+          currentUserId = null;
+          currentUserName = null;
         }
-    </script>
+        renderUserList(); // refresh UI
+      }
+    });
+
+    // Initial render
+    renderUserList();
+  }
+
+  // Before unload, send offline signal
+  window.addEventListener('beforeunload', () => {
+    sendOfflineSignal();
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+  });
+
+  // Start
+  init();
+</script>
 </body>
 </html>
