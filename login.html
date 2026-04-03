@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>⚡ SMUK LOGIN</title>
+  <title> SMUK Login </title>
   <style>
-    /* (keep all your existing styles unchanged) */
+    /* (keep your existing cyber styles) */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       min-height: 100vh;
@@ -71,7 +71,7 @@
 
   <div class="container" id="loginBox">
     <div class="scanner" id="scannerLine"></div>
-    <h2>⚡SMUK LOGIN</h2>
+    <h2>⚡ SMUK LOGIN</h2>
     <div class="ai-text" id="aiMessage">⟳ booting AI core...</div>
 
     <div class="input-group">
@@ -90,7 +90,6 @@
     <p style="color:#aaa; margin-top:15px; font-size:0.8rem;">Don't have an account? <a href="register.html" style="color:#0ff;">Register</a></p>
   </div>
 
-  <!-- Firebase SDKs (using Realtime Database) -->
   <script type="importmap">
     {
       "imports": {
@@ -104,7 +103,7 @@
   <script type="module">
     import { initializeApp } from "firebase/app";
     import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-    import { getDatabase, ref, get, child } from "firebase/database";
+    import { getDatabase, ref, get } from "firebase/database";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
@@ -117,6 +116,8 @@
       measurementId: "G-9M8VW7EL0B"
     };
 
+    // Test if Firebase can be reached – simple check
+    console.log("Initializing Firebase...");
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
@@ -190,9 +191,11 @@
           }
         }, 1000);
       } catch (error) {
-        console.error("Login error:", error);
+        console.error("Login error details:", error);
         let errorMsg = "⛔ ACCESS DENIED · ";
-        if (error.code === "auth/configuration-not-found") {
+        if (error.code === "auth/network-request-failed") {
+          errorMsg = "⚠️ Network error: Cannot reach Firebase. Check your internet connection and try again.";
+        } else if (error.code === "auth/configuration-not-found") {
           errorMsg = "⚠️ Firebase Auth not enabled · Enable Email/Password in Firebase Console";
         } else if (error.code === "auth/user-not-found") {
           errorMsg += "user not found";
