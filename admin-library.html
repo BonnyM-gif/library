@@ -2,544 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>SMUK PDF Library Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Cloud Books</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    body {
-      background: radial-gradient(ellipse at 20% 30%, #0c0f1c, #03050b);
-      font-family: 'Inter', system-ui, sans-serif;
-    }
-    .drop-zone-active {
-      background-color: #eef2ff;
-      border-color: #3b82f6;
-    }
-    .pdf-card {
-      transition: all 0.2s ease;
-    }
-    .pdf-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
-    }
-    .pdf-list-container {
-      max-height: 55vh;
-      overflow-y: auto;
-    }
+    body { background: #f1f5f9; }
+    .card { transition: all 0.2s; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1); }
   </style>
 </head>
-<body class="antialiased">
-<div class="max-w-6xl mx-auto px-4 py-6 md:py-8">
-  <!-- Header with back button -->
-  <div class="flex flex-wrap justify-between items-center border-b border-slate-700 pb-4 mb-6">
-    <div class="flex items-center gap-3">
-      <a href="admin.html" class="text-indigo-400 hover:text-indigo-300 transition text-sm flex items-center gap-1">
-        <i class="fas fa-arrow-left"></i> Back to Admin
-      </a>
-      <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-sm">
-        <i class="fas fa-landmark text-xl"></i>
-      </div>
-      <div>
-        <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">PDF Library <span class="text-indigo-400">Manager</span></h1>
-        <p class="text-slate-400 text-sm mt-0.5">Upload PDFs – they'll appear in the student library</p>
-      </div>
+<body class="p-6">
+<div class="max-w-6xl mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-indigo-800">📚 SMUK Book Manager</h1>
+    <a href="admin.html" class="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300">← Back to Admin</a>
+  </div>
+
+  <!-- Add / Edit Form -->
+  <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+    <h2 class="text-xl font-semibold mb-4" id="formTitle">Add New Book</h2>
+    <input type="hidden" id="bookId">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <input type="text" id="title" placeholder="Title *" class="border rounded-lg p-2">
+      <input type="text" id="author" placeholder="Author *" class="border rounded-lg p-2">
+      <input type="text" id="year" placeholder="Year (optional)" class="border rounded-lg p-2">
+      <input type="url" id="url" placeholder="Book URL (PDF or external link) *" class="border rounded-lg p-2">
+      <select id="type" class="border rounded-lg p-2">
+        <option value="link">🔗 External Link</option>
+        <option value="pdf">📄 PDF File (URL)</option>
+      </select>
+      <textarea id="description" rows="2" placeholder="Description (optional)" class="border rounded-lg p-2"></textarea>
     </div>
-    <div class="mt-2 sm:mt-0 flex items-center gap-2 bg-slate-800/50 backdrop-blur px-3 py-1.5 rounded-full text-slate-300 text-sm">
-      <i class="fas fa-database text-indigo-400"></i>
-      <span>local storage · IndexedDB</span>
+    <div class="mt-4 flex gap-2">
+      <button id="saveBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">Save Book</button>
+      <button id="cancelBtn" class="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 hidden">Cancel</button>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-    <div class="lg:col-span-1">
-      <div class="bg-slate-800/50 backdrop-blur rounded-2xl shadow-md border border-slate-700 overflow-hidden">
-        <div class="bg-slate-800/70 px-5 py-3 border-b border-slate-700">
-          <h2 class="font-semibold text-slate-200 flex items-center gap-2"><i class="fas fa-cloud-upload-alt text-indigo-400"></i> Upload PDF</h2>
-        </div>
-        <div class="p-5">
-          <div id="dropZone" class="border-2 border-dashed border-slate-600 rounded-xl p-6 text-center cursor-pointer transition bg-slate-800/30 hover:bg-indigo-900/20">
-            <i class="fas fa-file-pdf text-4xl text-indigo-400 mb-2"></i>
-            <p class="text-slate-300 font-medium">Drag & drop PDF here</p>
-            <p class="text-xs text-slate-400 mt-1">or click to browse</p>
-            <input type="file" id="fileInput" accept="application/pdf" multiple class="hidden" />
-            <button id="browseBtn" class="mt-3 text-sm bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition inline-flex items-center gap-1 shadow-sm"><i class="fas fa-folder-open"></i> Browse files</button>
-          </div>
-          <div class="mt-4 text-xs text-slate-400 flex justify-between items-center">
-            <span><i class="far fa-check-circle text-green-400"></i> PDF only, max 20MB each</span>
-            <span><i class="fas fa-layer-group"></i> multiple uploads allowed</span>
-          </div>
-          <div id="uploadStatus" class="mt-3 text-sm font-medium text-center"></div>
-        </div>
-      </div>
+  <!-- Books List (real-time) -->
+  <div class="bg-white rounded-xl shadow-md p-6">
+    <h2 class="text-xl font-semibold mb-4">Existing Books</h2>
+    <div id="booksList" class="space-y-2">
+      <div class="text-center py-8 text-gray-500">Loading books...</div>
     </div>
-
-    <div class="lg:col-span-2">
-      <div class="bg-slate-800/50 backdrop-blur rounded-2xl shadow-md border border-slate-700 p-5 flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-          <div class="bg-indigo-900/50 p-3 rounded-xl">
-            <i class="fas fa-book-open text-indigo-400 text-2xl"></i>
-          </div>
-          <div>
-            <p class="text-slate-400 text-sm">Total PDF documents</p>
-            <p id="totalCount" class="text-3xl font-bold text-white">0</p>
-          </div>
-        </div>
-        <div class="flex gap-2">
-          <button id="refreshListBtn" class="text-indigo-300 bg-indigo-900/30 px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-800/50 transition flex items-center gap-1"><i class="fas fa-sync-alt"></i> Refresh</button>
-          <button id="deleteAllBtn" class="text-rose-300 bg-rose-900/30 px-4 py-2 rounded-xl text-sm font-medium hover:bg-rose-800/50 transition flex items-center gap-1"><i class="fas fa-trash-alt"></i> Delete all</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="bg-slate-800/50 backdrop-blur rounded-2xl shadow-md border border-slate-700 overflow-hidden">
-    <div class="bg-slate-800/70 px-5 py-3 border-b border-slate-700 flex justify-between items-center flex-wrap gap-2">
-      <div class="flex items-center gap-2">
-        <i class="fas fa-list-ul text-indigo-400"></i>
-        <h2 class="font-semibold text-slate-200">PDF Inventory</h2>
-        <span id="itemCountBadge" class="bg-slate-700 text-slate-300 text-xs rounded-full px-2 py-0.5">0 items</span>
-      </div>
-      <div class="text-xs text-slate-400">
-        <i class="fas fa-info-circle"></i> PDFs appear in student library automatically
-      </div>
-    </div>
-    <div id="pdfListContainer" class="pdf-list-container p-4 divide-y divide-slate-700"></div>
-  </div>
-
-  <div class="mt-6 text-center text-xs text-slate-500 border-t border-slate-700 pt-5">
-    <i class="fas fa-database"></i> PDFs are stored locally and appear in the student library.
   </div>
 </div>
 
-<script>
-  // ---------- IndexedDB Setup ----------
-  const DB_NAME = "LibraryAdminDB";
-  const DB_VERSION = 1;
-  const STORE_NAME = "pdf_documents";
-  const BOOKS_KEY = 'admin_library_books';  // same as admin-library.html
-
-  let dbInstance = null;
-
-  function openDatabase() {
-    return new Promise((resolve, reject) => {
-      if (dbInstance && dbInstance.name === DB_NAME) {
-        resolve(dbInstance);
-        return;
-      }
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
-      request.onerror = () => reject("IndexedDB error: " + request.error);
-      request.onsuccess = () => {
-        dbInstance = request.result;
-        resolve(dbInstance);
-      };
-      request.onupgradeneeded = (event) => {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
-        }
-      };
-    });
-  }
-
-  // Get all PDFs from IndexedDB
-  async function getAllPDFs() {
-    const db = await openDatabase();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([STORE_NAME], "readonly");
-      const store = transaction.objectStore(STORE_NAME);
-      const request = store.getAll();
-      request.onsuccess = () => {
-        const docs = request.result || [];
-        docs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
-        resolve(docs);
-      };
-      request.onerror = (e) => reject(e.target.error);
-    });
-  }
-
-  // Save PDF file (blob) to IndexedDB and add book entry to localStorage
-  async function savePDFToDB(file) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const db = await openDatabase();
-        if (file.type !== "application/pdf") {
-          reject(new Error(`"${file.name}" is not a valid PDF file.`));
-          return;
-        }
-        const MAX_SIZE = 20 * 1024 * 1024;
-        if (file.size > MAX_SIZE) {
-          reject(new Error(`"${file.name}" exceeds 20MB limit.`));
-          return;
-        }
-        const fileData = await file.arrayBuffer();
-        const metadata = {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          uploadedAt: new Date().toISOString(),
-          fileData: fileData,
-        };
-        const transaction = db.transaction([STORE_NAME], "readwrite");
-        const store = transaction.objectStore(STORE_NAME);
-        const addRequest = store.add(metadata);
-        addRequest.onsuccess = async () => {
-          const pdfId = addRequest.result;
-          // Now add a corresponding book entry to localStorage
-          const books = JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]');
-          const newBook = {
-            id: `pdf_${pdfId}`,  // prefix to avoid collision
-            title: file.name.replace(/\.pdf$/i, ''),
-            author: "PDF Document",
-            year: new Date().getFullYear(),
-            description: `Uploaded PDF: ${file.name}`,
-            icon: "📄",
-            type: "pdf",
-            pdfId: pdfId,          // reference to IndexedDB record
-            fileName: file.name,
-          };
-          books.push(newBook);
-          localStorage.setItem(BOOKS_KEY, JSON.stringify(books));
-          resolve({ id: pdfId, name: file.name });
-        };
-        addRequest.onerror = (e) => reject(e.target.error);
-        transaction.onerror = (e) => reject(e.target.error);
-      } catch (err) {
-        reject(err);
-      }
-    });
-  }
-
-  // Delete PDF by id and remove its book entry
-  async function deletePDFById(id) {
-    const db = await openDatabase();
-    return new Promise(async (resolve, reject) => {
-      // First delete from IndexedDB
-      const transaction = db.transaction([STORE_NAME], "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
-      const request = store.delete(id);
-      request.onsuccess = async () => {
-        // Remove the corresponding book entry from localStorage
-        const books = JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]');
-        const filtered = books.filter(book => !(book.type === "pdf" && book.pdfId === id));
-        localStorage.setItem(BOOKS_KEY, JSON.stringify(filtered));
-        resolve(true);
-      };
-      request.onerror = (e) => reject(e.target.error);
-      transaction.onerror = (e) => reject(e.target.error);
-    });
-  }
-
-  // Delete all PDFs
-  async function deleteAllPDFs() {
-    const db = await openDatabase();
-    return new Promise(async (resolve, reject) => {
-      const transaction = db.transaction([STORE_NAME], "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
-      const clearRequest = store.clear();
-      clearRequest.onsuccess = async () => {
-        // Remove all PDF book entries
-        const books = JSON.parse(localStorage.getItem(BOOKS_KEY) || '[]');
-        const filtered = books.filter(book => book.type !== "pdf");
-        localStorage.setItem(BOOKS_KEY, JSON.stringify(filtered));
-        resolve(true);
-      };
-      clearRequest.onerror = (e) => reject(e.target.error);
-    });
-  }
-
-  // Get blob for viewing/downloading
-  async function getPDFBlobById(id) {
-    const db = await openDatabase();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([STORE_NAME], "readonly");
-      const store = transaction.objectStore(STORE_NAME);
-      const request = store.get(id);
-      request.onsuccess = () => {
-        const record = request.result;
-        if (record && record.fileData) {
-          const blob = new Blob([record.fileData], { type: "application/pdf" });
-          resolve(blob);
-        } else {
-          reject(new Error("PDF data not found"));
-        }
-      };
-      request.onerror = (e) => reject(e.target.error);
-    });
-  }
-
-  // ---------- UI Rendering ----------
-  const pdfContainer = document.getElementById("pdfListContainer");
-  const totalCountSpan = document.getElementById("totalCount");
-  const itemCountBadge = document.getElementById("itemCountBadge");
-  const uploadStatusDiv = document.getElementById("uploadStatus");
-
-  function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  }
-
-  function formatDate(isoString) {
-    const date = new Date(isoString);
-    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' });
-  }
-
-  let toastTimeout = null;
-  function showMessage(msg, isError = false) {
-    if (toastTimeout) clearTimeout(toastTimeout);
-    uploadStatusDiv.innerHTML = `<span class="${isError ? 'text-rose-300 bg-rose-900/30' : 'text-emerald-300 bg-emerald-900/30'} px-3 py-1.5 rounded-lg inline-flex items-center gap-1 text-sm shadow-sm"><i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}</span>`;
-    toastTimeout = setTimeout(() => {
-      if (uploadStatusDiv) uploadStatusDiv.innerHTML = "";
-    }, 2800);
-  }
-
-  function escapeHtml(str) {
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    });
-  }
-
-  async function renderPDFList() {
-    try {
-      const allDocs = await getAllPDFs();
-      const count = allDocs.length;
-      totalCountSpan.innerText = count;
-      itemCountBadge.innerText = `${count} item${count !== 1 ? 's' : ''}`;
-      if (count === 0) {
-        pdfContainer.innerHTML = `
-          <div class="text-center py-12 text-slate-400 flex flex-col items-center gap-2">
-            <i class="fas fa-folder-open text-5xl opacity-40"></i>
-            <p>No PDF documents yet. Upload your first library resource ✨</p>
-          </div>
-        `;
-        return;
-      }
-      let html = `<div class="space-y-2">`;
-      for (const doc of allDocs) {
-        const id = doc.id;
-        const fileName = doc.name;
-        const fileSize = formatFileSize(doc.size);
-        const uploadDate = formatDate(doc.uploadedAt);
-        const safeName = escapeHtml(fileName);
-        html += `
-          <div class="pdf-card bg-slate-800/30 rounded-xl border border-slate-700 p-4 hover:shadow-md transition-all" data-id="${id}">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div class="flex items-start gap-3 flex-1 min-w-0">
-                <div class="bg-rose-900/30 p-2 rounded-lg text-rose-400 flex-shrink-0">
-                  <i class="fas fa-file-pdf text-xl"></i>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <h3 class="font-medium text-slate-200 truncate pr-2" title="${safeName}">${safeName}</h3>
-                  <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400 mt-1">
-                    <span><i class="fas fa-database text-slate-500 text-xs"></i> ${fileSize}</span>
-                    <span><i class="far fa-calendar-alt text-slate-500"></i> ${uploadDate}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="flex gap-2 ml-8 sm:ml-0 flex-shrink-0">
-                <button class="view-pdf-btn text-blue-400 hover:bg-blue-900/30 p-2 rounded-lg transition" data-id="${id}" title="Preview PDF">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button class="download-pdf-btn text-indigo-400 hover:bg-indigo-900/30 p-2 rounded-lg transition" data-id="${id}" title="Download PDF">
-                  <i class="fas fa-download"></i>
-                </button>
-                <button class="delete-pdf-btn text-rose-400 hover:bg-rose-900/30 p-2 rounded-lg transition" data-id="${id}" title="Delete document">
-                  <i class="fas fa-trash-alt"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-      html += `</div>`;
-      pdfContainer.innerHTML = html;
-
-      document.querySelectorAll('.view-pdf-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const id = parseInt(btn.getAttribute('data-id'));
-          viewPDFById(id);
-        });
-      });
-      document.querySelectorAll('.download-pdf-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const id = parseInt(btn.getAttribute('data-id'));
-          downloadPDFById(id);
-        });
-      });
-      document.querySelectorAll('.delete-pdf-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          const id = parseInt(btn.getAttribute('data-id'));
-          if (confirm("Permanently delete this PDF from library? It will also be removed from student view.")) {
-            try {
-              await deletePDFById(id);
-              showMessage("PDF deleted successfully", false);
-              renderPDFList();
-            } catch (err) {
-              showMessage("Delete failed: " + err.message, true);
-            }
-          }
-        });
-      });
-    } catch (error) {
-      console.error(error);
-      showMessage("Error loading PDF list: " + error.message, true);
-      pdfContainer.innerHTML = `<div class="text-center text-rose-400 py-8"><i class="fas fa-exclamation-triangle"></i> Failed to load library.</div>`;
-    }
-  }
-
-  async function viewPDFById(id) {
-    try {
-      const blob = await getPDFBlobById(id);
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } catch (err) {
-      showMessage("Cannot open PDF: " + err.message, true);
-    }
-  }
-
-  async function downloadPDFById(id) {
-    try {
-      const blob = await getPDFBlobById(id);
-      const allDocs = await getAllPDFs();
-      const doc = allDocs.find(d => d.id === id);
-      const fileName = doc ? doc.name : `library_document_${id}.pdf`;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      showMessage(`Downloaded: ${fileName}`, false);
-    } catch (err) {
-      showMessage("Download failed: " + err.message, true);
-    }
-  }
-
-  async function handleUploadFiles(files) {
-    if (!files || files.length === 0) return;
-    let successCount = 0;
-    let failCount = 0;
-    for (let file of files) {
-      try {
-        await savePDFToDB(file);
-        successCount++;
-      } catch (err) {
-        failCount++;
-        showMessage(err.message, true);
-      }
-    }
-    if (successCount > 0) {
-      showMessage(`✅ ${successCount} PDF(s) uploaded and added to library.`, false);
-      await renderPDFList();
-    } else if (failCount > 0 && successCount === 0) {
-      showMessage(`No valid PDF uploaded. Check format/size.`, true);
-    } else {
-      if (failCount) showMessage(`Uploaded ${successCount}, ${failCount} failed.`, false);
-    }
-  }
-
-  function setupDragAndDrop() {
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const browseBtn = document.getElementById('browseBtn');
-
-    dropZone.addEventListener('click', (e) => {
-      if (e.target === browseBtn || browseBtn.contains(e.target)) {
-        e.stopPropagation();
-      }
-      fileInput.click();
-    });
-    browseBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      fileInput.click();
-    });
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files.length) {
-        handleUploadFiles(Array.from(e.target.files));
-        fileInput.value = '';
-      }
-    });
-
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('drop-zone-active');
-    });
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('drop-zone-active');
-    });
-    dropZone.addEventListener('drop', async (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('drop-zone-active');
-      const files = e.dataTransfer.files;
-      if (files.length) {
-        const pdfFiles = Array.from(files).filter(f => f.type === 'application/pdf');
-        if (pdfFiles.length === 0) {
-          showMessage("Only PDF files are allowed in the library.", true);
-          return;
-        }
-        await handleUploadFiles(pdfFiles);
-      }
-    });
-  }
-
-  async function setupGlobalActions() {
-    const refreshBtn = document.getElementById('refreshListBtn');
-    const deleteAllBtn = document.getElementById('deleteAllBtn');
-    refreshBtn.addEventListener('click', async () => {
-      await renderPDFList();
-      showMessage("Library refreshed", false);
-    });
-    deleteAllBtn.addEventListener('click', async () => {
-      const confirmDelete = confirm("⚠️ DELETE ALL PDFs? This action cannot be undone.");
-      if (confirmDelete) {
-        try {
-          await deleteAllPDFs();
-          await renderPDFList();
-          showMessage("All PDF documents have been removed.", false);
-        } catch (err) {
-          showMessage("Error clearing library: " + err.message, true);
-        }
-      }
-    });
-  }
-
-  async function init() {
-    try {
-      await openDatabase();
-      setupDragAndDrop();
-      await renderPDFList();
-      setupGlobalActions();
-    } catch (error) {
-      console.error(error);
-      uploadStatusDiv.innerHTML = `<span class="text-rose-300 bg-rose-900/30 p-2 rounded">⚠️ Failed to initialize local database. Storage may be disabled.</span>`;
-    }
-  }
-
-  init();
-</script>
-  <script type="module">
-  // Import the functions you need from the SDKs you need
+<script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import { getDatabase, ref, push, set, remove, onValue } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
     apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
     authDomain: "smuk-library.firebaseapp.com",
+    databaseURL: "https://smuk-library-default-rtdb.firebaseio.com/",
     projectId: "smuk-library",
     storageBucket: "smuk-library.firebasestorage.app",
     messagingSenderId: "101518774671",
@@ -547,9 +65,157 @@
     measurementId: "G-9M8VW7EL0B"
   };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  const booksRef = ref(db, 'books');
+
+  let currentUserRole = null;
+  let editingId = null;
+
+  // DOM elements
+  const titleInput = document.getElementById('title');
+  const authorInput = document.getElementById('author');
+  const yearInput = document.getElementById('year');
+  const urlInput = document.getElementById('url');
+  const typeSelect = document.getElementById('type');
+  const descInput = document.getElementById('description');
+  const saveBtn = document.getElementById('saveBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const formTitle = document.getElementById('formTitle');
+  const booksListDiv = document.getElementById('booksList');
+
+  // Save book (add or update)
+  async function saveBook() {
+    const title = titleInput.value.trim();
+    const author = authorInput.value.trim();
+    const url = urlInput.value.trim();
+    if (!title || !author || !url) {
+      alert("Title, Author and URL are required.");
+      return;
+    }
+
+    const bookData = {
+      title,
+      author,
+      year: yearInput.value.trim() || '',
+      url,
+      type: typeSelect.value,
+      description: descInput.value.trim() || '',
+      updatedAt: new Date().toISOString()
+    };
+
+    try {
+      if (editingId) {
+        // Update existing book
+        await set(ref(db, `books/${editingId}`), bookData);
+        alert("Book updated!");
+      } else {
+        // Add new book
+        const newRef = push(booksRef);
+        await set(newRef, { ...bookData, createdAt: new Date().toISOString() });
+        alert("Book added!");
+      }
+      resetForm();
+    } catch (err) {
+      console.error(err);
+      alert("Error saving book: " + err.message);
+    }
+  }
+
+  // Edit book
+  function editBook(id, data) {
+    editingId = id;
+    titleInput.value = data.title || '';
+    authorInput.value = data.author || '';
+    yearInput.value = data.year || '';
+    urlInput.value = data.url || '';
+    typeSelect.value = data.type || 'link';
+    descInput.value = data.description || '';
+    formTitle.innerText = "✏️ Edit Book";
+    cancelBtn.classList.remove('hidden');
+  }
+
+  // Delete book
+  async function deleteBook(id) {
+    if (confirm("Delete this book permanently?")) {
+      try {
+        await remove(ref(db, `books/${id}`));
+        alert("Book deleted.");
+      } catch (err) {
+        alert("Error deleting: " + err.message);
+      }
+    }
+  }
+
+  // Reset form
+  function resetForm() {
+    editingId = null;
+    titleInput.value = '';
+    authorInput.value = '';
+    yearInput.value = '';
+    urlInput.value = '';
+    typeSelect.value = 'link';
+    descInput.value = '';
+    formTitle.innerText = "Add New Book";
+    cancelBtn.classList.add('hidden');
+  }
+
+  // Render books list in real-time
+  function renderBooks(snapshot) {
+    const books = snapshot.val();
+    if (!books) {
+      booksListDiv.innerHTML = '<div class="text-center py-8 text-gray-500">No books yet. Add your first book!</div>';
+      return;
+    }
+    const booksArray = Object.entries(books).map(([id, data]) => ({ id, ...data }));
+    booksArray.sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+    booksListDiv.innerHTML = booksArray.map(book => `
+      <div class="border rounded-lg p-3 flex flex-wrap justify-between items-center gap-2 bg-white shadow-sm">
+        <div class="flex-1">
+          <div class="font-semibold">${escapeHtml(book.title)}</div>
+          <div class="text-sm text-gray-600">${escapeHtml(book.author)} ${book.year ? `(${book.year})` : ''}</div>
+          <div class="text-xs text-gray-400">${book.type === 'pdf' ? '📄 PDF' : '🔗 Link'}</div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="window.editBook('${book.id}', ${JSON.stringify(book).replace(/"/g, '&quot;')})" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">Edit</button>
+          <button onclick="window.deleteBook('${book.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+  }
+
+  // Expose functions to global scope for onclick
+  window.editBook = editBook;
+  window.deleteBook = deleteBook;
+
+  // Authentication and role check
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+    // Check if user is admin
+    const userRef = ref(db, `users/${user.uid}`);
+    const snapshot = await new Promise((resolve) => onValue(userRef, resolve, { onlyOnce: true }));
+    const userData = snapshot.val();
+    if (!userData || userData.role !== 'admin') {
+      alert("Access denied. Admin only.");
+      window.location.href = "dashboard.html";
+      return;
+    }
+    // Listen to books in real time
+    onValue(booksRef, renderBooks);
+  });
+
+  saveBtn.addEventListener('click', saveBook);
+  cancelBtn.addEventListener('click', resetForm);
 </script>
 </body>
 </html>
