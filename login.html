@@ -3,59 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>⚡ SMUK LOGIN</title>
+  <title>⚡ NEO CYBER LOGIN | AI SECURE</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    /* (keep all your existing styles exactly the same) */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       min-height: 100vh;
       background: radial-gradient(circle at 20% 30%, #0a0f1e, #03050b);
       display: flex;
       justify-content: center;
       align-items: center;
-      font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, sans-serif;
       position: relative;
       overflow: hidden;
-      cursor: default;
     }
-
-    /* ---------- floating particles (canvas) ---------- */
-    #particle-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    /* animated gradient orb background */
-    .orb {
-      position: absolute;
-      width: 50vmax;
-      height: 50vmax;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0, 242, 255, 0.2), transparent 70%);
-      filter: blur(70px);
-      animation: floatOrb 18s infinite alternate ease-in-out;
-      z-index: 0;
-    }
-
+    #particle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+    .orb { position: absolute; width: 50vmax; height: 50vmax; border-radius: 50%; background: radial-gradient(circle, rgba(0, 242, 255, 0.2), transparent 70%); filter: blur(70px); animation: floatOrb 18s infinite alternate ease-in-out; z-index: 0; }
     .orb1 { top: -20%; left: -20%; animation-duration: 22s; background: radial-gradient(circle, rgba(0, 180, 255, 0.25), transparent); }
     .orb2 { bottom: -15%; right: -15%; animation-duration: 19s; background: radial-gradient(circle, rgba(150, 0, 255, 0.2), transparent); }
     .orb3 { top: 40%; left: 30%; width: 30vmax; height: 30vmax; animation-duration: 26s; background: radial-gradient(circle, rgba(0, 255, 200, 0.15), transparent); }
-
-    @keyframes floatOrb {
-      0% { transform: translate(0, 0) scale(1); opacity: 0.4; }
-      100% { transform: translate(8%, 12%) scale(1.2); opacity: 0.8; }
-    }
-
-    /* ---------- glass card container ---------- */
+    @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); opacity: 0.4; } 100% { transform: translate(8%, 12%) scale(1.2); opacity: 0.8; } }
     .container {
       position: relative;
       width: 390px;
@@ -70,209 +37,29 @@
       z-index: 10;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
     }
-
-    .container:hover {
-      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.6), 0 0 0 1.5px rgba(0, 242, 255, 0.5) inset, 0 0 32px #00f2ff66;
-      transform: scale(1.01);
-    }
-
-    /* neon title */
-    h2 {
-      font-size: 2.1rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #e0f2fe, #00f2ff, #2a6eff);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      letter-spacing: -0.5px;
-      text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
-      margin-bottom: 0.3rem;
-    }
-
-    .ai-text {
-      font-size: 0.85rem;
-      font-weight: 400;
-      color: #a0e9ff;
-      background: rgba(0, 30, 40, 0.6);
-      display: inline-block;
-      padding: 0.3rem 1rem;
-      border-radius: 30px;
-      backdrop-filter: blur(4px);
-      margin: 0.75rem 0 1.2rem;
-      min-height: 2.8rem;
-      letter-spacing: 0.3px;
-      border-left: 2px solid #0ff;
-      border-right: 2px solid #0ff;
-      box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
-    }
-
-    /* modern input fields */
-    .input-group {
-      position: relative;
-      margin: 1.2rem 0;
-    }
-
-    input {
-      width: 100%;
-      padding: 14px 18px;
-      background: rgba(2, 8, 20, 0.7);
-      border: 1.5px solid rgba(0, 242, 255, 0.4);
-      border-radius: 60px;
-      font-size: 1rem;
-      color: #eef5ff;
-      outline: none;
-      transition: all 0.25s ease;
-      font-weight: 500;
-      letter-spacing: 0.3px;
-    }
-
-    input:focus {
-      border-color: #0ff;
-      box-shadow: 0 0 12px #00f2ffaa, 0 0 0 2px rgba(0, 242, 255, 0.2);
-      background: rgba(4, 12, 28, 0.85);
-    }
-
-    input::placeholder {
-      color: #6c86a3;
-      font-weight: 400;
-      font-size: 0.85rem;
-    }
-
-    /* futuristic button */
-    button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 12px;
-      border: none;
-      border-radius: 60px;
-      background: linear-gradient(95deg, #00c3ff, #0077ff, #2a2eff);
-      background-size: 200% auto;
-      color: #ffffff;
-      font-weight: bold;
-      font-size: 1rem;
-      letter-spacing: 1px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      box-shadow: 0 5px 15px rgba(0, 150, 255, 0.4);
-      position: relative;
-      overflow: hidden;
-    }
-
-    button::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      transition: left 0.6s;
-    }
-
-    button:hover::before {
-      left: 100%;
-    }
-
-    button:hover {
-      background-position: right center;
-      transform: scale(1.02);
-      box-shadow: 0 8px 22px rgba(0, 180, 255, 0.6);
-    }
-
-    /* scanner line */
-    .scanner {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 6px;
-      background: linear-gradient(90deg, transparent, #0ff, #f0f, #0ff, transparent);
-      filter: blur(2px);
-      border-radius: 10px;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 20;
-      box-shadow: 0 0 12px #0ff;
-    }
-
-    .scanner.active {
-      opacity: 1;
-      animation: scanMove 2.2s cubic-bezier(0.2, 0.9, 0.4, 1.1) infinite;
-    }
-
-    @keyframes scanMove {
-      0% { top: 0%; opacity: 1; }
-      45% { top: 95%; opacity: 1; }
-      55% { top: 95%; opacity: 0.8; }
-      100% { top: 0%; opacity: 1; }
-    }
-
-    /* loading spinner */
-    .loading {
-      display: none;
-      margin-top: 1.2rem;
-      color: #0ff;
-      font-size: 0.8rem;
-      font-weight: 500;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 6px 12px;
-      border-radius: 40px;
-      width: fit-content;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .spinner {
-      width: 18px;
-      height: 18px;
-      border: 2px solid rgba(0, 242, 255, 0.3);
-      border-top: 2px solid #0ff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-
+    .container:hover { box-shadow: 0 25px 45px rgba(0, 0, 0, 0.6), 0 0 0 1.5px rgba(0, 242, 255, 0.5) inset, 0 0 32px #00f2ff66; transform: scale(1.01); }
+    h2 { font-size: 2.1rem; font-weight: 700; background: linear-gradient(135deg, #e0f2fe, #00f2ff, #2a6eff); background-clip: text; -webkit-background-clip: text; color: transparent; letter-spacing: -0.5px; text-shadow: 0 0 8px rgba(0, 242, 255, 0.5); margin-bottom: 0.3rem; }
+    .ai-text { font-size: 0.85rem; font-weight: 400; color: #a0e9ff; background: rgba(0, 30, 40, 0.6); display: inline-block; padding: 0.3rem 1rem; border-radius: 30px; backdrop-filter: blur(4px); margin: 0.75rem 0 1.2rem; min-height: 2.8rem; letter-spacing: 0.3px; border-left: 2px solid #0ff; border-right: 2px solid #0ff; box-shadow: 0 0 8px rgba(0, 255, 255, 0.2); }
+    .input-group { position: relative; margin: 1.2rem 0; }
+    input { width: 100%; padding: 14px 18px; background: rgba(2, 8, 20, 0.7); border: 1.5px solid rgba(0, 242, 255, 0.4); border-radius: 60px; font-size: 1rem; color: #eef5ff; outline: none; transition: all 0.25s ease; font-weight: 500; letter-spacing: 0.3px; }
+    input:focus { border-color: #0ff; box-shadow: 0 0 12px #00f2ffaa, 0 0 0 2px rgba(0, 242, 255, 0.2); background: rgba(4, 12, 28, 0.85); }
+    input::placeholder { color: #6c86a3; font-weight: 400; font-size: 0.85rem; }
+    button { width: 100%; padding: 14px; margin-top: 12px; border: none; border-radius: 60px; background: linear-gradient(95deg, #00c3ff, #0077ff, #2a2eff); background-size: 200% auto; color: #ffffff; font-weight: bold; font-size: 1rem; letter-spacing: 1px; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 5px 15px rgba(0, 150, 255, 0.4); position: relative; overflow: hidden; }
+    button::before { content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transition: left 0.6s; }
+    button:hover::before { left: 100%; }
+    button:hover { background-position: right center; transform: scale(1.02); box-shadow: 0 8px 22px rgba(0, 180, 255, 0.6); }
+    .scanner { position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: linear-gradient(90deg, transparent, #0ff, #f0f, #0ff, transparent); filter: blur(2px); border-radius: 10px; opacity: 0; pointer-events: none; z-index: 20; box-shadow: 0 0 12px #0ff; }
+    .scanner.active { opacity: 1; animation: scanMove 2.2s cubic-bezier(0.2, 0.9, 0.4, 1.1) infinite; }
+    @keyframes scanMove { 0% { top: 0%; opacity: 1; } 45% { top: 95%; opacity: 1; } 55% { top: 95%; opacity: 0.8; } 100% { top: 0%; opacity: 1; } }
+    .loading { display: none; margin-top: 1.2rem; color: #0ff; font-size: 0.8rem; font-weight: 500; align-items: center; justify-content: center; gap: 8px; background: rgba(0, 0, 0, 0.5); padding: 6px 12px; border-radius: 40px; width: fit-content; margin-left: auto; margin-right: auto; }
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(0, 242, 255, 0.3); border-top: 2px solid #0ff; border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* shake effect */
-    .shake {
-      animation: glitchShake 0.35s ease-in-out 0s 2;
-    }
-
-    @keyframes glitchShake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      75% { transform: translateX(6px); }
-      100% { transform: translateX(0); }
-    }
-
-    /* subtle glow on container after wrong pass */
-    .glow-error {
-      box-shadow: 0 0 18px #ff3366aa, 0 0 0 1px #ff3366 inset;
-      transition: 0.1s;
-    }
-
-    /* link styles */
-    .link {
-      color: #0ff;
-      text-decoration: none;
-      font-size: 0.85rem;
-      margin-top: 15px;
-      display: inline-block;
-      cursor: pointer;
-    }
-
-    .link:hover {
-      text-decoration: underline;
-    }
-
-    /* responsive */
-    @media (max-width: 480px) {
-      .container { padding: 1.5rem; }
-      h2 { font-size: 1.7rem; }
-    }
+    .shake { animation: glitchShake 0.35s ease-in-out 0s 2; }
+    @keyframes glitchShake { 0% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } 100% { transform: translateX(0); } }
+    .glow-error { box-shadow: 0 0 18px #ff3366aa, 0 0 0 1px #ff3366 inset; transition: 0.1s; }
+    .link { color: #0ff; text-decoration: none; font-size: 0.85rem; margin-top: 15px; display: inline-block; cursor: pointer; }
+    .link:hover { text-decoration: underline; }
+    @media (max-width: 480px) { .container { padding: 1.5rem; } h2 { font-size: 1.7rem; } }
   </style>
 </head>
 <body>
@@ -284,7 +71,7 @@
 
   <div class="container" id="loginBox">
     <div class="scanner" id="scannerLine"></div>
-    <h2>⚡ SMUK</h2>
+    <h2>⚡ CYBER//SECURE</h2>
     <div class="ai-text" id="aiMessage">⟳ booting AI core...</div>
 
     <div class="input-group">
@@ -303,7 +90,7 @@
     <p style="color:#aaa; margin-top:15px; font-size:0.8rem;">Don't have an account? <a href="register.html" style="color:#0ff;">Register</a></p>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (modular) -->
   <script type="importmap">
     {
       "imports": {
@@ -319,7 +106,7 @@
     import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
     import { getFirestore, doc, getDoc } from "firebase/firestore";
 
-    // Firebase configuration (your existing project)
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
       authDomain: "smuk-library.firebaseapp.com",
@@ -330,6 +117,7 @@
       measurementId: "G-9M8VW7EL0B"
     };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -344,7 +132,6 @@
     const aiMsg = document.getElementById("aiMessage");
     const container = document.getElementById("loginBox");
 
-    // Helper: show toast-like message in AI area
     function setAIText(text, isError = false) {
       aiMsg.innerHTML = text;
       if (isError) {
@@ -353,7 +140,6 @@
       }
     }
 
-    // Login function
     async function login() {
       const email = emailInput.value.trim();
       const password = passwordInput.value;
@@ -363,7 +149,6 @@
         return;
       }
 
-      // Activate scanner and loading
       scanner.classList.add("active");
       loading.style.display = "flex";
       loginBtn.disabled = true;
@@ -374,7 +159,6 @@
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Check email verification
         if (!user.emailVerified) {
           setAIText("⚠️ email not verified · check your inbox", true);
           await auth.signOut();
@@ -385,7 +169,6 @@
           return;
         }
 
-        // Fetch user role from Firestore
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (!userDoc.exists()) {
           setAIText("⛔ user role missing · contact admin", true);
@@ -406,12 +189,19 @@
           }
         }, 1000);
       } catch (error) {
-        console.error(error);
+        console.error("Login error:", error);
         let errorMsg = "⛔ ACCESS DENIED · ";
-        if (error.code === "auth/user-not-found") errorMsg += "user not found";
-        else if (error.code === "auth/wrong-password") errorMsg += "invalid password";
-        else if (error.code === "auth/invalid-email") errorMsg += "invalid email format";
-        else errorMsg += error.message;
+        if (error.code === "auth/configuration-not-found") {
+          errorMsg = "⚠️ Firebase Auth not enabled · Enable Email/Password in Firebase Console";
+        } else if (error.code === "auth/user-not-found") {
+          errorMsg += "user not found";
+        } else if (error.code === "auth/wrong-password") {
+          errorMsg += "invalid password";
+        } else if (error.code === "auth/invalid-email") {
+          errorMsg += "invalid email format";
+        } else {
+          errorMsg += error.message;
+        }
         setAIText(errorMsg, true);
         scanner.classList.remove("active");
         loading.style.display = "none";
@@ -420,7 +210,6 @@
       }
     }
 
-    // Password reset
     async function resetPassword() {
       const email = emailInput.value.trim();
       if (!email) {
@@ -435,7 +224,6 @@
       }
     }
 
-    // Event listeners
     loginBtn.addEventListener("click", login);
     forgotLink.addEventListener("click", (e) => {
       e.preventDefault();
@@ -443,14 +231,10 @@
     });
 
     // Enter key support
-    const inputs = [emailInput, passwordInput];
-    inputs.forEach(inp => {
-      inp.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") login();
-      });
-    });
+    emailInput.addEventListener("keypress", (e) => { if (e.key === "Enter") login(); });
+    passwordInput.addEventListener("keypress", (e) => { if (e.key === "Enter") login(); });
 
-    // Typing effect for AI message (just for demo)
+    // Typing effect for AI message
     let typingTimer = null;
     function typeAIText(text) {
       if (typingTimer) clearInterval(typingTimer);
@@ -468,7 +252,7 @@
     }
     setTimeout(() => typeAIText("🔮 AI defense online · watching"), 800);
 
-    // Password strength feedback (optional)
+    // Password strength feedback
     passwordInput.addEventListener("input", () => {
       const pass = passwordInput.value;
       if (pass.length === 0) typeAIText("⚡ enter secure credentials");
@@ -479,56 +263,37 @@
       else typeAIText("🤖 acceptable · proceed with caution");
     });
 
-    // ---------- Particle network background (unchanged) ----------
+    // Particle network (unchanged)
     const canvas = document.getElementById('particle-canvas');
     const ctx = canvas.getContext('2d');
-    let width, height;
-    let particles = [];
-    const PARTICLE_COUNT = 75;
-    const MAX_DIST = 130;
-
+    let width, height, particles = [];
+    const PARTICLE_COUNT = 75, MAX_DIST = 130;
     function initParticles() {
       particles = [];
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         particles.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 0.4,
-          vy: (Math.random() - 0.5) * 0.3,
+          x: Math.random() * width, y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.3,
           radius: Math.random() * 2.2 + 1.2,
           color: `rgba(0, ${180 + Math.random() * 75}, 255, ${0.2 + Math.random() * 0.5})`
         });
       }
     }
-
     function resizeCanvas() {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
+      width = window.innerWidth; height = window.innerHeight;
+      canvas.width = width; canvas.height = height;
       initParticles();
     }
-
     function drawParticles() {
       ctx.clearRect(0, 0, width, height);
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.fill();
-
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0) p.x = width;
-        if (p.x > width) p.x = 0;
-        if (p.y < 0) p.y = height;
-        if (p.y > height) p.y = 0;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color; ctx.fill();
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = width; if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height; if (p.y > height) p.y = 0;
       }
-
-      ctx.beginPath();
-      ctx.strokeStyle = 'rgba(0, 210, 255, 0.2)';
-      ctx.lineWidth = 0.8;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
@@ -545,7 +310,6 @@
       }
       requestAnimationFrame(drawParticles);
     }
-
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     drawParticles();
