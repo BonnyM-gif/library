@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>⚡SMUK LOGIN</title>
+  <title>⚡ SMUK LOGIN</title>
   <style>
-    /* (keep all your existing styles exactly the same) */
+    /* (keep all your existing styles unchanged) */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       min-height: 100vh;
@@ -71,7 +71,7 @@
 
   <div class="container" id="loginBox">
     <div class="scanner" id="scannerLine"></div>
-    <h2>⚡ SMUK LOGIN</h2>
+    <h2>⚡SMUK LOGIN</h2>
     <div class="ai-text" id="aiMessage">⟳ booting AI core...</div>
 
     <div class="input-group">
@@ -90,13 +90,13 @@
     <p style="color:#aaa; margin-top:15px; font-size:0.8rem;">Don't have an account? <a href="register.html" style="color:#0ff;">Register</a></p>
   </div>
 
-  <!-- Firebase SDKs (modular) -->
+  <!-- Firebase SDKs (using Realtime Database) -->
   <script type="importmap">
     {
       "imports": {
         "firebase/app": "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js",
         "firebase/auth": "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js",
-        "firebase/firestore": "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js"
+        "firebase/database": "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js"
       }
     }
   </script>
@@ -104,12 +104,12 @@
   <script type="module">
     import { initializeApp } from "firebase/app";
     import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-    import { getFirestore, doc, getDoc } from "firebase/firestore";
+    import { getDatabase, ref, get, child } from "firebase/database";
 
-    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
       authDomain: "smuk-library.firebaseapp.com",
+      databaseURL: "https://smuk-library-default-rtdb.firebaseio.com/",
       projectId: "smuk-library",
       storageBucket: "smuk-library.firebasestorage.app",
       messagingSenderId: "101518774671",
@@ -117,10 +117,9 @@
       measurementId: "G-9M8VW7EL0B"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    const db = getDatabase(app);
 
     // DOM elements
     const emailInput = document.getElementById("loginEmail");
@@ -169,8 +168,10 @@
           return;
         }
 
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (!userDoc.exists()) {
+        // Fetch user role from Realtime Database
+        const userRef = ref(db, `users/${user.uid}`);
+        const snapshot = await get(userRef);
+        if (!snapshot.exists()) {
           setAIText("⛔ user role missing · contact admin", true);
           scanner.classList.remove("active");
           loading.style.display = "none";
@@ -179,7 +180,7 @@
           return;
         }
 
-        const role = userDoc.data().role;
+        const role = snapshot.val().role;
         setAIText("🚀 GRANTED · redirecting...");
         setTimeout(() => {
           if (role === "admin") {
@@ -230,11 +231,10 @@
       resetPassword();
     });
 
-    // Enter key support
     emailInput.addEventListener("keypress", (e) => { if (e.key === "Enter") login(); });
     passwordInput.addEventListener("keypress", (e) => { if (e.key === "Enter") login(); });
 
-    // Typing effect for AI message
+    // Typing effect
     let typingTimer = null;
     function typeAIText(text) {
       if (typingTimer) clearInterval(typingTimer);
@@ -252,7 +252,6 @@
     }
     setTimeout(() => typeAIText("🔮 AI defense online · watching"), 800);
 
-    // Password strength feedback
     passwordInput.addEventListener("input", () => {
       const pass = passwordInput.value;
       if (pass.length === 0) typeAIText("⚡ enter secure credentials");
