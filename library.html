@@ -70,7 +70,7 @@
       <span class="text-xs text-slate-500"><i class="fas fa-eye"></i> Click any book to read online</span>
     </div>
     <div id="booksContainer" class="book-grid p-5">
-      <!-- dynamic content -->
+      <div class="text-center py-10 text-slate-400"><i class="fas fa-spinner fa-pulse"></i> Loading books...</div>
     </div>
   </div>
 
@@ -81,14 +81,15 @@
 </div>
 
 <script type="module">
-  // ---------- Firebase Configuration ----------
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-  import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
+  // Firebase configuration (same as your project)
   const firebaseConfig = {
     apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
     authDomain: "smuk-library.firebaseapp.com",
+    databaseURL: "https://smuk-library-default-rtdb.firebaseio.com/",
     projectId: "smuk-library",
     storageBucket: "smuk-library.firebasestorage.app",
     messagingSenderId: "101518774671",
@@ -98,7 +99,7 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  const db = getDatabase(app);
 
   // DOM elements
   const booksContainer = document.getElementById('booksContainer');
@@ -109,16 +110,7 @@
   let allBooks = []; // store current books for search filtering
   let unsubscribeBooks = null;
 
-  // Helper: format file size (if needed)
-  function formatFileSize(bytes) {
-    if (!bytes) return '';
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  }
-
+  // Helper functions
   function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
@@ -129,10 +121,18 @@
     });
   }
 
+  function formatFileSize(bytes) {
+    if (!bytes) return '';
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
   // Open book based on type
   function openBook(book) {
     if (book.type === 'pdf' && book.url) {
-      // PDF stored in Firebase Storage – url is the download URL
       window.open(book.url, '_blank');
     } else if (book.type === 'link' && book.url) {
       window.open(book.url, '_blank');
@@ -147,7 +147,7 @@
     if (searchTerm.trim() !== '') {
       const term = searchTerm.trim().toLowerCase();
       filtered = allBooks.filter(book =>
-        book.title.toLowerCase().includes(term) ||
+        book.title?.toLowerCase().includes(term) ||
         (book.author && book.author.toLowerCase().includes(term)) ||
         (book.description && book.description.toLowerCase().includes(term))
       );
@@ -185,7 +185,7 @@
             <div class="text-xs text-slate-500 mt-1">${author}</div>
             <div class="flex items-center gap-2 text-xs text-slate-500 mt-1">
               ${year}
-              ${isPdf && book.fileSize ? `<span class="w-1 h-1 bg-slate-300 rounded-full"></span> ${formatFileSize(book.fileSize)}` : ''}
+              ${isPdf && book.size ? `<span class="w-1 h-1 bg-slate-300 rounded-full"></span> ${formatFileSize(book.size)}` : ''}
             </div>
             <div class="mt-4 flex justify-between items-center">
               <span class="text-indigo-600 text-xs bg-indigo-50 px-2 py-1 rounded-full"><i class="fas fa-bookmark"></i> ${typeLabel}</span>
@@ -202,7 +202,7 @@
 
     // Attach click handlers to each Read button
     document.querySelectorAll('.view-book-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const book = JSON.parse(btn.getAttribute('data-book'));
         openBook(book);
@@ -210,12 +210,21 @@
     });
   }
 
-  // Set up real-time listener to Firestore 'books' collection
+  // Set up real-time listener to Firebase Realtime Database 'books' node
   function subscribeToBooks() {
     if (unsubscribeBooks) unsubscribeBooks();
-    const q = query(collection(db, "books"), orderBy("timestamp", "desc"));
-    unsubscribeBooks = onSnapshot(q, (snapshot) => {
-      allBooks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const booksRef = ref(db, 'books');
+    unsubscribeBooks = onValue(booksRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Convert object to array
+        allBooks = Object.entries(data).map(([id, book]) => ({
+          id: id,
+          ...book
+        }));
+      } else {
+        allBooks = [];
+      }
       renderBooks(searchInput.value);
     }, (error) => {
       console.error("Error loading books:", error);
@@ -240,20 +249,18 @@
     });
   }
 
-  // Refresh button: manually re-run listener (already real-time, but we can re-fetch)
+  // Refresh button: manually re-trigger (the listener is real-time, but this resets search)
   refreshBtn.addEventListener('click', () => {
-    // Force re-subscribe (optional)
-    subscribeToBooks();
+    searchInput.value = '';
+    renderBooks('');
   });
 
   // Authentication guard
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      // Not logged in – redirect to login page
       window.location.href = "login.html";
       return;
     }
-    // User is logged in – start loading books
     subscribeToBooks();
     setupSearch();
   });
