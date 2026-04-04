@@ -312,7 +312,7 @@
             loadAnalytics();
         };
 
-        // ========== LOAD ASSIGNMENTS & SUBMISSIONS (with real-time for teachers) ==========
+        // ========== LOAD ASSIGNMENTS & SUBMISSIONS (Teacher/Admin see all) ==========
         function loadAssignments() {
             db.ref('assignments').on('value', (snap) => {
                 const assignments = snap.val();
@@ -364,7 +364,7 @@
                         });
                     }
                     
-                    // Teacher/admin: listen to submissions for this assignment
+                    // Teacher/admin: real-time submissions for this assignment
                     if (currentUserRole === 'teacher' || currentUserRole === 'admin') {
                         const submissionsRef = db.ref(`submissions/${ass.id}`);
                         submissionsRef.off(); // remove previous listener
