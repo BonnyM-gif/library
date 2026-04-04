@@ -541,7 +541,6 @@
     }
 
     // ========== FIREBASE REALTIME: LESSONS ==========
-    // Structure: /lessons/{dateKey}/{lessonId} = { subject, time, createdAt }
     let lessonsListener = null;
 
     function listenToLessons(dateKey) {
@@ -725,16 +724,25 @@
             return;
         }
         if (time === "") time = "To be defined";
-        await addOrUpdateLesson(selectedDateKey, editLessonId, subject, time);
-        cancelEdit();
-        // No need to call render again; listener will update
+        try {
+            await addOrUpdateLesson(selectedDateKey, editLessonId, subject, time);
+            cancelEdit();
+        } catch (err) {
+            console.error("Error saving lesson:", err);
+            alert("Failed to save lesson. Check console for details.");
+        }
     }
 
     async function deleteAllLessons() {
         if (!isAdmin || !selectedDateKey) return;
         if (!confirm(`⚠️ Delete ALL lessons for ${selectedDateKey}? This cannot be undone.`)) return;
-        await deleteAllLessonsForDate(selectedDateKey);
-        cancelEdit();
+        try {
+            await deleteAllLessonsForDate(selectedDateKey);
+            cancelEdit();
+        } catch (err) {
+            console.error("Error deleting lessons:", err);
+            alert("Failed to delete lessons.");
+        }
     }
 
     function changeMonth(delta) {
@@ -765,16 +773,13 @@
     // ========== AUTHENTICATION & ROLE CHECK ==========
     auth.onAuthStateChanged(async (user) => {
         if (!user) {
-            // Not logged in: show login prompt, hide calendar
             mainContent.style.display = 'none';
             loginPromptDiv.style.display = 'flex';
             return;
         }
-        // Logged in: hide prompt, show calendar
         loginPromptDiv.style.display = 'none';
         mainContent.style.display = 'flex';
         currentUser = user;
-        // Fetch user role from Realtime Database
         const userSnapshot = await db.ref(`users/${user.uid}`).once('value');
         const userData = userSnapshot.val();
         isAdmin = (userData && userData.role === 'admin');
@@ -783,7 +788,6 @@
         } else {
             adminControls.style.display = 'none';
         }
-        // Initialize calendar after login
         const now = new Date();
         currentDisplayDate = new Date(now.getFullYear(), now.getMonth(), 1);
         renderCalendar();
