@@ -3,822 +3,476 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Smuk admin | Control Hub</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <title>Admin Control Panel | ST KALEMBA SS VILAMARIA</title>
+  <!-- TailwindCSS + Font Awesome + Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FullCalendar -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <!-- Firebase SDKs (modular, using compat for simplicity) -->
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-storage-compat.js"></script>
   <style>
-    /* all existing styles – keep the same as in the previous admin.html */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    :root {
-      --bg-dark: #0a0c12;
-      --card-bg: rgba(18, 22, 35, 0.7);
-      --card-border: rgba(66, 153, 225, 0.3);
-      --glow-primary: #00e0ff;
-      --glow-accent: #a855f7;
-      --text-primary: #eef2ff;
-      --text-secondary: #9ca3af;
-      --radius-lg: 1.5rem;
-      --radius-md: 1rem;
-      --transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-    }
-    body {
-      min-height: 100vh;
-      background: radial-gradient(ellipse at 20% 30%, #0c0f1c, #03050b);
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-      padding: 2rem;
-      position: relative;
-      overflow-x: hidden;
-      color: var(--text-primary);
-    }
-    .particle-field {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background-image: radial-gradient(circle at 25% 40%, rgba(0,224,255,0.08) 1px, transparent 1px), radial-gradient(circle at 75% 85%, rgba(168,85,247,0.08) 1px, transparent 1px);
-      background-size: 48px 48px, 64px 64px;
-      animation: driftParticles 120s linear infinite;
-    }
-    @keyframes driftParticles {
-      0% { background-position: 0 0, 0 0; }
-      100% { background-position: 200px 200px, -150px 150px; }
-    }
-    .grid-overlay {
-      position: fixed;
-      inset: 0;
-      background-image: linear-gradient(rgba(0,224,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(0,224,255,0.12) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 1;
-    }
-    .admin-container {
-      position: relative;
-      z-index: 10;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    .title-section h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      background: linear-gradient(125deg, #fff, #00e0ff, #a855f7);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-    }
-    .title-section p {
-      color: var(--text-secondary);
-      margin-top: 0.25rem;
-    }
-    .action-links {
-      display: flex;
-      gap: 0.8rem;
-      flex-wrap: wrap;
-    }
-    .action-btn {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(0,224,255,0.3);
-      padding: 0.5rem 1rem;
-      border-radius: 40px;
-      color: white;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: 0.2s;
-      font-size: 0.85rem;
-    }
-    .action-btn:hover {
-      background: rgba(0,224,255,0.2);
-      transform: translateY(-2px);
-    }
-    .logout-btn {
-      background: rgba(239,68,68,0.2);
-      border-color: #ef4444;
-      color: #ffb4a2;
-    }
-    .logout-btn:hover {
-      background: rgba(239,68,68,0.4);
-      color: white;
-    }
-    /* tabs and panels – same as before */
-    .tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-      border-bottom: 1px solid rgba(66,153,225,0.3);
-      padding-bottom: 0.5rem;
-    }
-    .tab-btn {
-      background: transparent;
-      border: none;
-      padding: 0.7rem 1.5rem;
-      border-radius: 40px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .tab-btn.active {
-      background: rgba(0,224,255,0.2);
-      color: var(--glow-primary);
-      border: 1px solid var(--glow-primary);
-    }
-    .tab-btn:hover:not(.active) {
-      background: rgba(255,255,255,0.05);
-      color: white;
-    }
-    .panel {
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-    .panel.active-panel {
-      display: block;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-        * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    :root {
-      --bg-dark: #0a0c12;
-      --card-bg: rgba(18, 22, 35, 0.7);
-      --card-border: rgba(66, 153, 225, 0.3);
-      --glow-primary: #00e0ff;
-      --glow-accent: #a855f7;
-      --text-primary: #eef2ff;
-      --text-secondary: #9ca3af;
-      --radius-lg: 1.5rem;
-      --radius-md: 1rem;
-      --transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-    }
-
-    body {
-      min-height: 100vh;
-      background: radial-gradient(ellipse at 20% 30%, #0c0f1c, #03050b);
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-      padding: 2rem;
-      position: relative;
-      overflow-x: hidden;
-      color: var(--text-primary);
-    }
-
-    .particle-field {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background-image: 
-        radial-gradient(circle at 25% 40%, rgba(0,224,255,0.08) 1px, transparent 1px),
-        radial-gradient(circle at 75% 85%, rgba(168,85,247,0.08) 1px, transparent 1px);
-      background-size: 48px 48px, 64px 64px;
-      animation: driftParticles 120s linear infinite;
-    }
-
-    @keyframes driftParticles {
-      0% { background-position: 0 0, 0 0; }
-      100% { background-position: 200px 200px, -150px 150px; }
-    }
-
-    .grid-overlay {
-      position: fixed;
-      inset: 0;
-      background-image: 
-        linear-gradient(rgba(0,224,255,0.12) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,224,255,0.12) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    .admin-container {
-      position: relative;
-      z-index: 10;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    .title-section h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      background: linear-gradient(125deg, #fff, #00e0ff, #a855f7);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .title-section p {
-      color: var(--text-secondary);
-      margin-top: 0.25rem;
-    }
-    .logout-btn {
-      background: rgba(239,68,68,0.2);
-      border: 1px solid #ef4444;
-      padding: 0.5rem 1rem;
-      border-radius: 40px;
-      color: #ffb4a2;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: 0.2s;
-    }
-    .logout-btn:hover {
-      background: rgba(239,68,68,0.4);
-      color: white;
-    }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-      border-bottom: 1px solid rgba(66,153,225,0.3);
-      padding-bottom: 0.5rem;
-    }
-    .tab-btn {
-      background: transparent;
-      border: none;
-      padding: 0.7rem 1.5rem;
-      border-radius: 40px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .tab-btn.active {
-      background: rgba(0,224,255,0.2);
-      color: var(--glow-primary);
-      border: 1px solid var(--glow-primary);
-    }
-    .tab-btn:hover:not(.active) {
-      background: rgba(255,255,255,0.05);
-      color: white;
-    }
-
-    /* Panels */
-    .panel {
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-    .panel.active-panel {
-      display: block;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Cards & Stats */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.2rem;
-      margin-bottom: 2rem;
-    }
-    .stat-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(8px);
-      border-radius: var(--radius-md);
-      padding: 1.2rem;
-      text-align: center;
-      border: 1px solid var(--card-border);
-      transition: 0.2s;
-    }
-    .stat-card:hover {
-      transform: translateY(-3px);
-      border-color: var(--glow-accent);
-    }
-    .stat-number {
-      font-size: 2.5rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #fff, #00e0ff);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .stat-label {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      margin-top: 0.3rem;
-    }
-
-    /* Forms and lists */
-    .admin-section {
-      background: var(--card-bg);
-      backdrop-filter: blur(8px);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      border: 1px solid var(--card-border);
-    }
-    .admin-section h3 {
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .form-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    .form-group input, .form-group textarea, .form-group select {
-      flex: 1;
-      background: rgba(0,0,0,0.5);
-      border: 1px solid var(--card-border);
-      padding: 0.7rem 1rem;
-      border-radius: 2rem;
-      color: white;
-      outline: none;
-    }
-    button {
-      background: var(--glow-primary);
-      border: none;
-      padding: 0.7rem 1.5rem;
-      border-radius: 2rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    button:hover {
-      transform: scale(0.98);
-      background: #00a0cc;
-    }
-    .item-list {
-      max-height: 300px;
-      overflow-y: auto;
-      margin-top: 1rem;
-    }
-    .list-item {
-      background: rgba(0,0,0,0.3);
-      padding: 0.8rem;
-      border-radius: 1rem;
-      margin-bottom: 0.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-    .delete-item {
-      background: rgba(255,80,80,0.3);
-      border: none;
-      padding: 0.3rem 0.8rem;
-      border-radius: 20px;
-      color: #ffb4a2;
-      cursor: pointer;
-    }
-    .delete-item:hover {
-      background: rgba(255,80,80,0.6);
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      body { padding: 1rem; }
-      .tabs { justify-content: center; }
-      .tab-btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
-    }
-    /* rest of styles – keep all previous (stats, forms, lists, etc.) */
-    /* ... (copy all existing styles from the previous admin.html) ... */
-    /* For brevity, I'll include only the essential changes, but you must keep the full CSS from your working admin.html */
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #f1f5f9; }
+    .dashboard-card { transition: all 0.2s ease; }
+    .dashboard-card:hover { transform: translateY(-3px); box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.1); }
+    .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+    .status-dot.online { background-color: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,0.2); }
+    .status-dot.offline { background-color: #9ca3af; }
+    .file-drop-zone { transition: all 0.2s; }
+    .file-drop-zone.drag-over { background-color: #eef2ff; border-color: #4f46e5; }
+    .book-grid { max-height: 380px; overflow-y: auto; scrollbar-width: thin; }
+    .user-list { max-height: 320px; overflow-y: auto; }
+    .fc { --fc-border-color: #e2e8f0; --fc-button-bg-color: #4f46e5; --fc-button-border-color: #4f46e5; --fc-button-hover-bg-color: #4338ca; --fc-today-bg-color: #eef2ff; }
+    .fc-event { background: #4f46e5; border: none; cursor: pointer; }
+    .toast-notify { animation: fadeSlide 2.5s ease forwards; }
+    @keyframes fadeSlide { 0% { opacity: 0; transform: translateY(10px); } 15% { opacity: 1; transform: translateY(0); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); visibility: hidden; } }
+    .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
   </style>
 </head>
-<body>
-  <div class="particle-field"></div>
-  <div class="grid-overlay"></div>
+<body class="bg-slate-50">
 
-  <div class="admin-container">
-    <div class="header">
-      <div class="title-section">
-        <h1><i class="fas fa-crown"></i> SMUK ADMIN HUB</h1>
-        <p>Smuk · Manage books, events, announcements, assignments</p>
-      </div>
-      <div class="action-links">
-        <a href="admin-library.html" class="action-btn"><i class="fas fa-book"></i> Manage Books</a>
-        <a href="dashboard.html" class="action-btn logout-btn"><i class="fas fa-arrow-left"></i> View Dashboard</a>
-      </div>
-    </div>
-
-    <!-- Tabs (same as before) -->
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="overview"><i class="fas fa-chart-line"></i> Overview</button>
-      <button class="tab-btn" data-tab="events"><i class="fas fa-calendar-alt"></i> Events</button>
-      <button class="tab-btn" data-tab="announcements"><i class="fas fa-bullhorn"></i> Announcements</button>
-      <button class="tab-btn" data-tab="assignments"><i class="fas fa-tasks"></i> Assignments</button>
-      <button class="tab-btn" data-tab="messages"><i class="fas fa-comments"></i> Messages</button>
-      <button class="tab-btn" data-tab="users"><i class="fas fa-users"></i> Users</button>
-    </div>
-
-    <!-- Panels – keep all the existing panels from previous admin.html -->
-    <!-- ... (same content for overview, events, announcements, etc.) ... -->
-    <!-- Since they are unchanged, I won't repeat them here to save space. -->
-    <!-- You must copy the full panel content from your current admin.html. -->
-     <body>
-  <div class="particle-field"></div>
-  <div class="grid-overlay"></div>
-
-    <!-- Overview Panel -->
-    <div id="overviewPanel" class="panel active-panel">
-      <div class="stats-grid" id="statsGrid"></div>
-      <div class="admin-section">
-        <h3><i class="fas fa-chart-simple"></i> Recent Activity</h3>
-        <div id="recentActivity" style="font-size:0.9rem; color: var(--text-secondary);"></div>
-      </div>
-    </div>
-
-    <!-- Books Panel -->
-    <div id="booksPanel" class="panel">
-      <div class="admin-section">
-        <h3><i class="fas fa-plus-circle"></i> Add New Book</h3>
-        <div class="form-group">
-          <input type="text" id="bookTitle" placeholder="Title">
-          <input type="text" id="bookAuthor" placeholder="Author">
-          <input type="text" id="bookYear" placeholder="Year">
+  <div class="max-w-7xl mx-auto px-4 py-6 md:py-8">
+    <!-- Header with Admin Badge -->
+    <div class="flex flex-wrap justify-between items-center mb-6 pb-3 border-b border-indigo-200">
+      <div class="flex items-center gap-3">
+        <div class="bg-indigo-700 text-white p-2.5 rounded-2xl shadow-md">
+          <i class="fas fa-user-shield text-xl"></i>
         </div>
-        <div class="form-group">
-          <textarea id="bookDesc" rows="2" placeholder="Description"></textarea>
-          <input type="text" id="bookIcon" placeholder="Icon emoji (optional)">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-indigo-800 to-purple-800 bg-clip-text text-transparent">Admin Control Panel</h1>
+          <p class="text-slate-500 text-sm flex items-center gap-1"><i class="fas fa-tachometer-alt"></i> Full Library & Calendar Management · Live Oversight</p>
         </div>
-        <button id="addBookBtn">➕ Add Book</button>
       </div>
-      <div class="admin-section">
-        <h3><i class="fas fa-list"></i> Manage Books</h3>
-        <div id="booksList" class="item-list"></div>
+      <div class="bg-white/70 backdrop-blur rounded-full px-4 py-2 shadow-sm text-indigo-700 text-sm font-medium">
+        <i class="far fa-clock"></i> <span id="liveClock">--:--:--</span>
       </div>
     </div>
 
-    <!-- Events Panel -->
-    <div id="eventsPanel" class="panel">
-      <div class="admin-section">
-        <h3><i class="fas fa-plus-circle"></i> Add New Event</h3>
-        <div class="form-group">
-          <input type="date" id="eventDate">
-          <input type="text" id="eventText" placeholder="Event description">
+    <!-- Stats Cards (real-time from Firebase) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <div class="dashboard-card bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 flex items-center justify-between">
+        <div><p class="text-slate-500 text-sm">📚 Total Books</p><p id="totalBooksStat" class="text-3xl font-bold text-indigo-700">0</p></div>
+        <i class="fas fa-book-open text-4xl text-indigo-300"></i>
+      </div>
+      <div class="dashboard-card bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 flex items-center justify-between">
+        <div><p class="text-slate-500 text-sm"><i class="fas fa-circle text-green-500 text-xs"></i> Online Now</p><p id="onlineUsersStat" class="text-3xl font-bold text-emerald-600">0</p></div>
+        <i class="fas fa-users-viewfinder text-4xl text-indigo-300"></i>
+      </div>
+      <div class="dashboard-card bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 flex items-center justify-between">
+        <div><p class="text-slate-500 text-sm">👥 Total Users</p><p id="totalUsersStat" class="text-3xl font-bold text-slate-700">0</p></div>
+        <i class="fas fa-user-friends text-4xl text-indigo-300"></i>
+      </div>
+      <div class="dashboard-card bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 flex items-center justify-between">
+        <div><p class="text-slate-500 text-sm">📅 Calendar Events</p><p id="totalEventsStat" class="text-3xl font-bold text-purple-600">0</p></div>
+        <i class="fas fa-calendar-week text-4xl text-indigo-300"></i>
+      </div>
+    </div>
+
+    <!-- Two Column Layout: PDF Library (left) + Live Users (right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <!-- Left: PDF Library Management (Full Admin Control) -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+          <div class="bg-gradient-to-r from-indigo-50 to-white px-5 py-3 border-b border-slate-100 flex justify-between items-center flex-wrap gap-2">
+            <h2 class="font-semibold text-slate-700 flex items-center gap-2"><i class="fas fa-cloud-upload-alt text-indigo-500"></i> PDF Library · Full Control</h2>
+            <span class="text-xs text-slate-400"><i class="fas fa-database"></i> Upload / Delete / Preview</span>
+          </div>
+          <div class="p-5">
+            <div id="dropZone" class="file-drop-zone border-2 border-dashed border-slate-300 rounded-xl p-5 text-center cursor-pointer transition bg-slate-50 hover:bg-indigo-50/40">
+              <i class="fas fa-file-pdf text-3xl text-indigo-400 mb-2"></i>
+              <p class="text-slate-600 font-medium">Drag & drop PDF or click to browse (Admin only)</p>
+              <input type="file" id="fileInput" accept="application/pdf" multiple class="hidden" />
+              <button id="browseBtn" class="mt-2 text-sm bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition inline-flex items-center gap-1"><i class="fas fa-folder-open"></i> Select files</button>
+            </div>
+            <div id="uploadStatus" class="mt-3 text-sm text-center"></div>
+            <p class="text-xs text-slate-400 mt-2"><i class="fas fa-info-circle"></i> Max 20MB per PDF · Click on book to view, download or delete</p>
+          </div>
+          <div class="bg-slate-50 px-5 py-2 border-t border-slate-100 flex justify-between items-center">
+            <span class="text-sm font-medium"><i class="fas fa-list"></i> Library Collection</span>
+            <button id="refreshBooksBtn" class="text-indigo-600 text-sm hover:bg-indigo-100 px-2 py-1 rounded"><i class="fas fa-sync-alt"></i> Refresh</button>
+          </div>
+          <div id="booksContainer" class="book-grid p-4 divide-y divide-slate-100 bg-white">
+            <div class="text-center py-8 text-slate-400"><i class="fas fa-spinner fa-pulse"></i> Loading books...</div>
+          </div>
         </div>
-        <button id="addEventBtn">➕ Add Event</button>
       </div>
-      <div class="admin-section">
-        <h3><i class="fas fa-calendar-week"></i> Manage Events</h3>
-        <div id="eventsList" class="item-list"></div>
+
+      <!-- Right: Real-time Users Panel (Monitor) -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl shadow-md border border-indigo-100 overflow-hidden">
+          <div class="bg-indigo-50/60 px-5 py-3 border-b border-indigo-100 flex justify-between items-center">
+            <h2 class="font-semibold text-slate-700"><i class="fas fa-users text-indigo-500"></i> Live Activity · Users Online</h2>
+            <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full"><i class="fas fa-broadcast-tower"></i> real-time</span>
+          </div>
+          <div class="p-3 user-list" id="liveUsersList">
+            <div class="text-center py-6 text-slate-400 text-sm">Waiting for users...</div>
+          </div>
+          <div class="bg-slate-50 px-4 py-2 text-xs text-slate-500 border-t border-slate-100 flex justify-between items-center">
+            <span><i class="fas fa-user-tag"></i> You (Admin): <span id="myPresenceName">Administrator</span></span>
+          </div>
+        </div>
+        <div class="bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-4 shadow-sm border border-indigo-100">
+          <div class="flex items-center gap-2 mb-1"><i class="fas fa-gavel text-indigo-600"></i><span class="font-semibold">Admin Privileges</span></div>
+          <p class="text-slate-600 text-xs">✔ Upload & delete PDFs<br>✔ Add / Edit / Delete calendar events<br>✔ Monitor live users</p>
+        </div>
       </div>
     </div>
 
-    <!-- Announcements Panel -->
-    <div id="announcementsPanel" class="panel">
-      <div class="admin-section">
-        <h3><i class="fas fa-bullhorn"></i> Post Announcement</h3>
-        <textarea id="announcementText" rows="3" placeholder="Announcement text..."></textarea>
-        <button id="postAnnouncementBtn" style="margin-top: 1rem;">📢 Post Announcement</button>
+    <!-- Full-Width Calendar Section with Edit/Delete Controls -->
+    <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden mt-4">
+      <div class="bg-gradient-to-r from-purple-50 to-indigo-50 px-5 py-3 border-b border-slate-100 flex justify-between items-center flex-wrap gap-2">
+        <div><i class="fas fa-calendar-alt text-indigo-500"></i> <span class="font-semibold text-slate-700">School Calendar · Full Admin Control</span></div>
+        <div class="text-xs text-slate-500"><i class="fas fa-mouse-pointer"></i> Click date to add · Click event to edit/delete</div>
       </div>
-      <div class="admin-section">
-        <h3><i class="fas fa-history"></i> Recent Announcements</h3>
-        <div id="announcementsList" class="item-list"></div>
+      <div class="p-4">
+        <div id="calendar"></div>
       </div>
     </div>
+  </div>
 
-    <!-- Assignments Panel -->
-    <div id="assignmentsPanel" class="panel">
-      <div class="admin-section">
-        <h3><i class="fas fa-file-alt"></i> All Submissions</h3>
-        <div id="assignmentsList" class="item-list"></div>
-      </div>
-    </div>
-
-    <!-- Messages Panel -->
-    <div id="messagesPanel" class="panel">
-      <div class="admin-section">
-        <h3><i class="fas fa-comment-dots"></i> Public Chat Messages</h3>
-        <div id="messagesList" class="item-list"></div>
-      </div>
-    </div>
-
-    <!-- Users Panel -->
-    <div id="usersPanel" class="panel">
-      <div class="admin-section">
-        <h3><i class="fas fa-user-graduate"></i> Registered Students</h3>
-        <div id="usersList" class="item-list"></div>
+  <!-- Modal for editing event (hidden by default) -->
+  <div id="editEventModal" class="fixed inset-0 flex items-center justify-center z-50 modal-overlay hidden transition-all">
+    <div class="bg-white rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl">
+      <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fas fa-edit text-indigo-500"></i> Edit Event</h3>
+      <input type="text" id="editEventTitle" placeholder="Event title" class="w-full border border-slate-200 rounded-xl px-4 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+      <input type="date" id="editEventDate" class="w-full border border-slate-200 rounded-xl px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+      <div class="flex gap-3 justify-end">
+        <button id="closeModalBtn" class="px-4 py-2 bg-slate-200 rounded-xl hover:bg-slate-300">Cancel</button>
+        <button id="saveEventBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">Save Changes</button>
       </div>
     </div>
   </div>
 
   <script>
-   // ---------- AUTHENTICATION ----------
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    if (!currentUser || currentUser.role !== "admin") {
-      alert("Access denied. Redirecting to dashboard.");
-      window.location.href = "dashboard.html";
-    }
-
-    // ---------- DATA REFERENCES ----------
-    let books = JSON.parse(localStorage.getItem("school_books")) || [];
-    let events = JSON.parse(localStorage.getItem("school_events")) || [];
-    let messages = JSON.parse(localStorage.getItem("school_messages")) || [];
-    let assignments = JSON.parse(localStorage.getItem("school_assignments")) || [];
-    let users = JSON.parse(localStorage.getItem("school_users")) || [];
-
-    // Helper: save functions
-    function saveBooks() { localStorage.setItem("school_books", JSON.stringify(books)); }
-    function saveEvents() { localStorage.setItem("school_events", JSON.stringify(events)); }
-    function saveMessages() { localStorage.setItem("school_messages", JSON.stringify(messages)); }
-    function saveAssignments() { localStorage.setItem("school_assignments", JSON.stringify(assignments)); }
-
-    // Seed default data if empty
-    if (books.length === 0) {
-      books = [
-        { id: Date.now()+1, title: "The Feynman Lectures on Physics", author: "Richard P. Feynman", year: "1963", desc: "Classic physics lectures.", icon: "📖" },
-        { id: Date.now()+2, title: "Gravitation", author: "Misner, Thorne, Wheeler", year: "1973", desc: "Definitive relativity text.", icon: "🌌" }
-      ];
-      saveBooks();
-    }
-    if (events.length === 0) {
-      events = [
-        { id: Date.now()+1, date: "2025-04-15", text: "Physics Symposium" },
-        { id: Date.now()+2, date: "2025-04-20", text: "Assignment Deadline" }
-      ];
-      saveEvents();
-    }
-    if (messages.length === 0) {
-      messages = [
-        { id: Date.now()+1, text: "Welcome to the chat!", name: "System", type: "message", timestamp: Date.now() - 3600000 }
-      ];
-      saveMessages();
-    }
-    if (assignments.length === 0) {
-      // placeholder
-    }
-
-    // ---------- RENDER FUNCTIONS ----------
-    function renderOverview() {
-      const statsGrid = document.getElementById("statsGrid");
-      statsGrid.innerHTML = `
-        <div class="stat-card"><div class="stat-number">${books.length}</div><div class="stat-label">Total Books</div></div>
-        <div class="stat-card"><div class="stat-number">${events.length}</div><div class="stat-label">Upcoming Events</div></div>
-        <div class="stat-card"><div class="stat-number">${messages.length}</div><div class="stat-label">Chat Messages</div></div>
-        <div class="stat-card"><div class="stat-number">${assignments.length}</div><div class="stat-label">Assignments</div></div>
-        <div class="stat-card"><div class="stat-number">${users.filter(u => u.role === "student").length}</div><div class="stat-label">Students</div></div>
-      `;
-
-      const recent = document.getElementById("recentActivity");
-      const latestMessages = [...messages].sort((a,b) => b.timestamp - a.timestamp).slice(0, 5);
-      recent.innerHTML = latestMessages.map(msg => `
-        <div style="margin-bottom:0.5rem;">📢 ${msg.name}: ${msg.text.substring(0, 60)}...</div>
-      `).join("");
-      if (latestMessages.length === 0) recent.innerHTML = "No recent activity.";
-    }
-
-    function renderBooks() {
-      const container = document.getElementById("booksList");
-      container.innerHTML = books.map(book => `
-        <div class="list-item">
-          <div><strong>${book.title}</strong><br><small>${book.author} (${book.year})</small></div>
-          <button class="delete-item" onclick="deleteBook(${book.id})">Delete</button>
-        </div>
-      `).join("");
-    }
-
-    function renderEvents() {
-      const container = document.getElementById("eventsList");
-      container.innerHTML = events.map(ev => `
-        <div class="list-item">
-          <div><strong>📅 ${ev.date}</strong> – ${ev.text}</div>
-          <button class="delete-item" onclick="deleteEvent(${ev.id})">Delete</button>
-        </div>
-      `).join("");
-    }
-
-    function renderAnnouncements() {
-      const container = document.getElementById("announcementsList");
-      const announcements = messages.filter(m => m.type === "announcement").sort((a,b) => b.timestamp - a.timestamp);
-      container.innerHTML = announcements.map(ann => `
-        <div class="list-item">
-          <div><strong>📢 ${ann.name}</strong><br><small>${new Date(ann.timestamp).toLocaleString()}</small><br>${ann.text}</div>
-          <button class="delete-item" onclick="deleteMessage(${ann.id})">Delete</button>
-        </div>
-      `).join("");
-      if (announcements.length === 0) container.innerHTML = "<div>No announcements yet.</div>";
-    }
-
-    function renderAssignments() {
-      const container = document.getElementById("assignmentsList");
-      const usersMap = Object.fromEntries(users.map(u => [u.id, u.name]));
-      container.innerHTML = assignments.map(a => `
-        <div class="list-item">
-          <div><strong>${a.title}</strong><br>by ${usersMap[a.studentId] || "Unknown"}<br><a href="${a.fileUrl}" target="_blank">View File</a></div>
-          <button class="delete-item" onclick="deleteAssignment(${a.id})">Delete</button>
-        </div>
-      `).join("");
-      if (assignments.length === 0) container.innerHTML = "<div>No assignments submitted.</div>";
-    }
-
-    function renderMessages() {
-      const container = document.getElementById("messagesList");
-      const allMessages = [...messages].sort((a,b) => b.timestamp - a.timestamp);
-      container.innerHTML = allMessages.map(msg => `
-        <div class="list-item">
-          <div><strong>${msg.name}</strong> <small>${new Date(msg.timestamp).toLocaleString()}</small><br>${msg.text}</div>
-          <button class="delete-item" onclick="deleteMessage(${msg.id})">Delete</button>
-        </div>
-      `).join("");
-    }
-
-    function renderUsers() {
-      const container = document.getElementById("usersList");
-      const students = users.filter(u => u.role === "student");
-      container.innerHTML = students.map(u => `
-        <div class="list-item">
-          <div><strong>${u.name}</strong><br>${u.email}</div>
-        </div>
-      `).join("");
-      if (students.length === 0) container.innerHTML = "<div>No students registered.</div>";
-    }
-
-    // ---------- CRUD Operations ----------
-    window.deleteBook = (id) => {
-      books = books.filter(b => b.id !== id);
-      saveBooks();
-      renderBooks();
-      renderOverview();
+    // ========== FIREBASE CONFIGURATION ==========
+    const firebaseConfig = {
+      apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
+      authDomain: "smuk-library.firebaseapp.com",
+      databaseURL: "https://smuk-library-default-rtdb.firebaseio.com/",
+      projectId: "smuk-library",
+      storageBucket: "smuk-library.firebasestorage.app",
+      messagingSenderId: "101518774671",
+      appId: "1:101518774671:web:24c6c9c2574f230639fbfa",
+      measurementId: "G-9M8VW7EL0B"
     };
-    window.deleteEvent = (id) => {
-      events = events.filter(e => e.id !== id);
-      saveEvents();
-      renderEvents();
-      renderOverview();
-    };
-    window.deleteMessage = (id) => {
-      messages = messages.filter(m => m.id !== id);
-      saveMessages();
-      renderAnnouncements();
-      renderMessages();
-      renderOverview();
-    };
-    window.deleteAssignment = (id) => {
-      assignments = assignments.filter(a => a.id !== id);
-      saveAssignments();
-      renderAssignments();
-      renderOverview();
-    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const storage = firebase.storage();
 
-    function addBook() {
-      const title = document.getElementById("bookTitle").value.trim();
-      const author = document.getElementById("bookAuthor").value.trim();
-      const year = document.getElementById("bookYear").value.trim();
-      const desc = document.getElementById("bookDesc").value.trim();
-      const icon = document.getElementById("bookIcon").value.trim() || "📘";
-      if (!title || !author || !year || !desc) {
-        alert("Please fill all fields.");
+    // DOM elements
+    const totalBooksSpan = document.getElementById('totalBooksStat');
+    const onlineUsersSpan = document.getElementById('onlineUsersStat');
+    const totalUsersSpan = document.getElementById('totalUsersStat');
+    const totalEventsSpan = document.getElementById('totalEventsStat');
+    const booksContainer = document.getElementById('booksContainer');
+    const liveUsersList = document.getElementById('liveUsersList');
+    const myPresenceNameSpan = document.getElementById('myPresenceName');
+    const uploadStatusDiv = document.getElementById('uploadStatus');
+
+    let calendar = null;
+    let currentUserId = null;
+    let currentUserName = "Admin";
+
+    // Helper: show toast
+    function showToast(msg, isErr = false) {
+      uploadStatusDiv.innerHTML = `<span class="${isErr ? 'text-rose-600 bg-rose-50' : 'text-emerald-600 bg-emerald-50'} px-2 py-1 rounded text-xs">${msg}</span>`;
+      setTimeout(() => uploadStatusDiv.innerHTML = '', 2500);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+    }
+
+    // ========== 1. PDF BOOKS MANAGEMENT (Firebase Storage + Realtime DB) ==========
+    // Books are stored in Realtime Database under "books" node.
+    // PDF files are stored in Storage under "books/{bookId}.pdf"
+    async function loadBooks() {
+      const snapshot = await db.ref('books').once('value');
+      const books = snapshot.val() || {};
+      const count = Object.keys(books).length;
+      totalBooksSpan.innerText = count;
+      if (count === 0) {
+        booksContainer.innerHTML = '<div class="text-center py-8 text-slate-400"><i class="fas fa-folder-open"></i> No PDFs uploaded</div>';
         return;
       }
-      books.push({ id: Date.now(), title, author, year, desc, icon });
-      saveBooks();
-      renderBooks();
-      renderOverview();
-      // Clear form
-      document.getElementById("bookTitle").value = "";
-      document.getElementById("bookAuthor").value = "";
-      document.getElementById("bookYear").value = "";
-      document.getElementById("bookDesc").value = "";
-      document.getElementById("bookIcon").value = "";
-      alert("Book added.");
-    }
-
-    function addEvent() {
-      const date = document.getElementById("eventDate").value;
-      const text = document.getElementById("eventText").value.trim();
-      if (!date || !text) {
-        alert("Fill both date and description.");
-        return;
+      let html = '<div class="space-y-2">';
+      for (const [id, book] of Object.entries(books)) {
+        html += `
+          <div class="flex flex-wrap sm:flex-nowrap justify-between items-center p-3 bg-white rounded-lg border border-slate-100 hover:shadow-sm">
+            <div class="flex items-center gap-3 min-w-0 flex-1"><i class="fas fa-file-pdf text-red-500 text-xl"></i><div class="truncate"><p class="font-medium text-slate-700 truncate">${escapeHtml(book.name)}</p><p class="text-xs text-slate-400">${formatSize(book.size)} · ${formatDate(book.uploadedAt)}</p></div></div>
+            <div class="flex gap-2 mt-2 sm:mt-0">
+              <button class="viewBookBtn text-blue-600 hover:bg-blue-50 p-1.5 rounded" data-id="${id}" data-url="${book.url}"><i class="fas fa-eye"></i></button>
+              <button class="downloadBookBtn text-indigo-600 hover:bg-indigo-50 p-1.5 rounded" data-id="${id}" data-url="${book.url}" data-name="${escapeHtml(book.name)}"><i class="fas fa-download"></i></button>
+              <button class="deleteBookBtn text-rose-600 hover:bg-rose-50 p-1.5 rounded" data-id="${id}"><i class="fas fa-trash-alt"></i></button>
+            </div>
+          </div>`;
       }
-      events.push({ id: Date.now(), date, text });
-      saveEvents();
-      renderEvents();
-      renderOverview();
-      document.getElementById("eventDate").value = "";
-      document.getElementById("eventText").value = "";
-      alert("Event added.");
+      html += '</div>';
+      booksContainer.innerHTML = html;
+      attachBookEvents();
     }
 
-    function postAnnouncement() {
-      const text = document.getElementById("announcementText").value.trim();
-      if (!text) return alert("Enter announcement text.");
-      const newAnn = {
-        id: Date.now(),
-        text: text,
-        name: currentUser.name,
-        type: "announcement",
-        timestamp: Date.now()
-      };
-      messages.push(newAnn);
-      saveMessages();
-      renderAnnouncements();
-      renderMessages();
-      renderOverview();
-      document.getElementById("announcementText").value = "";
-      alert("Announcement posted.");
-    }
-
-    // ---------- Tab Switching ----------
-    const tabs = document.querySelectorAll(".tab-btn");
-    const panels = {
-      overview: document.getElementById("overviewPanel"),
-      books: document.getElementById("booksPanel"),
-      events: document.getElementById("eventsPanel"),
-      announcements: document.getElementById("announcementsPanel"),
-      assignments: document.getElementById("assignmentsPanel"),
-      messages: document.getElementById("messagesPanel"),
-      users: document.getElementById("usersPanel")
-    };
-
-    function switchTab(tabId) {
-      Object.values(panels).forEach(panel => panel.classList.remove("active-panel"));
-      panels[tabId].classList.add("active-panel");
-      tabs.forEach(btn => btn.classList.remove("active"));
-      document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add("active");
-    }
-
-    tabs.forEach(btn => {
-      btn.addEventListener("click", () => {
-        const tab = btn.getAttribute("data-tab");
-        switchTab(tab);
-        // re-render the active panel to ensure fresh data
-        if (tab === "overview") renderOverview();
-        if (tab === "books") renderBooks();
-        if (tab === "events") renderEvents();
-        if (tab === "announcements") renderAnnouncements();
-        if (tab === "assignments") renderAssignments();
-        if (tab === "messages") renderMessages();
-        if (tab === "users") renderUsers();
+    function attachBookEvents() {
+      document.querySelectorAll('.viewBookBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const url = btn.getAttribute('data-url');
+          if (url) window.open(url, '_blank');
+        });
       });
+      document.querySelectorAll('.downloadBookBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const url = btn.getAttribute('data-url');
+          const name = btn.getAttribute('data-name');
+          if (url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name || 'document.pdf';
+            a.click();
+          }
+        });
+      });
+      document.querySelectorAll('.deleteBookBtn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          if (confirm('Permanently delete this book?')) {
+            try {
+              // Delete from Storage
+              const storageRef = storage.ref(`books/${id}.pdf`);
+              await storageRef.delete();
+              // Delete from Realtime DB
+              await db.ref(`books/${id}`).remove();
+              showToast('Book deleted successfully', false);
+              loadBooks();
+            } catch (err) {
+              showToast('Delete failed: ' + err.message, true);
+            }
+          }
+        });
+      });
+    }
+
+    function formatSize(bytes) {
+      if (!bytes) return '0 KB';
+      const k = 1024;
+      const sizes = ['Bytes','KB','MB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+    function formatDate(iso) {
+      if (!iso) return '';
+      return new Date(iso).toLocaleDateString() + ' ' + new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }
+
+    async function uploadPDF(file) {
+      if (file.type !== 'application/pdf') throw new Error(`${file.name} is not a PDF`);
+      if (file.size > 20 * 1024 * 1024) throw new Error(`${file.name} exceeds 20MB`);
+      const bookId = Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const storageRef = storage.ref(`books/${bookId}.pdf`);
+      const uploadTask = await storageRef.put(file);
+      const downloadURL = await uploadTask.ref.getDownloadURL();
+      const bookData = {
+        name: file.name,
+        size: file.size,
+        url: downloadURL,
+        uploadedAt: new Date().toISOString()
+      };
+      await db.ref(`books/${bookId}`).set(bookData);
+      return bookId;
+    }
+
+    async function handleUpload(files) {
+      let success = 0, fail = 0;
+      for (const file of files) {
+        try {
+          await uploadPDF(file);
+          success++;
+        } catch (err) {
+          fail++;
+          showToast(err.message, true);
+        }
+      }
+      if (success) {
+        showToast(`✅ ${success} PDF(s) uploaded`, false);
+        loadBooks();
+      }
+    }
+
+    // Upload UI
+    function setupUpload() {
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+      const browseBtn = document.getElementById('browseBtn');
+      dropZone.addEventListener('click', () => fileInput.click());
+      browseBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+      fileInput.addEventListener('change', async (e) => {
+        if (e.target.files.length) await handleUpload(Array.from(e.target.files));
+        fileInput.value = '';
+      });
+      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+      dropZone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+        if (files.length) await handleUpload(files);
+        else showToast('Only PDF allowed', true);
+      });
+    }
+
+    // ========== 2. REAL-TIME USER PRESENCE (Firebase) ==========
+    // We store online users in /presence/{userId} with .onDisconnect() cleanup.
+    // Also listen to /users to get total count.
+    function initPresence() {
+      const user = auth.currentUser;
+      if (!user) return;
+      currentUserId = user.uid;
+      const userStatusRef = db.ref(`presence/${currentUserId}`);
+      const connectedRef = db.ref('.info/connected');
+      connectedRef.on('value', (snap) => {
+        if (snap.val() === true) {
+          userStatusRef.onDisconnect().remove();
+          userStatusRef.set({
+            name: currentUserName,
+            online: true,
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
+          });
+        }
+      });
+      // Listen to all presence entries
+      db.ref('presence').on('value', (snapshot) => {
+        const presence = snapshot.val() || {};
+        const onlineCount = Object.keys(presence).length;
+        onlineUsersSpan.innerText = onlineCount;
+        // Render user list
+        let html = '<div class="space-y-2">';
+        for (const [uid, data] of Object.entries(presence)) {
+          const isSelf = (uid === currentUserId);
+          html += `
+            <div class="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50">
+              <div class="flex items-center gap-2">
+                <span class="status-dot online"></span>
+                <span class="text-sm font-medium ${isSelf ? 'text-indigo-600' : 'text-slate-700'}">${escapeHtml(data.name || 'User')}</span>
+                ${isSelf ? '<span class="text-[10px] bg-indigo-100 px-1.5 rounded-full ml-1">you</span>' : ''}
+              </div>
+              <span class="text-xs text-slate-400">online now</span>
+            </div>`;
+        }
+        html += '</div>';
+        if (onlineCount === 0) html = '<div class="text-center py-4 text-slate-400 text-sm">No active users</div>';
+        liveUsersList.innerHTML = html;
+      });
+      // Listen to total users count from /users
+      db.ref('users').on('value', (snapshot) => {
+        const users = snapshot.val() || {};
+        totalUsersSpan.innerText = Object.keys(users).length;
+      });
+    }
+
+    // ========== 3. CALENDAR (Firebase Realtime Database) ==========
+    function initCalendar() {
+      const calendarEl = document.getElementById('calendar');
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,dayGridWeek' },
+        selectable: true,
+        dateClick: async (info) => {
+          let title = prompt("📌 Add New Event (Admin):", "School Event");
+          if (!title || title.trim() === "") return;
+          const eventData = { title: title.trim(), start: info.dateStr, createdAt: firebase.database.ServerValue.TIMESTAMP };
+          try {
+            await db.ref("events").push(eventData);
+            showToast(`✅ "${title}" added`, false);
+          } catch(err) { showToast("Failed to add event", true); }
+        },
+        eventClick: (info) => {
+          const userChoice = confirm(`Event: "${info.event.title}"\nClick OK to EDIT, Cancel to DELETE this event.`);
+          if (userChoice) {
+            // EDIT
+            currentEditingEventId = info.event.id;
+            document.getElementById('editEventTitle').value = info.event.title;
+            const startDate = info.event.start ? info.event.start.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+            document.getElementById('editEventDate').value = startDate;
+            document.getElementById('editEventModal').classList.remove('hidden');
+          } else {
+            // DELETE
+            if (confirm(`Permanently delete "${info.event.title}"?`)) {
+              db.ref("events/"+info.event.id).remove().then(() => showToast("Event deleted", false));
+            }
+          }
+        },
+        eventDidMount: (info) => { info.el.setAttribute('title', 'Click to edit or delete (Admin)'); }
+      });
+      calendar.render();
+      // Listen to events in real-time
+      db.ref("events").on("value", (snapshot) => {
+        const events = [];
+        snapshot.forEach(child => {
+          events.push({ id: child.key, title: child.val().title, start: child.val().start });
+        });
+        if (calendar) {
+          calendar.removeAllEvents();
+          calendar.addEventSource(events);
+        }
+        totalEventsSpan.innerText = events.length;
+      });
+    }
+
+    let currentEditingEventId = null;
+    async function saveEventEdit() {
+      if (!currentEditingEventId) return;
+      const newTitle = document.getElementById('editEventTitle').value.trim();
+      const newDate = document.getElementById('editEventDate').value;
+      if (!newTitle || !newDate) { alert("Title and date required"); return; }
+      try {
+        await db.ref(`events/${currentEditingEventId}`).update({ title: newTitle, start: newDate });
+        showToast("Event updated successfully", false);
+        document.getElementById('editEventModal').classList.add('hidden');
+        currentEditingEventId = null;
+      } catch(e) { showToast("Update failed", true); }
+    }
+
+    // ========== 4. AUTHENTICATION & ROLE CHECK ==========
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      // Check if user is admin
+      const userSnapshot = await db.ref(`users/${user.uid}`).once('value');
+      const userData = userSnapshot.val();
+      if (!userData || userData.role !== 'admin') {
+        alert("Access denied. Admin only.");
+        window.location.href = "dashboard.html";
+        return;
+      }
+      currentUserName = userData.name || "Admin";
+      myPresenceNameSpan.innerText = currentUserName;
+      // Initialize all modules
+      await loadBooks();
+      setupUpload();
+      initPresence();
+      initCalendar();
+      // Refresh button
+      document.getElementById('refreshBooksBtn').addEventListener('click', () => loadBooks());
+      document.getElementById('closeModalBtn').addEventListener('click', () => {
+        document.getElementById('editEventModal').classList.add('hidden');
+        currentEditingEventId = null;
+      });
+      document.getElementById('saveEventBtn').addEventListener('click', saveEventEdit);
+      // Clock
+      function updateClock() {
+        document.getElementById('liveClock').innerText = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
     });
-
-    // Event listeners
-    document.getElementById("addBookBtn").addEventListener("click", addBook);
-    document.getElementById("addEventBtn").addEventListener("click", addEvent);
-    document.getElementById("postAnnouncementBtn").addEventListener("click", postAnnouncement);
-
-    // Initial render of all panels
-    renderOverview();
-    renderBooks();
-    renderEvents();
-    renderAnnouncements();
-    renderAssignments();
-    renderMessages();
-    renderUsers();
   </script>
-  <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
-    authDomain: "smuk-library.firebaseapp.com",
-    projectId: "smuk-library",
-    storageBucket: "smuk-library.firebasestorage.app",
-    messagingSenderId: "101518774671",
-    appId: "1:101518774671:web:24c6c9c2574f230639fbfa",
-    measurementId: "G-9M8VW7EL0B"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
 </body>
 </html>
