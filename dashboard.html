@@ -11,7 +11,7 @@
   <style>
     * { font-family: 'Inter', sans-serif; }
     body { background: #f1f5f9; }
-    .dashboard-card { transition: all 0.25s ease; }
+    .dashboard-card { transition: all 0.2s ease; }
     .dashboard-card:hover { transform: translateY(-3px); box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.1); }
     .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
     .status-dot.online { background-color: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,0.2); }
@@ -33,7 +33,7 @@
         </div>
         <div>
           <h1 class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-indigo-800 to-purple-800 bg-clip-text text-transparent">ST KALEMBA SS VILAMARIA</h1>
-          <p class="text-slate-500 text-sm flex items-center gap-1"><i class="fas fa-tachometer-alt"></i> Central Dashboard · Library & Live Presence</p>
+          <p class="text-slate-500 text-sm flex items-center gap-1"><i class="fas fa-tachometer-alt"></i> Central Dashboard · Live Presence</p>
         </div>
       </div>
       <div class="flex items-center gap-3">
@@ -76,7 +76,7 @@
       </div>
     </div>
 
-    <!-- Navigation Cards (all platform links) -->
+    <!-- Navigation Cards (all platform links - updated) -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
       <a href="library.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-book text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Library</span></a>
       <a href="calendar.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-calendar-alt text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Calendar</span></a>
@@ -88,7 +88,7 @@
       <a href="admin.html" id="adminLink" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition hidden"><i class="fas fa-crown text-amber-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Admin Panel</span></a>
     </div>
 
-    <!-- Two column layout: Left (Library Collection) | Right (Live Users) -->
+    <!-- Two column layout: Left (Book Library) | Right (Live Users) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- LEFT COLUMN: Book Library (Read‑only) -->
       <div class="lg:col-span-2 space-y-6">
@@ -130,237 +130,214 @@
   </div>
 
   <!-- Firebase SDKs -->
-  <script type="importmap">
-    {
-      "imports": {
-        "firebase/app": "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js",
-        "firebase/auth": "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js",
-        "firebase/firestore": "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js"
-      }
-    }
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-database-compat.js"></script>
 
-  <script type="module">
-    import { initializeApp } from "firebase/app";
-    import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
-    import { getFirestore, doc, getDoc } from "firebase/firestore";
-
-    // Firebase configuration
+  <script>
+    // ========== FIREBASE CONFIGURATION ==========
     const firebaseConfig = {
       apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
       authDomain: "smuk-library.firebaseapp.com",
+      databaseURL: "https://smuk-library-default-rtdb.firebaseio.com/",
       projectId: "smuk-library",
       storageBucket: "smuk-library.firebasestorage.app",
       messagingSenderId: "101518774671",
       appId: "1:101518774671:web:24c6c9c2574f230639fbfa",
       measurementId: "G-9M8VW7EL0B"
     };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
 
     // DOM elements
-    const userNameDisplay = document.getElementById("userNameDisplay");
-    const userRoleDisplay = document.getElementById("userRoleDisplay");
-    const adminLink = document.getElementById("adminLink");
-    const logoutBtn = document.getElementById("logoutBtn");
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    const userRoleDisplay = document.getElementById('userRoleDisplay');
+    const adminLink = document.getElementById('adminLink');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const totalBooksSpan = document.getElementById('totalBooksStat');
+    const onlineUsersSpan = document.getElementById('onlineUsersStat');
+    const totalUsersSpan = document.getElementById('totalUsersStat');
+    const lastUploadSpan = document.getElementById('lastUploadStat');
+    const bookCountBadge = document.getElementById('bookCountBadge');
+    const booksContainer = document.getElementById('booksContainer');
+    const liveUsersList = document.getElementById('liveUsersList');
+    const myPresenceNameSpan = document.getElementById('myPresenceName');
+    const setNameQuickBtn = document.getElementById('setNameQuickBtn');
 
-    // Check authentication and load user data
-    onAuthStateChanged(auth, async (user) => {
+    let currentUserId = null;
+    let currentUserName = "";
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+    }
+
+    // ========== 1. LOAD BOOKS FROM FIREBASE ==========
+    async function loadBooks() {
+      const snapshot = await db.ref('books').once('value');
+      const books = snapshot.val() || {};
+      const count = Object.keys(books).length;
+      totalBooksSpan.innerText = count;
+      bookCountBadge.innerText = `${count} item${count !== 1 ? 's' : ''}`;
+      if (count === 0) {
+        booksContainer.innerHTML = '<div class="text-center py-8 text-slate-400"><i class="fas fa-folder-open"></i> No books uploaded yet</div>';
+        lastUploadSpan.innerHTML = '—';
+        return;
+      }
+      let latest = null;
+      let latestTime = 0;
+      let html = '<div class="space-y-2">';
+      for (const [id, book] of Object.entries(books)) {
+        if (book.uploadedAt && new Date(book.uploadedAt).getTime() > latestTime) {
+          latestTime = new Date(book.uploadedAt).getTime();
+          latest = book.name;
+        }
+        html += `
+          <div class="flex flex-wrap sm:flex-nowrap justify-between items-center p-3 bg-white rounded-lg border border-slate-100 hover:shadow-sm">
+            <div class="flex items-center gap-3 min-w-0 flex-1"><i class="fas fa-file-pdf text-red-500 text-xl"></i><div class="truncate"><p class="font-medium text-slate-700 truncate">${escapeHtml(book.name)}</p><p class="text-xs text-slate-400">${formatSize(book.size)} · ${formatDate(book.uploadedAt)}</p></div></div>
+            <div class="flex gap-2 mt-2 sm:mt-0"><button class="viewBookBtn text-blue-600 hover:bg-blue-50 p-1.5 rounded" data-url="${book.url}"><i class="fas fa-eye"></i></button><button class="downloadBookBtn text-indigo-600 hover:bg-indigo-50 p-1.5 rounded" data-url="${book.url}" data-name="${escapeHtml(book.name)}"><i class="fas fa-download"></i></button></div>
+          </div>`;
+      }
+      html += '</div>';
+      booksContainer.innerHTML = html;
+      lastUploadSpan.innerHTML = latest ? (latest.length > 20 ? latest.substring(0, 20) + '...' : latest) : '—';
+      attachBookEvents();
+    }
+
+    function formatSize(bytes) {
+      if (!bytes) return '0 KB';
+      const k = 1024;
+      const sizes = ['Bytes','KB','MB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+    function formatDate(iso) {
+      if (!iso) return '';
+      return new Date(iso).toLocaleDateString() + ' ' + new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }
+    function attachBookEvents() {
+      document.querySelectorAll('.viewBookBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const url = btn.getAttribute('data-url');
+          if (url) window.open(url, '_blank');
+        });
+      });
+      document.querySelectorAll('.downloadBookBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const url = btn.getAttribute('data-url');
+          const name = btn.getAttribute('data-name');
+          if (url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name || 'document.pdf';
+            a.click();
+          }
+        });
+      });
+    }
+
+    // ========== 2. REAL-TIME USER PRESENCE ==========
+    function initPresence() {
+      const user = auth.currentUser;
+      if (!user) return;
+      currentUserId = user.uid;
+      const userStatusRef = db.ref(`presence/${currentUserId}`);
+      const connectedRef = db.ref('.info/connected');
+      connectedRef.on('value', (snap) => {
+        if (snap.val() === true) {
+          userStatusRef.onDisconnect().remove();
+          userStatusRef.set({
+            name: currentUserName,
+            online: true,
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
+          });
+        }
+      });
+      db.ref('presence').on('value', (snapshot) => {
+        const presence = snapshot.val() || {};
+        const onlineCount = Object.keys(presence).length;
+        onlineUsersSpan.innerText = onlineCount;
+        let html = '<div class="space-y-2">';
+        for (const [uid, data] of Object.entries(presence)) {
+          const isSelf = (uid === currentUserId);
+          html += `
+            <div class="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50">
+              <div class="flex items-center gap-2">
+                <span class="status-dot online"></span>
+                <span class="text-sm font-medium ${isSelf ? 'text-indigo-600' : 'text-slate-700'}">${escapeHtml(data.name || 'User')}</span>
+                ${isSelf ? '<span class="text-[10px] bg-indigo-100 px-1.5 rounded-full ml-1">you</span>' : ''}
+              </div>
+              <span class="text-xs text-slate-400">online now</span>
+            </div>`;
+        }
+        html += '</div>';
+        if (onlineCount === 0) html = '<div class="text-center py-4 text-slate-400 text-sm">No active users</div>';
+        liveUsersList.innerHTML = html;
+      });
+      db.ref('users').on('value', (snapshot) => {
+        const users = snapshot.val() || {};
+        totalUsersSpan.innerText = Object.keys(users).length;
+      });
+    }
+
+    // ========== 3. AUTHENTICATION & ROLE CHECK ==========
+    auth.onAuthStateChanged(async (user) => {
       if (!user) {
         window.location.href = "login.html";
         return;
       }
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        userNameDisplay.textContent = userData.name;
-        userRoleDisplay.textContent = userData.role === "admin" ? "Administrator" : "Student";
-        if (userData.role === "admin") {
-          adminLink.classList.remove("hidden");
-        }
-      } else {
-        userNameDisplay.textContent = user.email;
-        userRoleDisplay.textContent = "User";
+      const userSnapshot = await db.ref(`users/${user.uid}`).once('value');
+      const userData = userSnapshot.val();
+      if (!userData) {
+        alert("User data not found. Please contact admin.");
+        return;
       }
+      userNameDisplay.innerText = userData.name;
+      userRoleDisplay.innerText = userData.role === 'admin' ? 'Administrator' : 'Student';
+      currentUserName = userData.name;
+      myPresenceNameSpan.innerText = currentUserName;
+      if (userData.role === 'admin') {
+        adminLink.classList.remove('hidden');
+      }
+      await loadBooks();
+      initPresence();
     });
 
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
+    logoutBtn.addEventListener('click', async () => {
+      await auth.signOut();
       window.location.href = "login.html";
     });
 
-    // ======================== INDEXED DB (Books – read-only) ========================
-    const DB_NAME = "LibraryAdminDB";
-    const DB_VERSION = 1;
-    const STORE_NAME = "pdf_documents";
-    let dbInstance = null;
-
-    function openDatabase() {
-      return new Promise((resolve, reject) => {
-        if (dbInstance && dbInstance.name === DB_NAME) { resolve(dbInstance); return; }
-        const req = indexedDB.open(DB_NAME, DB_VERSION);
-        req.onerror = e => reject("DB error");
-        req.onsuccess = e => { dbInstance = e.target.result; resolve(dbInstance); };
-        req.onupgradeneeded = e => {
-          const db = e.target.result;
-          if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
-        };
-      });
-    }
-
-    async function getAllPDFs() {
-      const db = await openDatabase();
-      return new Promise((res, rej) => {
-        const tx = db.transaction(STORE_NAME, "readonly");
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.getAll();
-        req.onsuccess = () => res(req.result || []);
-        req.onerror = e => rej(e);
-      });
-    }
-
-    async function getPDFBlobById(id) {
-      const db = await openDatabase();
-      return new Promise((res, rej) => {
-        const tx = db.transaction(STORE_NAME, "readonly");
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.get(id);
-        req.onsuccess = () => {
-          if (req.result && req.result.fileData) res(new Blob([req.result.fileData], { type: "application/pdf" }));
-          else rej("No data");
-        };
-        req.onerror = e => rej(e);
-      });
-    }
-
-    function formatSize(bytes) { if (!bytes) return '0 KB'; const k = 1024; const sizes = ['Bytes','KB','MB']; const i = Math.floor(Math.log(bytes)/Math.log(k)); return parseFloat((bytes/Math.pow(k,i)).toFixed(1)) + ' ' + sizes[i]; }
-    function formatDate(iso) { if(!iso) return ''; return new Date(iso).toLocaleDateString() + ' ' + new Date(iso).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
-    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
-
-    async function renderBookLibrary() {
-      const books = await getAllPDFs();
-      const total = books.length;
-      document.getElementById('totalBooksStat').innerText = total;
-      document.getElementById('bookCountBadge').innerText = `${total} item${total!==1?'s':''}`;
-      if (books.length > 0) {
-        const last = books.sort((a,b)=>new Date(b.uploadedAt)-new Date(a.uploadedAt))[0];
-        document.getElementById('lastUploadStat').innerHTML = `<span title="${last.name}">${last.name.substring(0,20)}${last.name.length>20?'...':''}</span>`;
-      } else { document.getElementById('lastUploadStat').innerHTML = '—'; }
-      const container = document.getElementById('booksContainer');
-      if (books.length === 0) { container.innerHTML = `<div class="text-center py-8 text-slate-400"><i class="fas fa-folder-open"></i> No PDFs uploaded yet</div>`; return; }
-      container.innerHTML = `<div class="space-y-2">` + books.map(book => `
-        <div class="flex flex-wrap sm:flex-nowrap justify-between items-center p-3 bg-white rounded-lg border border-slate-100 hover:shadow-sm">
-          <div class="flex items-center gap-3 min-w-0 flex-1"><i class="fas fa-file-pdf text-red-500 text-xl"></i><div class="truncate"><p class="font-medium text-slate-700 truncate">${escapeHtml(book.name)}</p><p class="text-xs text-slate-400">${formatSize(book.size)} · ${formatDate(book.uploadedAt)}</p></div></div>
-          <div class="flex gap-2 mt-2 sm:mt-0"><button class="viewBookBtn text-blue-600 hover:bg-blue-50 p-1.5 rounded" data-id="${book.id}"><i class="fas fa-eye"></i></button><button class="downloadBookBtn text-indigo-600 hover:bg-indigo-50 p-1.5 rounded" data-id="${book.id}"><i class="fas fa-download"></i></button></div>
-        </div>`).join('') + `</div>`;
-      attachBookEvents();
-    }
-
-    function attachBookEvents() {
-      document.querySelectorAll('.viewBookBtn').forEach(btn => btn.addEventListener('click', async e => { const id = parseInt(btn.dataset.id); const blob = await getPDFBlobById(id); const url = URL.createObjectURL(blob); window.open(url, '_blank'); setTimeout(()=>URL.revokeObjectURL(url), 60000); }));
-      document.querySelectorAll('.downloadBookBtn').forEach(btn => btn.addEventListener('click', async e => { const id = parseInt(btn.dataset.id); const blob = await getPDFBlobById(id); const books=await getAllPDFs(); const name=books.find(b=>b.id===id)?.name||'document.pdf'; const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),100); }));
-    }
-
-    document.getElementById('refreshLibraryBtn').addEventListener('click', () => renderBookLibrary());
-
-    // ======================== REAL-TIME PRESENCE (BroadcastChannel) ========================
-    const TAB_ID = crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(36).substr(2,6);
-    let currentUserName = localStorage.getItem('dashboard_username') || `User_${TAB_ID.slice(0,4)}`;
-    let usersMap = new Map();
-    const channel = new BroadcastChannel('livewire_user_presence');
-
-    function broadcastPresence() {
-      channel.postMessage({ type: 'HEARTBEAT', userId: TAB_ID, name: currentUserName, timestamp: Date.now(), online: true });
-      updateSelfMap(true, Date.now());
-    }
-    function updateSelfMap(online, timestamp) {
-      usersMap.set(TAB_ID, { userId: TAB_ID, name: currentUserName, online: online, lastSeen: timestamp, lastHeartbeatTime: timestamp });
-      renderUserList();
-    }
-    function handleChannelMessage(ev) {
-      const msg = ev.data;
-      if (!msg || !msg.userId) return;
-      const { userId, name, timestamp, type } = msg;
-      if (type === 'HEARTBEAT') {
-        const existing = usersMap.get(userId) || {};
-        usersMap.set(userId, { userId, name: name || 'Anonymous', online: true, lastSeen: timestamp, lastHeartbeatTime: timestamp });
-        renderUserList();
-      } else if (type === 'NAME_UPDATE') {
-        const user = usersMap.get(userId);
-        if (user) { user.name = name; usersMap.set(userId, user); renderUserList(); }
-      } else if (type === 'USER_OFFLINE') {
-        const user = usersMap.get(userId);
-        if (user) { user.online = false; user.lastSeen = timestamp; usersMap.set(userId, user); renderUserList(); }
-      }
-    }
-    function pruneStaleUsers() {
-      const now = Date.now();
-      let changed = false;
-      for (let [id, user] of usersMap.entries()) {
-        if (id === TAB_ID) continue;
-        if (user.online && (now - (user.lastHeartbeatTime || 0) > 12000)) {
-          user.online = false; user.lastSeen = user.lastHeartbeatTime; changed = true;
-        }
-      }
-      if (changed) renderUserList();
-    }
-    function broadcastNameChange(newName) {
-      channel.postMessage({ type: 'NAME_UPDATE', userId: TAB_ID, name: newName, timestamp: Date.now() });
-      const self = usersMap.get(TAB_ID);
-      if (self) { self.name = newName; usersMap.set(TAB_ID, self); renderUserList(); }
-    }
-    function sendOfflineSignal() { channel.postMessage({ type: 'USER_OFFLINE', userId: TAB_ID, timestamp: Date.now() }); }
-    function renderUserList() {
-      const users = Array.from(usersMap.values());
-      const onlineCount = users.filter(u => u.online).length;
-      document.getElementById('onlineUsersStat').innerText = onlineCount;
-      document.getElementById('totalUsersStat').innerText = users.length;
-      document.getElementById('myPresenceName').innerText = currentUserName;
-      const container = document.getElementById('liveUsersList');
-      if (users.length === 0) { container.innerHTML = '<div class="text-center py-4 text-slate-400 text-sm">No active sessions</div>'; return; }
-      const sorted = [...users].sort((a,b)=> (b.online?1:0)-(a.online?1:0));
-      container.innerHTML = `<div class="space-y-2">` + sorted.map(u => `
-        <div class="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50">
-          <div class="flex items-center gap-2"><span class="status-dot ${u.online ? 'online' : 'offline'}"></span><span class="text-sm font-medium ${u.userId === TAB_ID ? 'text-indigo-600' : 'text-slate-700'}">${escapeHtml(u.name)}</span>${u.userId === TAB_ID ? '<span class="text-[10px] bg-indigo-100 px-1.5 rounded-full">you</span>' : ''}</div>
-          <span class="text-xs text-slate-400">${u.online ? 'online now' : 'last seen ' + formatLastSeen(u.lastSeen)}</span>
-        </div>
-      `).join('') + `</div>`;
-    }
-    function formatLastSeen(ts) { if(!ts) return 'unknown'; const diff = Math.floor((Date.now()-ts)/1000); if(diff<5) return 'just now'; if(diff<60) return `${diff}s ago`; const mins=Math.floor(diff/60); if(mins<60) return `${mins}m ago`; return new Date(ts).toLocaleTimeString(); }
-
-    function initPresence() {
-      usersMap.set(TAB_ID, { userId: TAB_ID, name: currentUserName, online: true, lastSeen: Date.now(), lastHeartbeatTime: Date.now() });
-      renderUserList();
-      setInterval(() => { broadcastPresence(); }, 5000);
-      setInterval(() => pruneStaleUsers(), 4000);
-      channel.onmessage = handleChannelMessage;
-      window.addEventListener('beforeunload', () => sendOfflineSignal());
-      broadcastPresence();
-    }
+    document.getElementById('refreshLibraryBtn').addEventListener('click', loadBooks);
 
     function promptSetName() {
       const newName = prompt('Enter your display name (visible to all):', currentUserName);
       if (newName && newName.trim()) {
         currentUserName = newName.trim().substring(0, 30);
-        localStorage.setItem('dashboard_username', currentUserName);
-        broadcastNameChange(currentUserName);
-        broadcastPresence();
-        renderUserList();
+        myPresenceNameSpan.innerText = currentUserName;
+        if (currentUserId) {
+          db.ref(`presence/${currentUserId}`).update({ name: currentUserName });
+        }
+        showToast(`Name updated to ${currentUserName}`, false);
       }
     }
-    document.getElementById('setNameQuickBtn').addEventListener('click', promptSetName);
+    setNameQuickBtn.addEventListener('click', promptSetName);
+
+    function showToast(msg, isErr = false) {
+      const toast = document.createElement('div');
+      toast.className = `fixed bottom-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm ${isErr ? 'bg-red-100 text-red-700 border-l-4 border-red-500' : 'bg-green-100 text-green-700 border-l-4 border-green-500'}`;
+      toast.innerHTML = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
 
     // Clock
-    function updateClock() { document.getElementById('liveClock').innerText = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
-    setInterval(updateClock, 1000); updateClock();
-
-    // Initialise
-    openDatabase().then(() => {
-      renderBookLibrary();
-    });
-    initPresence();
+    function updateClock() {
+      document.getElementById('liveClock').innerText = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
   </script>
 </body>
 </html>
