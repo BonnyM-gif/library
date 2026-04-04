@@ -16,7 +16,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .deadline-closed { background: #fee2e2; border-left: 6px solid #dc2626; opacity: 0.9; }
         .deadline-open { background: #f0fdf4; border-left: 6px solid #22c55e; }
-        .deadline-warning { background: #fffbeb; border-left: 6px solid #f59e0b; }
         .file-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); transition: 0.2s; }
         .scroll-list { max-height: 550px; overflow-y: auto; scrollbar-width: thin; }
         .toast { animation: slideIn 0.3s ease; z-index: 9999; }
@@ -28,7 +27,6 @@
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100">
 
-    <!-- Main App (hidden until auth) -->
     <div id="mainApp" class="hidden">
         <!-- Top bar -->
         <div class="bg-white shadow-md px-5 py-3 flex flex-wrap justify-between items-center sticky top-0 z-30 border-b border-gray-200">
@@ -49,7 +47,7 @@
 
             <!-- Content panels -->
             <div class="flex-1 p-6">
-                <!-- ASSIGNMENTS (for all roles) -->
+                <!-- ASSIGNMENTS (all roles) -->
                 <div id="sectionAssignments" class="page-section">
                     <div class="bg-white rounded-xl shadow-lg p-5">
                         <h2 class="text-2xl font-bold mb-2 text-gray-800 flex items-center gap-2">📋 Active & Past Assignments</h2>
@@ -89,10 +87,10 @@
                     </div>
                 </div>
 
-                <!-- FILE RESOURCE HUB (All roles) -->
+                <!-- FILE RESOURCE HUB -->
                 <div id="sectionFiles" class="page-section">
                     <div class="bg-white rounded-xl shadow-lg p-5">
-                        <h2 class="text-xl font-bold mb-4">📎 Course Resources (Teachers & Admins upload)</h2>
+                        <h2 class="text-xl font-bold mb-4">📎 Course Resources</h2>
                         <div id="resourceUploadArea" class="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center mb-6 bg-gray-50 hidden">
                             <input type="file" id="fileInput" class="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="uploadSharedFile()">
                             <button onclick="document.getElementById('fileInput').click()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition shadow">📤 Upload Resource</button>
@@ -120,7 +118,7 @@
     <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-storage-compat.js"></script>
 
     <script>
-        // ========== FIREBASE CONFIGURATION (same as your project) ==========
+        // ========== FIREBASE CONFIG (same as your project) ==========
         const firebaseConfig = {
             apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
             authDomain: "smuk-library.firebaseapp.com",
@@ -136,18 +134,14 @@
         const db = firebase.database();
         const storage = firebase.storage();
 
-        // Global state
         let currentUser = null;
         let currentUserRole = null;
         let currentUserEmail = null;
         let currentUserName = null;
 
-        // Helper: deadline check
         function isDeadlineOpen(deadlineISO) {
             if (!deadlineISO) return false;
-            const now = new Date();
-            const deadlineDate = new Date(deadlineISO);
-            return now <= deadlineDate;
+            return new Date() <= new Date(deadlineISO);
         }
 
         // ========== AUTHENTICATION & ROLE ==========
@@ -158,7 +152,6 @@
             }
             currentUser = user;
             currentUserEmail = user.email;
-            // Fetch user role from Realtime Database
             const userSnap = await db.ref(`users/${user.uid}`).once('value');
             const userData = userSnap.val();
             if (!userData) {
@@ -179,7 +172,6 @@
             setupRealtimeListeners();
             logActivity(`${currentUserRole.toUpperCase()} logged in`, 'login');
             if (currentUserRole === 'admin') loadUsersForAdmin();
-            // Show/hide upload area based on role
             const uploadArea = document.getElementById('resourceUploadArea');
             if (currentUserRole === 'teacher' || currentUserRole === 'admin') {
                 uploadArea.classList.remove('hidden');
@@ -244,19 +236,20 @@
                 id, title, description: desc, deadline: deadlineRaw, points: points || 100,
                 createdBy: currentUser.uid, createdByEmail: currentUserEmail,
                 createdAt: Date.now(), status: 'active'
-            });
-            document.getElementById('assignmentTitle').value = '';
-            document.getElementById('assignmentDesc').value = '';
-            document.getElementById('assignmentDeadline').value = '';
-            document.getElementById('assignmentPoints').value = '';
-            logActivity(`Created assignment: "${title}" (deadline ${new Date(deadlineRaw).toLocaleString()})`, 'create');
-            alert("✅ Assignment published with strict deadline lock.");
+            }).then(() => {
+                document.getElementById('assignmentTitle').value = '';
+                document.getElementById('assignmentDesc').value = '';
+                document.getElementById('assignmentDeadline').value = '';
+                document.getElementById('assignmentPoints').value = '';
+                logActivity(`Created assignment: "${title}"`, 'create');
+                alert("✅ Assignment published.");
+            }).catch(err => alert("Error: " + err.message));
         };
 
         // ========== SUBMIT ASSIGNMENT (students only) ==========
         window.submitAssignment = async function(assignmentId, assignmentTitle, deadlineISO, points) {
             if (!isDeadlineOpen(deadlineISO)) {
-                alert(`⛔ SUBMISSION CLOSED: Deadline was ${new Date(deadlineISO).toLocaleString()}. No further uploads allowed.`);
+                alert(`⛔ SUBMISSION CLOSED: Deadline was ${new Date(deadlineISO).toLocaleString()}.`);
                 return;
             }
             const fileInput = document.createElement('input');
@@ -319,7 +312,7 @@
             loadAnalytics();
         };
 
-        // ========== LOAD ASSIGNMENTS ==========
+        // ========== LOAD ASSIGNMENTS & SUBMISSIONS (with real-time for teachers) ==========
         function loadAssignments() {
             db.ref('assignments').on('value', (snap) => {
                 const assignments = snap.val();
@@ -332,7 +325,7 @@
                 Object.values(assignments).forEach(ass => {
                     const deadlineOpen = isDeadlineOpen(ass.deadline);
                     let cardClass = deadlineOpen ? 'deadline-open' : 'deadline-closed';
-                    let deadlineStatusLabel = deadlineOpen ? '<span class="badge-open text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 ml-2">📢 OPEN</span>' : '<span class="badge-locked text-xs px-2 py-0.5 rounded-full ml-2">🔒 CLOSED / LOCKED</span>';
+                    let deadlineStatusLabel = deadlineOpen ? '<span class="badge-open text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 ml-2">📢 OPEN</span>' : '<span class="badge-locked text-xs px-2 py-0.5 rounded-full ml-2">🔒 CLOSED</span>';
                     let submitButtonHtml = '';
                     if (currentUserRole === 'student' && deadlineOpen) {
                         submitButtonHtml = `<button onclick="submitAssignment('${ass.id}', '${ass.title.replace(/'/g, "\\'")}', '${ass.deadline}', ${ass.points})" class="bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition shadow">📎 Submit Work</button>`;
@@ -345,18 +338,20 @@
                             <div class="flex flex-wrap justify-between items-start gap-4">
                                 <div class="flex-1">
                                     <div class="flex items-center flex-wrap gap-2"><h3 class="font-bold text-xl">${ass.title}</h3>${deadlineStatusLabel}</div>
-                                    <p class="text-gray-600 mt-1 text-sm">${ass.description || '📌 No description provided'}</p>
+                                    <p class="text-gray-600 mt-1 text-sm">${ass.description || '📌 No description'}</p>
                                     <div class="flex flex-wrap gap-4 mt-3 text-sm">
                                         <span class="bg-gray-100 px-3 py-1 rounded-full">📅 Due: ${new Date(ass.deadline).toLocaleString()}</span>
                                         <span class="bg-gray-100 px-3 py-1 rounded-full">⭐ ${ass.points} points</span>
-                                        <span class="${deadlineOpen ? 'text-green-700 font-medium' : 'text-red-700 font-medium'}">${deadlineOpen ? '✅ Submissions open' : '❌ Portal closed'}</span>
+                                        <span class="${deadlineOpen ? 'text-green-700' : 'text-red-700'}">${deadlineOpen ? '✅ Submissions open' : '❌ Portal closed'}</span>
                                     </div>
                                     <div id="sub-status-${ass.id}" class="text-sm mt-2 font-medium"></div>
                                 </div>
                                 ${submitButtonHtml}
                             </div>
-                            ${(currentUserRole === 'teacher' || currentUserRole === 'admin') ? `<div id="submissions-list-${ass.id}" class="mt-5 border-t border-gray-200 pt-4"><h4 class="font-semibold text-md flex items-center gap-1">📥 Student Submissions <span class="text-xs font-normal">(grade & feedback)</span></h4><div class="space-y-3 mt-2"></div></div>` : ''}
+                            ${(currentUserRole === 'teacher' || currentUserRole === 'admin') ? `<div id="submissions-list-${ass.id}" class="mt-5 border-t border-gray-200 pt-4"><h4 class="font-semibold text-md flex items-center gap-1">📥 Student Submissions</h4><div class="space-y-3 mt-2"></div></div>` : ''}
                         </div>`;
+                    
+                    // Student's own submission status
                     if (currentUserRole === 'student') {
                         db.ref(`submissions/${ass.id}/${currentUser.uid}`).once('value', s => {
                             const sub = s.val();
@@ -368,32 +363,34 @@
                             else if (statusDiv && deadlineOpen) statusDiv.innerHTML = `⌛ Awaiting your submission before deadline.`;
                         });
                     }
-                    if (currentUserRole === 'teacher' || currentUserRole === 'admin') loadSubmissionsForAssignment(ass.id);
-                });
-            });
-        }
-
-        function loadSubmissionsForAssignment(assignmentId) {
-            db.ref(`submissions/${assignmentId}`).on('value', (snap) => {
-                const subs = snap.val();
-                const containerDiv = document.querySelector(`#submissions-list-${assignmentId} div:last-child`);
-                if (!containerDiv) return;
-                if (!subs || Object.keys(subs).length === 0) {
-                    containerDiv.innerHTML = '<div class="text-gray-400 italic text-sm p-2">✨ No submissions yet.</div>';
-                    return;
-                }
-                containerDiv.innerHTML = '';
-                Object.entries(subs).forEach(([sid, sub]) => {
-                    const gradeWidget = (sub.grade !== null && sub.grade !== undefined) ? 
-                        `<div class="mt-1"><span class="font-bold text-emerald-700">Grade: ${sub.grade}/${sub.points}</span> ${sub.feedback ? `<span class="text-gray-500 text-xs ml-2">✏️ ${sub.feedback}</span>` : ''}</div>`
-                        : `<div class="flex flex-wrap gap-2 items-center mt-2"><input type="number" id="grade-${assignmentId}-${sid}" placeholder="Grade" class="grade-input border rounded-lg px-2 py-1 w-24 text-sm"><input type="text" id="feedback-${assignmentId}-${sid}" placeholder="Feedback (optional)" class="border rounded-lg px-2 py-1 text-sm flex-1"><button onclick="gradeSubmission('${assignmentId}', '${sid}', document.getElementById('grade-${assignmentId}-${sid}').value, document.getElementById('feedback-${assignmentId}-${sid}').value)" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm">Save Grade</button></div>`;
-                    containerDiv.innerHTML += `
-                        <div class="bg-gray-50 border rounded-lg p-3 shadow-sm">
-                            <div class="flex justify-between items-center flex-wrap"><span class="font-semibold">👩‍🎓 ${sub.studentName}</span><span class="text-xs ${sub.onTime ? 'text-green-600' : 'text-red-600'} bg-white px-2 py-0.5 rounded-full">${sub.onTime ? '✅ On time' : '⚠️ Late'}</span></div>
-                            <div class="text-xs text-gray-500 my-1">Submitted: ${new Date(sub.submittedAt).toLocaleString()}</div>
-                            <div><a href="${sub.fileUrl}" target="_blank" class="text-blue-600 underline text-sm flex items-center gap-1">📄 ${sub.fileName}</a></div>
-                            ${gradeWidget}
-                        </div>`;
+                    
+                    // Teacher/admin: listen to submissions for this assignment
+                    if (currentUserRole === 'teacher' || currentUserRole === 'admin') {
+                        const submissionsRef = db.ref(`submissions/${ass.id}`);
+                        submissionsRef.off(); // remove previous listener
+                        submissionsRef.on('value', (subSnap) => {
+                            const subs = subSnap.val();
+                            const containerDiv = document.querySelector(`#submissions-list-${ass.id} div:last-child`);
+                            if (!containerDiv) return;
+                            if (!subs || Object.keys(subs).length === 0) {
+                                containerDiv.innerHTML = '<div class="text-gray-400 italic text-sm p-2">✨ No submissions yet.</div>';
+                                return;
+                            }
+                            containerDiv.innerHTML = '';
+                            Object.entries(subs).forEach(([sid, sub]) => {
+                                const gradeWidget = (sub.grade !== null && sub.grade !== undefined) ? 
+                                    `<div class="mt-1"><span class="font-bold text-emerald-700">Grade: ${sub.grade}/${sub.points}</span> ${sub.feedback ? `<span class="text-gray-500 text-xs ml-2">✏️ ${sub.feedback}</span>` : ''}</div>`
+                                    : `<div class="flex flex-wrap gap-2 items-center mt-2"><input type="number" id="grade-${ass.id}-${sid}" placeholder="Grade" class="grade-input border rounded-lg px-2 py-1 w-24 text-sm"><input type="text" id="feedback-${ass.id}-${sid}" placeholder="Feedback (optional)" class="border rounded-lg px-2 py-1 text-sm flex-1"><button onclick="gradeSubmission('${ass.id}', '${sid}', document.getElementById('grade-${ass.id}-${sid}').value, document.getElementById('feedback-${ass.id}-${sid}').value)" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm">Save Grade</button></div>`;
+                                containerDiv.innerHTML += `
+                                    <div class="bg-gray-50 border rounded-lg p-3 shadow-sm">
+                                        <div class="flex justify-between items-center flex-wrap"><span class="font-semibold">👩‍🎓 ${sub.studentName}</span><span class="text-xs ${sub.onTime ? 'text-green-600' : 'text-red-600'} bg-white px-2 py-0.5 rounded-full">${sub.onTime ? '✅ On time' : '⚠️ Late'}</span></div>
+                                        <div class="text-xs text-gray-500 my-1">Submitted: ${new Date(sub.submittedAt).toLocaleString()}</div>
+                                        <div><a href="${sub.fileUrl}" target="_blank" class="text-blue-600 underline text-sm flex items-center gap-1">📄 ${sub.fileName}</a></div>
+                                        ${gradeWidget}
+                                    </div>`;
+                            });
+                        });
+                    }
                 });
             });
         }
@@ -404,7 +401,7 @@
             if (!file) return;
             const allowed = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','image/jpeg','image/png','image/jpg'];
             if (!allowed.includes(file.type)) {
-                alert("Unsupported format. Use PDF, DOC, DOCX, JPG, PNG.");
+                alert("Unsupported format.");
                 return;
             }
             if (file.size > 10*1024*1024) {
@@ -421,7 +418,7 @@
                 await db.ref('sharedFiles').push({
                     name: file.name, url, type: file.type, size: file.size,
                     uploadedBy: currentUserEmail, uploadedByRole: currentUserRole,
-                    timestamp: Date.now(), downloads: 0
+                    timestamp: Date.now()
                 });
                 hideToast(toastId);
                 showToast("Resource uploaded.", "success");
@@ -473,9 +470,7 @@
         }
 
         function logActivity(message, type) {
-            db.ref('activityLog').push({
-                message, type, user: currentUserEmail, timestamp: Date.now()
-            });
+            db.ref('activityLog').push({ message, type, user: currentUserEmail, timestamp: Date.now() });
         }
 
         function setupRealtimeListeners() {
@@ -513,7 +508,7 @@
             }
         };
 
-        // ========== TOAST NOTIFICATIONS ==========
+        // ========== TOAST ==========
         function showToast(msg, type) {
             const id = 't'+Date.now();
             const div = document.createElement('div');
