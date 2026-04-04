@@ -21,7 +21,6 @@
             position: relative;
         }
 
-        /* particle canvas (from your login) */
         #particle-canvas {
             position: fixed;
             top: 0;
@@ -32,7 +31,6 @@
             z-index: 0;
         }
 
-        /* main container */
         .dashboard {
             display: flex;
             flex-wrap: wrap;
@@ -44,7 +42,6 @@
             z-index: 10;
         }
 
-        /* LEFT PANEL - CALENDAR CARD */
         .calendar-card {
             flex: 1.2;
             min-width: 320px;
@@ -57,7 +54,6 @@
             transition: all 0.2s ease;
         }
 
-        /* RIGHT PANEL - SCHEDULE */
         .schedule-card {
             flex: 1.8;
             min-width: 340px;
@@ -69,7 +65,6 @@
             box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.4);
         }
 
-        /* header */
         .calendar-header {
             display: flex;
             justify-content: space-between;
@@ -127,7 +122,6 @@
             color: white;
         }
 
-        /* weekdays grid */
         .weekdays {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -140,7 +134,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* dates grid */
         .dates-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -193,7 +186,6 @@
             aspect-ratio: 1 / 1;
         }
 
-        /* schedule header */
         .schedule-header {
             display: flex;
             justify-content: space-between;
@@ -219,7 +211,6 @@
             font-weight: 500;
         }
 
-        /* lesson cards */
         .lessons-container {
             max-height: 380px;
             overflow-y: auto;
@@ -281,7 +272,6 @@
             font-style: italic;
         }
 
-        /* form section */
         .form-section {
             margin-top: 20px;
             background: rgba(0, 0, 0, 0.25);
@@ -346,27 +336,7 @@
         .danger-btn:hover {
             background: #c44545;
         }
-        ::-webkit-scrollbar {
-            width: 5px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e2438;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #00c6ff;
-            border-radius: 10px;
-        }
-        @media (max-width: 780px) {
-            body {
-                padding: 16px;
-            }
-            .date-cell {
-                font-size: 0.8rem;
-            }
-        }
 
-        /* back & logout buttons */
         .top-bar {
             display: flex;
             justify-content: flex-end;
@@ -387,13 +357,56 @@
             background: rgba(0, 242, 255, 0.2);
             transform: translateY(-2px);
         }
+
+        .login-prompt {
+            text-align: center;
+            padding: 3rem;
+            background: rgba(0,0,0,0.4);
+            border-radius: 2rem;
+            margin: 2rem auto;
+            max-width: 500px;
+        }
+        .login-prompt i {
+            font-size: 3rem;
+            color: #a5b4fc;
+            margin-bottom: 1rem;
+        }
+        .login-prompt h3 {
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+        .login-prompt a {
+            display: inline-block;
+            margin-top: 1rem;
+            background: #4f46e5;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e2438;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00c6ff;
+            border-radius: 10px;
+        }
+        @media (max-width: 780px) {
+            body { padding: 16px; }
+            .date-cell { font-size: 0.8rem; }
+        }
     </style>
 </head>
 <body>
 <canvas id="particle-canvas"></canvas>
 
 <div class="dashboard">
-    <!-- Top bar with back and logout -->
     <div style="width:100%; margin-bottom: 10px;">
         <div class="top-bar">
             <a href="dashboard.html" class="top-btn">← Dashboard</a>
@@ -401,88 +414,113 @@
         </div>
     </div>
 
-    <!-- LEFT CALENDAR PANEL -->
-    <div class="calendar-card">
-        <div class="calendar-header">
-            <div class="month-nav">
-                <button class="nav-btn" id="prevMonthBtn">◀</button>
-                <button class="nav-btn" id="nextMonthBtn">▶</button>
+    <div id="mainContent" style="display: none; width:100%; display:flex; flex-wrap:wrap; gap:24px;">
+        <!-- LEFT CALENDAR PANEL -->
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <div class="month-nav">
+                    <button class="nav-btn" id="prevMonthBtn">◀</button>
+                    <button class="nav-btn" id="nextMonthBtn">▶</button>
+                </div>
+                <h3 class="month-title" id="monthYearDisplay">March 2026</h3>
+                <button class="today-btn" id="todayBtn">📅 Today</button>
             </div>
-            <h3 class="month-title" id="monthYearDisplay">March 2026</h3>
-            <button class="today-btn" id="todayBtn">📅 Today</button>
+
+            <div class="weekdays">
+                <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+            </div>
+            <div class="dates-grid" id="datesGrid"></div>
         </div>
 
-        <div class="weekdays">
-            <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+        <!-- RIGHT SCHEDULE PANEL -->
+        <div class="schedule-card">
+            <div class="schedule-header">
+                <div>
+                    <span class="selected-date-title" id="selectedDateLabel">📌 No date selected</span>
+                </div>
+                <div class="lesson-count" id="lessonCountBadge">0 lessons</div>
+            </div>
+
+            <div id="lessonsList" class="lessons-container">
+                <div class="empty-message">✨ Click on a date to view or add lessons</div>
+            </div>
+
+            <!-- Admin-only form (hidden for students) -->
+            <div id="adminControls" style="display: none;">
+                <div class="form-section">
+                    <div class="form-title">
+                        <strong>✏️ Manage Lesson</strong>
+                        <button id="cancelEditBtn" class="btn-secondary" style="display:none;">Cancel Edit</button>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="subjectInput" placeholder="Subject name (e.g., Mathematics)" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="timeInput" placeholder="Time (e.g., 09:30 AM / 14:00)">
+                    </div>
+                    <button id="saveLessonBtn" class="btn-primary">➕ Add Lesson</button>
+                    <div class="flex-btns">
+                        <button id="deleteAllBtn" class="btn-secondary danger-btn" style="background:#882d2d;">🗑️ Delete all for date</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="dates-grid" id="datesGrid"></div>
     </div>
 
-    <!-- RIGHT SCHEDULE PANEL -->
-    <div class="schedule-card">
-        <div class="schedule-header">
-            <div>
-                <span class="selected-date-title" id="selectedDateLabel">📌 No date selected</span>
-            </div>
-            <div class="lesson-count" id="lessonCountBadge">0 lessons</div>
-        </div>
-
-        <div id="lessonsList" class="lessons-container">
-            <div class="empty-message">✨ Click on a date to view or add lessons</div>
-        </div>
-
-        <!-- Admin-only form: hidden for students -->
-        <div id="adminControls" style="display: none;">
-            <div class="form-section">
-                <div class="form-title">
-                    <strong>✏️ Manage Lesson</strong>
-                    <button id="cancelEditBtn" class="btn-secondary" style="display:none;">Cancel Edit</button>
-                </div>
-                <div class="form-group">
-                    <input type="text" id="subjectInput" placeholder="Subject name (e.g., Mathematics)" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <input type="text" id="timeInput" placeholder="Time (e.g., 09:30 AM / 14:00)">
-                </div>
-                <button id="saveLessonBtn" class="btn-primary">➕ Add Lesson</button>
-                <div class="flex-btns">
-                    <button id="deleteAllBtn" class="btn-secondary danger-btn" style="background:#882d2d;">🗑️ Delete all for date</button>
-                </div>
-            </div>
-        </div>
+    <!-- Login Prompt (shown when not logged in) -->
+    <div id="loginPrompt" class="login-prompt" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
+        <i class="fas fa-lock"></i>
+        <h3>Please log in to view the school calendar</h3>
+        <p>You need to be signed in to see upcoming lessons and events.</p>
+        <a href="login.html">Go to Login Page</a>
     </div>
 </div>
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-database-compat.js"></script>
+
 <script>
-    // ------------------- AUTHENTICATION -------------------
+    // ========== FIREBASE CONFIGURATION ==========
+    const firebaseConfig = {
+        apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
+        authDomain: "smuk-library.firebaseapp.com",
+        databaseURL: "https://smuk-library-default-rtdb.firebaseio.com/",
+        projectId: "smuk-library",
+        storageBucket: "smuk-library.firebasestorage.app",
+        messagingSenderId: "101518774671",
+        appId: "1:101518774671:web:24c6c9c2574f230639fbfa",
+        measurementId: "G-9M8VW7EL0B"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    // Global state
     let currentUser = null;
     let isAdmin = false;
-
-    function checkAuth() {
-        const userStr = localStorage.getItem("currentUser");
-        if (!userStr) {
-            window.location.href = "login.html";
-            return false;
-        }
-        currentUser = JSON.parse(userStr);
-        isAdmin = (currentUser.role === "admin");
-        return true;
-    }
-
-    function logout() {
-        localStorage.removeItem("currentUser");
-        window.location.href = "login.html";
-    }
-
-    // ------------------- CALENDAR LOGIC (adapted from your code) -------------------
-    let currentDisplayDate = new Date();  // month navigation
-    let selectedDateKey = null;           // stored as "YYYY-MM-DD"
+    let currentDisplayDate = new Date();
+    let selectedDateKey = null;
     let editMode = false;
-    let editLessonIndex = null;
-    
-    // timetable storage: key = "YYYY-MM-DD" => array of { subject, time, id }
-    let timetable = {};
+    let editLessonId = null;
 
+    // DOM elements
+    const mainContent = document.getElementById('mainContent');
+    const loginPromptDiv = document.getElementById('loginPrompt');
+    const datesGrid = document.getElementById('datesGrid');
+    const monthYearDisplay = document.getElementById('monthYearDisplay');
+    const selectedDateLabel = document.getElementById('selectedDateLabel');
+    const lessonCountBadge = document.getElementById('lessonCountBadge');
+    const lessonsList = document.getElementById('lessonsList');
+    const subjectInput = document.getElementById('subjectInput');
+    const timeInput = document.getElementById('timeInput');
+    const saveLessonBtn = document.getElementById('saveLessonBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const deleteAllBtn = document.getElementById('deleteAllBtn');
+    const adminControls = document.getElementById('adminControls');
+
+    // Helper: format date key YYYY-MM-DD
     function formatDateKey(year, month, day) {
         return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     }
@@ -499,103 +537,61 @@
             if (m === '<') return '&lt;';
             if (m === '>') return '&gt;';
             return m;
-        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-            return c;
         });
     }
 
-    function migrateLegacyTimetable() {
-        let raw = localStorage.getItem("timetable");
-        if (!raw) return {};
-        let oldData = JSON.parse(raw);
-        let newData = {};
-        let migrated = false;
-        for (let oldKey in oldData) {
-            const match = oldKey.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-            if (match) {
-                const year = match[1];
-                const month = parseInt(match[2], 10);
-                const day = parseInt(match[3], 10);
-                if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-                    const newKey = formatDateKey(parseInt(year), month, day);
-                    if (!newData[newKey]) newData[newKey] = [];
-                    const lessons = oldData[oldKey];
-                    if (Array.isArray(lessons)) {
-                        lessons.forEach(lesson => {
-                            newData[newKey].push({
-                                subject: lesson.subject || "Untitled",
-                                time: lesson.time || "TBD",
-                                id: Date.now() + Math.random() + newKey + Math.random()
-                            });
-                        });
-                    }
-                    migrated = true;
-                } else {
-                    newData[oldKey] = oldData[oldKey];
-                }
-            } else {
-                newData[oldKey] = oldData[oldKey];
-            }
-        }
-        if (migrated) {
-            localStorage.setItem("timetable", JSON.stringify(newData));
-            return newData;
-        }
-        for (let k in oldData) {
-            if (Array.isArray(oldData[k])) {
-                oldData[k] = oldData[k].map((l, idx) => ({
-                    subject: l.subject || "Lesson",
-                    time: l.time || "",
-                    id: l.id || `${k}-${idx}-${Date.now()}-${Math.random()}`
-                }));
-            }
-        }
-        return oldData;
+    // ========== FIREBASE REALTIME: LESSONS ==========
+    // Structure: /lessons/{dateKey}/{lessonId} = { subject, time, createdAt }
+    let lessonsListener = null;
+
+    function listenToLessons(dateKey) {
+        if (lessonsListener) lessonsListener();
+        const lessonsRef = db.ref(`lessons/${dateKey}`);
+        lessonsListener = lessonsRef.on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            renderLessonsForDate(data);
+        });
     }
 
-    function loadTimetable() {
-        const migrated = migrateLegacyTimetable();
-        timetable = migrated;
-        for (let key in timetable) {
-            if (Array.isArray(timetable[key])) {
-                timetable[key] = timetable[key].map(l => {
-                    if (!l.id) l.id = `${key}-${Date.now()}-${Math.random()}`;
-                    return l;
-                });
-            }
-        }
-        persistTimetable();
+    async function addOrUpdateLesson(dateKey, lessonId, subject, time) {
+        const lessonRef = db.ref(`lessons/${dateKey}/${lessonId || Date.now() + '_' + Math.random()}`);
+        await lessonRef.set({
+            subject: subject,
+            time: time,
+            createdAt: firebase.database.ServerValue.TIMESTAMP
+        });
     }
 
-    function persistTimetable() {
-        localStorage.setItem("timetable", JSON.stringify(timetable));
+    async function deleteLesson(dateKey, lessonId) {
+        await db.ref(`lessons/${dateKey}/${lessonId}`).remove();
     }
 
+    async function deleteAllLessonsForDate(dateKey) {
+        await db.ref(`lessons/${dateKey}`).remove();
+    }
+
+    // ========== CALENDAR RENDERING ==========
     function renderCalendar() {
         const year = currentDisplayDate.getFullYear();
-        const month = currentDisplayDate.getMonth(); // 0-index
+        const month = currentDisplayDate.getMonth();
         const firstDayOfMonth = new Date(year, month, 1);
-        const startWeekday = firstDayOfMonth.getDay(); // 0 = Sunday
-        let startOffset = startWeekday === 0 ? 6 : startWeekday - 1; // Monday based offset
+        let startWeekday = firstDayOfMonth.getDay();
+        let startOffset = startWeekday === 0 ? 6 : startWeekday - 1;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        const monthName = currentDisplayDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-        document.getElementById('monthYearDisplay').innerText = monthName;
-
-        const gridContainer = document.getElementById('datesGrid');
-        gridContainer.innerHTML = '';
+        monthYearDisplay.innerText = currentDisplayDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+        datesGrid.innerHTML = '';
 
         const todayKey = getTodayKey();
 
         for (let i = 0; i < startOffset; i++) {
             const emptyDiv = document.createElement('div');
             emptyDiv.classList.add('empty-cell');
-            gridContainer.appendChild(emptyDiv);
+            datesGrid.appendChild(emptyDiv);
         }
 
         for (let d = 1; d <= daysInMonth; d++) {
             const cellKey = formatDateKey(year, month + 1, d);
-            const hasLessons = timetable[cellKey] && timetable[cellKey].length > 0;
             const isToday = (todayKey === cellKey);
             const isSelected = (selectedDateKey === cellKey);
 
@@ -603,72 +599,60 @@
             dateDiv.className = 'date-cell';
             if (isToday) dateDiv.classList.add('today');
             if (isSelected) dateDiv.classList.add('selected');
-            
+
             const numberSpan = document.createElement('span');
             numberSpan.className = 'date-number';
             numberSpan.innerText = d;
             dateDiv.appendChild(numberSpan);
-            
-            if (hasLessons) {
-                const dotSpan = document.createElement('div');
-                dotSpan.className = 'lesson-dot';
-                dateDiv.appendChild(dotSpan);
-            }
-            
+
+            // Check if there are lessons for this date (async, but we'll show dot after checking)
+            db.ref(`lessons/${cellKey}`).once('value', (snap) => {
+                if (snap.exists() && snap.numChildren() > 0) {
+                    const dotSpan = document.createElement('div');
+                    dotSpan.className = 'lesson-dot';
+                    dateDiv.appendChild(dotSpan);
+                }
+            });
+
             dateDiv.addEventListener('click', (function(key) {
                 return function() { selectDate(key); };
             })(cellKey));
-            
-            gridContainer.appendChild(dateDiv);
+
+            datesGrid.appendChild(dateDiv);
         }
     }
 
-    function selectDate(dateKey) {
+    async function selectDate(dateKey) {
         selectedDateKey = dateKey;
         editMode = false;
-        editLessonIndex = null;
-        const saveBtn = document.getElementById('saveLessonBtn');
-        if (saveBtn) saveBtn.innerText = '➕ Add Lesson';
-        const cancelBtn = document.getElementById('cancelEditBtn');
-        if (cancelBtn) cancelBtn.style.display = 'none';
-        const subjectInput = document.getElementById('subjectInput');
-        const timeInput = document.getElementById('timeInput');
+        editLessonId = null;
+        if (saveLessonBtn) saveLessonBtn.innerText = '➕ Add Lesson';
+        if (cancelEditBtn) cancelEditBtn.style.display = 'none';
         if (subjectInput) subjectInput.value = '';
         if (timeInput) timeInput.value = '';
         renderCalendar();
-        renderLessonsForDate();
+        listenToLessons(dateKey);
+        updateDateLabel(dateKey);
     }
 
-    function renderLessonsForDate() {
-        const container = document.getElementById('lessonsList');
-        const badge = document.getElementById('lessonCountBadge');
-        const dateLabel = document.getElementById('selectedDateLabel');
-        
-        if (!selectedDateKey) {
-            dateLabel.innerHTML = '📌 No date selected';
-            container.innerHTML = '<div class="empty-message">🗓️ Select a date from calendar to manage lessons</div>';
-            badge.innerText = '0 lessons';
-            return;
-        }
-        
-        const [year, month, day] = selectedDateKey.split('-');
-        const dateObj = new Date(year, month-1, day);
+    function updateDateLabel(dateKey) {
+        const [year, month, day] = dateKey.split('-');
+        const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         const formatted = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        dateLabel.innerHTML = `📅 ${formatted}`;
-        
-        const lessons = timetable[selectedDateKey] || [];
-        badge.innerText = `${lessons.length} lesson${lessons.length !== 1 ? 's' : ''}`;
-        
+        selectedDateLabel.innerHTML = `📅 ${formatted}`;
+    }
+
+    function renderLessonsForDate(lessonsData) {
+        const lessons = Object.entries(lessonsData || {}).map(([id, data]) => ({ id, ...data }));
+        lessonCountBadge.innerText = `${lessons.length} lesson${lessons.length !== 1 ? 's' : ''}`;
         if (lessons.length === 0) {
-            container.innerHTML = '<div class="empty-message">📭 No lessons scheduled. Add one below ✨</div>';
+            lessonsList.innerHTML = '<div class="empty-message">📭 No lessons scheduled. Add one below ✨</div>';
             return;
         }
-        
-        container.innerHTML = '';
-        lessons.forEach((lesson, idx) => {
+        lessonsList.innerHTML = '';
+        lessons.forEach(lesson => {
             const card = document.createElement('div');
             card.className = 'lesson-card';
-            
             const infoDiv = document.createElement('div');
             infoDiv.className = 'lesson-info';
             const subjectSpan = document.createElement('div');
@@ -679,21 +663,19 @@
             timeSpan.innerHTML = `⏰ ${escapeHtml(lesson.time || 'Not specified')}`;
             infoDiv.appendChild(subjectSpan);
             infoDiv.appendChild(timeSpan);
-            
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'lesson-actions';
-            
-            // Only show edit/delete for admins
+            card.appendChild(infoDiv);
+
             if (isAdmin) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'lesson-actions';
                 const editBtn = document.createElement('button');
                 editBtn.innerHTML = '✏️';
                 editBtn.className = 'icon-btn';
                 editBtn.title = 'Edit lesson';
                 editBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    startEditLesson(lesson, idx);
+                    startEditLesson(lesson);
                 });
-                
                 const deleteBtn = document.createElement('button');
                 deleteBtn.innerHTML = '❌';
                 deleteBtn.className = 'icon-btn delete-btn';
@@ -701,139 +683,77 @@
                 deleteBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (confirm(`Delete "${lesson.subject}" lesson?`)) {
-                        deleteLessonByIdx(idx);
+                        deleteLesson(selectedDateKey, lesson.id);
                     }
                 });
-                
                 actionsDiv.appendChild(editBtn);
                 actionsDiv.appendChild(deleteBtn);
+                card.appendChild(actionsDiv);
             }
-            
-            card.appendChild(infoDiv);
-            card.appendChild(actionsDiv);
-            container.appendChild(card);
+            lessonsList.appendChild(card);
         });
     }
-    
-    function startEditLesson(lesson, index) {
+
+    function startEditLesson(lesson) {
         if (!isAdmin) return;
         editMode = true;
-        editLessonIndex = index;
-        document.getElementById('subjectInput').value = lesson.subject;
-        document.getElementById('timeInput').value = lesson.time || '';
-        const saveBtn = document.getElementById('saveLessonBtn');
-        saveBtn.innerText = '🔄 Update Lesson';
-        document.getElementById('cancelEditBtn').style.display = 'inline-block';
+        editLessonId = lesson.id;
+        subjectInput.value = lesson.subject;
+        timeInput.value = lesson.time || '';
+        saveLessonBtn.innerText = '🔄 Update Lesson';
+        cancelEditBtn.style.display = 'inline-block';
     }
-    
+
     function cancelEdit() {
-        if (!isAdmin) return;
         editMode = false;
-        editLessonIndex = null;
-        document.getElementById('subjectInput').value = '';
-        document.getElementById('timeInput').value = '';
-        const saveBtn = document.getElementById('saveLessonBtn');
-        saveBtn.innerText = '➕ Add Lesson';
-        document.getElementById('cancelEditBtn').style.display = 'none';
+        editLessonId = null;
+        subjectInput.value = '';
+        timeInput.value = '';
+        saveLessonBtn.innerText = '➕ Add Lesson';
+        cancelEditBtn.style.display = 'none';
     }
-    
-    function deleteLessonByIdx(index) {
-        if (!isAdmin) return;
-        if (!selectedDateKey) return;
-        if (!timetable[selectedDateKey]) return;
-        timetable[selectedDateKey].splice(index, 1);
-        if (timetable[selectedDateKey].length === 0) {
-            delete timetable[selectedDateKey];
-        }
-        persistTimetable();
-        renderLessonsForDate();
-        renderCalendar();
-    }
-    
-    function deleteAllLessonsForDate() {
-        if (!isAdmin) return;
-        if (!selectedDateKey) {
+
+    async function saveLesson() {
+        if (!isAdmin || !selectedDateKey) {
             alert("Please select a date first.");
             return;
         }
-        if (!timetable[selectedDateKey] || timetable[selectedDateKey].length === 0) {
-            alert("No lessons to delete for this date.");
-            return;
-        }
-        if (confirm(`⚠️ Delete ALL lessons for ${selectedDateKey}? This cannot be undone.`)) {
-            delete timetable[selectedDateKey];
-            persistTimetable();
-            renderLessonsForDate();
-            renderCalendar();
-            cancelEdit();
-        }
-    }
-    
-    function saveLesson() {
-        if (!isAdmin) return;
-        if (!selectedDateKey) {
-            alert("❗ Please select a date from the calendar first.");
-            return;
-        }
-        let subject = document.getElementById('subjectInput').value.trim();
-        let time = document.getElementById('timeInput').value.trim();
-        
+        let subject = subjectInput.value.trim();
+        let time = timeInput.value.trim();
         if (subject === "") {
             alert("Please enter a subject name.");
             return;
         }
         if (time === "") time = "To be defined";
-        
-        if (editMode && editLessonIndex !== null) {
-            if (timetable[selectedDateKey] && timetable[selectedDateKey][editLessonIndex]) {
-                timetable[selectedDateKey][editLessonIndex].subject = subject;
-                timetable[selectedDateKey][editLessonIndex].time = time;
-                persistTimetable();
-                cancelEdit();
-                renderLessonsForDate();
-                renderCalendar();
-            } else {
-                alert("Lesson not found, re-adding as new.");
-                editMode = false;
-                addNewLesson(subject, time);
-            }
-        } else {
-            addNewLesson(subject, time);
-        }
+        await addOrUpdateLesson(selectedDateKey, editLessonId, subject, time);
+        cancelEdit();
+        // No need to call render again; listener will update
     }
-    
-    function addNewLesson(subject, time) {
-        if (!isAdmin) return;
-        if (!timetable[selectedDateKey]) {
-            timetable[selectedDateKey] = [];
-        }
-        const newLesson = {
-            subject: subject,
-            time: time,
-            id: `${selectedDateKey}-${Date.now()}-${Math.random()}`
-        };
-        timetable[selectedDateKey].push(newLesson);
-        persistTimetable();
-        renderLessonsForDate();
-        renderCalendar();
-        document.getElementById('subjectInput').value = '';
-        document.getElementById('timeInput').value = '';
+
+    async function deleteAllLessons() {
+        if (!isAdmin || !selectedDateKey) return;
+        if (!confirm(`⚠️ Delete ALL lessons for ${selectedDateKey}? This cannot be undone.`)) return;
+        await deleteAllLessonsForDate(selectedDateKey);
+        cancelEdit();
     }
-    
+
     function changeMonth(delta) {
         currentDisplayDate.setMonth(currentDisplayDate.getMonth() + delta);
-        const [year, month] = [currentDisplayDate.getFullYear(), currentDisplayDate.getMonth()];
+        const year = currentDisplayDate.getFullYear();
+        const month = currentDisplayDate.getMonth();
         if (selectedDateKey) {
             const [selYear, selMonth] = selectedDateKey.split('-');
             if (parseInt(selYear) !== year || parseInt(selMonth) !== (month + 1)) {
                 selectedDateKey = null;
                 cancelEdit();
-                renderLessonsForDate();
+                lessonsList.innerHTML = '<div class="empty-message">✨ Click on a date to view or add lessons</div>';
+                lessonCountBadge.innerText = '0 lessons';
+                selectedDateLabel.innerHTML = '📌 No date selected';
             }
         }
         renderCalendar();
     }
-    
+
     function goToToday() {
         const today = new Date();
         currentDisplayDate = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -841,43 +761,51 @@
         const todayKey = getTodayKey();
         selectDate(todayKey);
     }
-    
-    // ------------------- INITIALIZATION -------------------
-    function init() {
-        if (!checkAuth()) return;
-        
-        loadTimetable();
-        
-        // Show admin controls only if admin
-        if (isAdmin) {
-            document.getElementById('adminControls').style.display = 'block';
-        } else {
-            document.getElementById('adminControls').style.display = 'none';
+
+    // ========== AUTHENTICATION & ROLE CHECK ==========
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+            // Not logged in: show login prompt, hide calendar
+            mainContent.style.display = 'none';
+            loginPromptDiv.style.display = 'flex';
+            return;
         }
-        
+        // Logged in: hide prompt, show calendar
+        loginPromptDiv.style.display = 'none';
+        mainContent.style.display = 'flex';
+        currentUser = user;
+        // Fetch user role from Realtime Database
+        const userSnapshot = await db.ref(`users/${user.uid}`).once('value');
+        const userData = userSnapshot.val();
+        isAdmin = (userData && userData.role === 'admin');
+        if (isAdmin) {
+            adminControls.style.display = 'block';
+        } else {
+            adminControls.style.display = 'none';
+        }
+        // Initialize calendar after login
         const now = new Date();
         currentDisplayDate = new Date(now.getFullYear(), now.getMonth(), 1);
         renderCalendar();
         const todayKey = getTodayKey();
         selectDate(todayKey);
-        
-        // event listeners (only if elements exist)
-        const prevBtn = document.getElementById('prevMonthBtn');
-        const nextBtn = document.getElementById('nextMonthBtn');
-        const todayBtn = document.getElementById('todayBtn');
-        const saveBtn = document.getElementById('saveLessonBtn');
-        const cancelBtn = document.getElementById('cancelEditBtn');
-        const deleteAllBtn = document.getElementById('deleteAllBtn');
-        
-        if (prevBtn) prevBtn.addEventListener('click', () => changeMonth(-1));
-        if (nextBtn) nextBtn.addEventListener('click', () => changeMonth(1));
-        if (todayBtn) todayBtn.addEventListener('click', goToToday);
-        if (saveBtn) saveBtn.addEventListener('click', saveLesson);
-        if (cancelBtn) cancelBtn.addEventListener('click', cancelEdit);
-        if (deleteAllBtn) deleteAllBtn.addEventListener('click', deleteAllLessonsForDate);
+    });
+
+    function logout() {
+        auth.signOut().then(() => {
+            window.location.reload();
+        });
     }
-    
-    // ------------------- PARTICLE BACKGROUND (same as login) -------------------
+
+    // Event listeners
+    document.getElementById('prevMonthBtn').addEventListener('click', () => changeMonth(-1));
+    document.getElementById('nextMonthBtn').addEventListener('click', () => changeMonth(1));
+    document.getElementById('todayBtn').addEventListener('click', goToToday);
+    saveLessonBtn.addEventListener('click', saveLesson);
+    cancelEditBtn.addEventListener('click', cancelEdit);
+    deleteAllBtn.addEventListener('click', deleteAllLessons);
+
+    // ========== PARTICLE BACKGROUND ==========
     const canvas = document.getElementById('particle-canvas');
     const ctx = canvas.getContext('2d');
     let width, height, particles = [];
@@ -927,31 +855,6 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     drawParticles();
-
-    init();
-</script>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
-    authDomain: "smuk-library.firebaseapp.com",
-    projectId: "smuk-library",
-    storageBucket: "smuk-library.firebasestorage.app",
-    messagingSenderId: "101518774671",
-    appId: "1:101518774671:web:24c6c9c2574f230639fbfa",
-    measurementId: "G-9M8VW7EL0B"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
 </script>
 </body>
 </html>
