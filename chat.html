@@ -1,723 +1,436 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>SMUK CHATROOM</title>
-    <!-- Google Font & Simple Icons (Font Awesome) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            min-height: 100vh;
-            background: radial-gradient(ellipse at 20% 30%, #0c0f1c, #03050b);
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-            position: relative;
-            overflow-x: hidden;
-            color: #eef2ff;
-        }
-
-        /* dashboard background layers */
-        .particle-field {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            background-image: 
-                radial-gradient(circle at 25% 40%, rgba(0,224,255,0.08) 1px, transparent 1px),
-                radial-gradient(circle at 75% 85%, rgba(168,85,247,0.08) 1px, transparent 1px);
-            background-size: 48px 48px, 64px 64px;
-            animation: driftParticles 120s linear infinite;
-        }
-
-        @keyframes driftParticles {
-            0% { background-position: 0 0, 0 0; }
-            100% { background-position: 200px 200px, -150px 150px; }
-        }
-
-        .grid-overlay {
-            position: fixed;
-            inset: 0;
-            background-image: 
-                linear-gradient(rgba(0,224,255,0.12) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,224,255,0.12) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        /* main chat container – glassmorphic card (same as before, but with matching shadow) */
-        .chat-app {
-            position: relative;
-            z-index: 10;
-            max-width: 1300px;
-            width: 100%;
-            height: 90vh;
-            background: rgba(18, 25, 40, 0.75);
-            backdrop-filter: blur(12px);
-            border-radius: 2rem;
-            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            transition: all 0.2s ease;
-            border: 1px solid rgba(66, 153, 225, 0.25);
-        }
-
-        /* header area */
-        .chat-header {
-            padding: 1.2rem 1.8rem;
-            background: rgba(10, 18, 28, 0.6);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 0.8rem;
-        }
-
-        .brand h2 {
-            font-weight: 600;
-            font-size: 1.55rem;
-            background: linear-gradient(135deg, #e0eafc, #cfdef3);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            letter-spacing: -0.3px;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .brand h2 i {
-            background: none;
-            color: #5f9eff;
-            font-size: 1.6rem;
-            background-clip: unset;
-            -webkit-background-clip: unset;
-        }
-
-        .badge {
-            background: rgba(95, 158, 255, 0.18);
-            padding: 0.3rem 0.8rem;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: #9bbdff;
-            border: 1px solid rgba(95, 158, 255, 0.3);
-        }
-
-        /* user panel */
-        .user-panel {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.7rem;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.3rem 1rem 0.3rem 1.2rem;
-            border-radius: 60px;
-        }
-
-        .user-panel label {
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #b9ceff;
-        }
-
-        #usernameInput {
-            background: #0f1622;
-            border: 1px solid #2a3a5a;
-            color: white;
-            padding: 0.5rem 0.9rem;
-            border-radius: 2rem;
-            font-size: 0.85rem;
-            width: 140px;
-            font-weight: 500;
-            transition: 0.2s;
-        }
-
-        #usernameInput:focus {
-            outline: none;
-            border-color: #5f9eff;
-            box-shadow: 0 0 0 2px rgba(95, 158, 255, 0.2);
-        }
-
-        .icon-btn {
-            background: #1e2a3e;
-            border: none;
-            color: #cfdef5;
-            padding: 0.45rem 1rem;
-            border-radius: 2rem;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .icon-btn i {
-            font-size: 0.8rem;
-        }
-
-        .icon-btn:hover {
-            background: #2e3d58;
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        .danger-btn {
-            background: rgba(180, 70, 80, 0.2);
-            color: #ffb4a2;
-            border: 1px solid rgba(255, 120, 100, 0.3);
-        }
-
-        .danger-btn:hover {
-            background: #c23b2e80;
-            color: white;
-        }
-
-        /* message stream */
-        .message-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1.2rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            scroll-behavior: smooth;
-        }
-
-        /* custom scroll */
-        .message-area::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        .message-area::-webkit-scrollbar-track {
-            background: #0f1420;
-            border-radius: 10px;
-        }
-
-        .message-area::-webkit-scrollbar-thumb {
-            background: #2f405b;
-            border-radius: 10px;
-        }
-
-        /* chat bubble */
-        .message-bubble {
-            display: flex;
-            flex-direction: column;
-            max-width: 75%;
-            animation: fadeSlideUp 0.2s ease-out;
-        }
-
-        .own-message {
-            align-self: flex-end;
-            align-items: flex-end;
-        }
-
-        .other-message {
-            align-self: flex-start;
-            align-items: flex-start;
-        }
-
-        .bubble-content {
-            padding: 0.7rem 1.2rem;
-            border-radius: 1.8rem;
-            word-break: break-word;
-            font-size: 0.95rem;
-            line-height: 1.4;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .own-message .bubble-content {
-            background: linear-gradient(125deg, #2c6bff, #1e4fcf);
-            color: white;
-            border-bottom-right-radius: 0.4rem;
-        }
-
-        .other-message .bubble-content {
-            background: rgba(30, 40, 55, 0.9);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #eef4ff;
-            border-bottom-left-radius: 0.4rem;
-        }
-
-        .message-meta {
-            display: flex;
-            align-items: baseline;
-            gap: 0.6rem;
-            font-size: 0.7rem;
-            margin-top: 0.25rem;
-            padding: 0 0.4rem;
-            color: #8b9bc2;
-        }
-
-        .sender-name {
-            font-weight: 600;
-            color: #c8ddff;
-        }
-
-        .own-message .sender-name {
-            color: #ffdfb8;
-        }
-
-        .timestamp {
-            font-size: 0.65rem;
-            opacity: 0.7;
-        }
-
-        /* input panel */
-        .input-panel {
-            padding: 1rem 1.5rem 1.5rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .input-group {
-            display: flex;
-            gap: 0.8rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        #messageInput {
-            flex: 1;
-            background: #0e1422;
-            border: 1px solid #293856;
-            border-radius: 3rem;
-            padding: 0.9rem 1.4rem;
-            font-family: 'Inter', monospace;
-            font-size: 0.9rem;
-            color: #f0f3fc;
-            resize: none;
-            transition: 0.2s;
-        }
-
-        #messageInput:focus {
-            outline: none;
-            border-color: #5f9eff;
-            box-shadow: 0 0 0 2px #1e3a8a30;
-        }
-
-        .send-btn {
-            background: #2b5fdb;
-            border: none;
-            padding: 0.9rem 1.8rem;
-            border-radius: 3rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 6px 14px rgba(43, 95, 219, 0.25);
-        }
-
-        .send-btn:hover {
-            background: #1e4ac4;
-            transform: scale(0.97);
-        }
-
-        .helper-text {
-            margin-top: 0.6rem;
-            font-size: 0.7rem;
-            color: #6b7c9e;
-            text-align: center;
-            letter-spacing: 0.3px;
-        }
-
-        .helper-text i {
-            margin-right: 4px;
-        }
-
-        @keyframes fadeSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(12px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* responsive */
-        @media (max-width: 650px) {
-            .chat-app {
-                height: 95vh;
-                border-radius: 1.5rem;
-            }
-            .message-bubble {
-                max-width: 85%;
-            }
-            .user-panel {
-                width: 100%;
-                justify-content: center;
-            }
-            .brand h2 {
-                font-size: 1.3rem;
-            }
-            .input-group {
-                flex-direction: column;
-            }
-            .send-btn {
-                width: 100%;
-                justify-content: center;
-            }
-            #messageInput {
-                width: 100%;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>💬 SMUK Chatroom | Real‑time Messenger</title>
+  <!-- Tailwind + Font Awesome + Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-storage-compat.js"></script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body {
+      background: linear-gradient(145deg, #e0e7ff 0%, #f3e8ff 100%);
+      transition: background 0.3s;
+    }
+    .dark body {
+      background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 100%);
+    }
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .dark .glass-panel {
+      background: rgba(15, 23, 42, 0.7);
+      border-color: rgba(255,255,255,0.05);
+    }
+    .chat-scroll::-webkit-scrollbar { width: 4px; }
+    .chat-scroll::-webkit-scrollbar-track { background: transparent; }
+    .chat-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .message-slide {
+      animation: fadeSlideUp 0.2s ease-out;
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .reaction-picker {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: white;
+      border-radius: 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      padding: 6px 12px;
+      gap: 12px;
+      z-index: 20;
+      backdrop-filter: blur(8px);
+    }
+    .dark .reaction-picker { background: #1e293b; }
+    .message-wrapper:hover .reaction-picker { display: flex; }
+    .typing-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #94a3b8;
+      margin: 0 2px;
+      animation: typingBounce 1.4s infinite ease-in-out;
+    }
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-4px); }
+    }
+    .online-indicator {
+      width: 10px;
+      height: 10px;
+      background-color: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px white;
+    }
+    .dark .online-indicator { box-shadow: 0 0 0 2px #1e293b; }
+  </style>
 </head>
-<body>
-    <!-- dashboard background layers -->
-    <div class="particle-field"></div>
-    <div class="grid-overlay"></div>
+<body class="p-4 md:p-6 font-sans antialiased">
 
-    <div class="chat-app">
-        <div class="chat-header">
-            <div class="brand">
-                <h2><i class="fas fa-comment-dots"></i> Smuk chatroom</h2>
-                <div class="badge"><i class="fas fa-globe"></i> cross‑tab · live</div>
-            </div>
-            <div class="user-panel">
-                <label><i class="fas fa-user-astronaut"></i> Giants</label>
-                <input type="text" id="usernameInput" placeholder="Your name" maxlength="24">
-                <button id="setUsernameBtn" class="icon-btn"><i class="fas fa-check-circle"></i> Set</button>
-                <button id="clearChatBtn" class="icon-btn danger-btn"><i class="fas fa-trash-alt"></i> Clear</button>
-            </div>
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="glass-panel rounded-2xl p-3 mb-5 flex flex-wrap justify-between items-center shadow-xl">
+      <div class="flex items-center gap-3">
+        <div class="bg-gradient-to-tr from-emerald-500 to-teal-500 p-2.5 rounded-2xl shadow-md">
+          <i class="fab fa-whatsapp text-white text-xl"></i>
         </div>
-
-        <div class="message-area" id="messageContainer">
-            <!-- messages injected dynamically -->
-            <div style="text-align: center; opacity: 0.6; padding: 2rem;">loading conversation...</div>
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-indigo-800 to-purple-800 bg-clip-text text-transparent">SMUK Chatroom</h1>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Real‑time school messenger</p>
         </div>
-
-        <div class="input-panel">
-            <div class="input-group">
-                <input type="text" id="messageInput" placeholder="Type your message...  ✨" autocomplete="off">
-                <button id="sendBtn" class="send-btn"><i class="fas fa-paper-plane"></i> Send</button>
-            </div>
-            <div class="helper-text">
-                <i class="fas fa-window-restore"></i> Open this page in two different tabs/windows → real chat across tabs!  
-                <i class="fas fa-sync-alt"></i> messages sync instantly
-            </div>
-        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="currentUserSpan" class="text-sm font-semibold bg-white/50 dark:bg-gray-800/50 px-3 py-1.5 rounded-full backdrop-blur shadow-sm"></span>
+        <button id="darkModeToggle" class="p-2 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur hover:scale-105 transition"><i class="fas fa-moon text-indigo-600 dark:text-yellow-300"></i></button>
+        <a href="dashboard.html" class="p-2 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur text-indigo-500 hover:scale-105 transition"><i class="fas fa-arrow-left"></i></a>
+        <button id="logoutBtn" class="p-2 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur text-rose-500 hover:scale-105 transition"><i class="fas fa-sign-out-alt"></i></button>
+      </div>
     </div>
 
-    <script>
-        (function() {
-            // ---------- DOM elements ----------
-            const messageContainer = document.getElementById('messageContainer');
-            const messageInput = document.getElementById('messageInput');
-            const sendBtn = document.getElementById('sendBtn');
-            const usernameInput = document.getElementById('usernameInput');
-            const setUsernameBtn = document.getElementById('setUsernameBtn');
-            const clearChatBtn = document.getElementById('clearChatBtn');
+    <!-- Main Grid: Sidebar + Chat -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Groups & Contacts -->
+      <div class="glass-panel rounded-2xl p-4 shadow-xl backdrop-blur-md">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-bold flex items-center gap-2"><i class="fas fa-comments text-indigo-500"></i> Chats</h2>
+          <button id="createGroupBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white text-sm px-3 py-1.5 rounded-full shadow-md transition-all flex items-center gap-1"><i class="fas fa-plus"></i> Group</button>
+        </div>
+        <div id="groupsList" class="space-y-2 max-h-80 overflow-y-auto pr-1">
+          <!-- dynamic groups -->
+        </div>
+        <hr class="my-3 border-gray-300 dark:border-gray-700">
+        <div>
+          <p class="text-xs font-semibold text-gray-500 mb-2"><i class="fas fa-circle text-green-500 text-[8px]"></i> Online now</p>
+          <div id="usersList" class="space-y-1 text-sm max-h-40 overflow-y-auto"></div>
+        </div>
+      </div>
 
-            // ---------- Storage keys ----------
-            const MESSAGES_KEY = 'smuk_chatroom_chat_messages';
-            const USERNAME_SESSION_KEY = 'smuk_chatroom_local_username';  // sessionStorage (tab-specific)
+      <!-- Chat Area -->
+      <div class="lg:col-span-2 glass-panel rounded-2xl shadow-xl flex flex-col h-[70vh] backdrop-blur-md">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <div>
+            <span id="currentRoomName" class="font-bold text-lg">Global Chat</span>
+            <div id="roomStatus" class="text-xs text-gray-500 flex items-center gap-1 mt-0.5"></div>
+          </div>
+          <div id="roomActions" class="hidden">
+            <button id="addMemberBtn" class="bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-full shadow-md hover:bg-emerald-600 transition"><i class="fas fa-user-plus"></i> Add member</button>
+          </div>
+        </div>
+        <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-3 chat-scroll bg-[#f8f9fc] dark:bg-gray-900/30"></div>
+        <div id="replyPreview" class="mx-4 mt-2 text-xs text-gray-500 hidden bg-white/50 dark:bg-gray-800/50 rounded-lg p-2 backdrop-blur"></div>
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex gap-2 items-center">
+            <button id="attachBtn" class="text-indigo-500 hover:scale-110 transition"><i class="fas fa-paperclip text-xl"></i></button>
+            <input type="text" id="messageInput" placeholder="Type a message..." class="flex-1 border-0 bg-white/50 dark:bg-gray-800/50 rounded-full px-5 py-2.5 focus:ring-2 focus:ring-indigo-300 outline-none transition-all">
+            <button id="sendBtn" class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-2.5 rounded-full shadow-md hover:scale-105 transition"><i class="fas fa-paper-plane"></i></button>
+          </div>
+          <div class="flex gap-3 mt-2 text-sm">
+            <button id="voiceBtn" class="text-rose-500 flex items-center gap-1 bg-white/30 rounded-full px-3 py-1"><i class="fas fa-microphone"></i> Voice</button>
+            <button id="emojiBtn" class="text-amber-500 flex items-center gap-1 bg-white/30 rounded-full px-3 py-1"><i class="fas fa-smile"></i> Emoji</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-            // ---------- Global state ----------
-            let currentUsername = '';
+  <!-- Firebase Config (same as your project) -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
+      authDomain: "smuk-library.firebaseapp.com",
+      databaseURL: "https://smuk-library-default-rtdb.firebaseio.com/",
+      projectId: "smuk-library",
+      storageBucket: "smuk-library.firebasestorage.app",
+      messagingSenderId: "101518774671",
+      appId: "1:101518774671:web:24c6c9c2574f230639fbfa",
+      measurementId: "G-9M8VW7EL0B"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const storage = firebase.storage();
 
-            // ---------- Helper: Load / Save messages from localStorage ----------
-            function getStoredMessages() {
-                const raw = localStorage.getItem(MESSAGES_KEY);
-                if (!raw) return null;
-                try {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) return parsed;
-                    return null;
-                } catch(e) {
-                    return null;
-                }
-            }
+    let currentUser = null;
+    let currentUserName = "";
+    let currentRoomId = 'global';
+    let currentRoomType = 'global';
+    let replyTo = null;
 
-            function saveMessagesToLocalStorage(messagesArray) {
-                localStorage.setItem(MESSAGES_KEY, JSON.stringify(messagesArray));
-            }
+    // Redirect if not logged in
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      currentUser = user;
+      // Fetch user name from Realtime Database
+      const userSnap = await db.ref(`users/${user.uid}`).once('value');
+      const userData = userSnap.val();
+      currentUserName = userData ? userData.name : user.email.split('@')[0];
+      document.getElementById('currentUserSpan').innerText = currentUserName;
 
-            // Initialize default messages (only if empty)
-            function initDefaultMessages() {
-                const existing = getStoredMessages();
-                if (!existing || existing.length === 0) {
-                    const welcomeMsg = {
-                        id: `sys_${Date.now()}_1`,
-                        text: "✨ Welcome to Smuk chatroom! ✨\nOpen this page in another tab/window → type a message → see it appear here instantly. Change your alias anytime. Have fun!",
-                        sender: "Smuk",
-                        timestamp: Date.now() - 60000
-                    };
-                    const exampleMsg = {
-                        id: `sys_${Date.now()}_2`,
-                        text: "💬 Cross-tab magic: messages are shared across all tabs using localStorage + storage events. Try sending a message from another window!",
-                        sender: "Smuk",
-                        timestamp: Date.now() - 30000
-                    };
-                    saveMessagesToLocalStorage([welcomeMsg, exampleMsg]);
-                    return [welcomeMsg, exampleMsg];
-                }
-                return existing;
-            }
+      // Set presence
+      const userStatusRef = db.ref('presence/' + currentUserName);
+      userStatusRef.set({ online: true, lastSeen: Date.now() });
+      userStatusRef.onDisconnect().update({ online: false, lastSeen: Date.now() });
 
-            // ---------- Render messages (sorted by timestamp, oldest first) ----------
-            function renderMessages() {
-                const messages = getStoredMessages();
-                if (!messages || messages.length === 0) {
-                    messageContainer.innerHTML = `<div style="text-align:center; padding:2rem; color:#7e8aa8;"><i class="fas fa-comment-slash"></i> No messages yet — start the conversation!</div>`;
-                    return;
-                }
+      // Load online users
+      db.ref('presence').on('value', (snap) => {
+        const users = snap.val() || {};
+        const onlineDiv = document.getElementById('usersList');
+        onlineDiv.innerHTML = '';
+        for (let [name, data] of Object.entries(users)) {
+          if (data.online && name !== currentUserName) {
+            onlineDiv.innerHTML += `<div class="flex items-center gap-2 py-1"><span class="online-indicator"></span><span class="text-sm font-medium">${escapeHtml(name)}</span></div>`;
+          }
+        }
+        if (onlineDiv.innerHTML === '') onlineDiv.innerHTML = '<p class="text-xs text-gray-400">No one else online</p>';
+      });
 
-                // sort ascending by timestamp (oldest at top)
-                const sorted = [...messages].sort((a,b) => a.timestamp - b.timestamp);
-                
-                let html = '';
-                for (const msg of sorted) {
-                    const isOwn = (msg.sender === currentUsername && msg.sender !== 'System');
-                    const bubbleClass = isOwn ? 'own-message' : 'other-message';
-                    const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit', second:'2-digit' });
-                    const displaySender = msg.sender === currentUsername ? `${msg.sender} (You)` : msg.sender;
-                    
-                    // Escape message to avoid injection but preserve line breaks (simple)
-                    const safeText = escapeHtml(msg.text).replace(/\n/g, '<br>');
-                    
-                    html += `
-                        <div class="message-bubble ${bubbleClass}">
-                            <div class="bubble-content">
-                                ${safeText}
-                            </div>
-                            <div class="message-meta">
-                                <span class="sender-name"><i class="fas fa-user-circle"></i> ${escapeHtml(displaySender)}</span>
-                                <span class="timestamp"><i class="far fa-clock"></i> ${timeStr}</span>
-                            </div>
-                        </div>
-                    `;
-                }
-                messageContainer.innerHTML = html;
-                // auto-scroll to bottom
-                messageContainer.scrollTop = messageContainer.scrollHeight;
-            }
+      // Load groups
+      loadGroups();
+      switchRoom('global', 'Global Chat');
+    });
 
-            // simple XSS protection
-            function escapeHtml(str) {
-                if (!str) return '';
-                return str.replace(/[&<>]/g, function(m) {
-                    if (m === '&') return '&amp;';
-                    if (m === '<') return '&lt;';
-                    if (m === '>') return '&gt;';
-                    return m;
-                }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-                    return c;
-                });
-            }
+    function loadGroups() {
+      db.ref('groups').on('value', (snap) => {
+        const groups = snap.val() || {};
+        const container = document.getElementById('groupsList');
+        container.innerHTML = `<div class="cursor-pointer p-3 rounded-xl flex items-center gap-3 transition-all hover:bg-white/40 dark:hover:bg-gray-800/40 ${currentRoomId === 'global' ? 'bg-indigo-100 dark:bg-indigo-900/30 shadow-sm' : ''}" onclick="switchRoom('global','Global Chat')">
+          <i class="fas fa-globe text-indigo-500"></i><span>Global Chat</span>
+        </div>`;
+        for (let [id, group] of Object.entries(groups)) {
+          if (group.members && group.members[currentUserName]) {
+            container.innerHTML += `<div class="cursor-pointer p-3 rounded-xl flex items-center gap-3 transition-all hover:bg-white/40 dark:hover:bg-gray-800/40 ${currentRoomId === id ? 'bg-indigo-100 dark:bg-indigo-900/30 shadow-sm' : ''}" onclick="switchRoom('${id}','${escapeHtml(group.name)}')">
+              <i class="fas fa-users text-emerald-500"></i><span>${escapeHtml(group.name)} ${group.admin === currentUserName ? '(admin)' : ''}</span>
+            </div>`;
+          }
+        }
+      });
+    }
 
-            // ---------- Add a new message (core) ----------
-            function addNewMessage(text, senderName) {
-                if (!text || text.trim() === '') return false;
-                const trimmedText = text.trim();
-                const newMessage = {
-                    id: `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
-                    text: trimmedText,
-                    sender: senderName,
-                    timestamp: Date.now()
-                };
-                
-                // read current, push, save
-                const currentMessages = getStoredMessages();
-                if (!currentMessages) {
-                    saveMessagesToLocalStorage([newMessage]);
-                } else {
-                    currentMessages.push(newMessage);
-                    saveMessagesToLocalStorage(currentMessages);
-                }
-                // trigger re-render for this tab + storage event will update others
-                renderMessages();
-                return true;
-            }
+    window.switchRoom = (roomId, roomName) => {
+      currentRoomId = roomId;
+      currentRoomType = roomId === 'global' ? 'global' : 'group';
+      document.getElementById('currentRoomName').innerHTML = escapeHtml(roomName);
+      document.getElementById('chatBox').innerHTML = '';
+      replyTo = null;
+      document.getElementById('replyPreview').classList.add('hidden');
+      document.getElementById('roomActions').classList.toggle('hidden', currentRoomType !== 'group');
+      attachMessageListener();
+    };
 
-            // ---------- Clear all messages (with confirm) ----------
-            function clearAllMessages() {
-                const confirmClear = confirm("⚠️ Clear entire chat history? This will delete all messages for ALL tabs.");
-                if (!confirmClear) return;
-                saveMessagesToLocalStorage([]);
-                // re-init with fresh system hint? but cleaner: empty chat, but we push a small system info.
-                const systemNote = {
-                    id: `sys_clear_${Date.now()}`,
-                    text: "🗑️ Chat history cleared. Start fresh! (open another tab to continue cross-tab chat)",
-                    sender: "System",
-                    timestamp: Date.now()
-                };
-                const freshArr = [systemNote];
-                saveMessagesToLocalStorage(freshArr);
-                renderMessages();
-            }
+    document.getElementById('createGroupBtn').onclick = () => {
+      let groupName = prompt("New group name:");
+      if (!groupName) return;
+      const newGroupRef = db.ref('groups').push();
+      newGroupRef.set({ name: groupName, admin: currentUserName, members: { [currentUserName]: true }, createdAt: Date.now() });
+    };
 
-            // ---------- Username management (tab-specific) ----------
-            function loadCurrentUsername() {
-                let storedName = sessionStorage.getItem(USERNAME_SESSION_KEY);
-                if (!storedName) {
-                    const randomId = Math.floor(Math.random() * 900) + 100;
-                    storedName = `Student${randomId}`;
-                    sessionStorage.setItem(USERNAME_SESSION_KEY, storedName);
-                }
-                currentUsername = storedName;
-                usernameInput.value = currentUsername;
-            }
+    document.getElementById('addMemberBtn').onclick = () => {
+      const memberName = prompt("Username to add:");
+      if (memberName) db.ref(`groups/${currentRoomId}/members/${memberName}`).set(true);
+    };
 
-            function updateUsername(newName) {
-                if (!newName || newName.trim() === '') {
-                    alert("Username can't be empty!");
-                    return false;
-                }
-                const cleanName = newName.trim().substring(0, 24);
-                if (cleanName.length === 0) return false;
-                currentUsername = cleanName;
-                sessionStorage.setItem(USERNAME_SESSION_KEY, currentUsername);
-                usernameInput.value = currentUsername;
-                // re-render messages to update "You" indicators
-                renderMessages();
-                return true;
-            }
+    function attachMessageListener() {
+      const path = currentRoomType === 'global' ? 'chat/global' : `groups/${currentRoomId}/messages`;
+      db.ref(path).off();
+      db.ref(path).on('child_added', (snap) => displayMessage(snap.key, snap.val()));
+      db.ref(path).on('child_changed', (snap) => updateMessage(snap.key, snap.val()));
+      db.ref(path).on('child_removed', (snap) => { const el = document.getElementById(`msg-${snap.key}`); if(el) el.remove(); });
+    }
 
-            // ---------- Send action ----------
-            function handleSendMessage() {
-                const rawMsg = messageInput.value;
-                if (!rawMsg.trim()) {
-                    // subtle shake effect? just ignore
-                    messageInput.style.borderColor = "#ff8888";
-                    setTimeout(() => { messageInput.style.borderColor = "#293856"; }, 400);
-                    return;
-                }
-                const success = addNewMessage(rawMsg, currentUsername);
-                if (success) {
-                    messageInput.value = '';
-                    messageInput.focus();
-                }
-            }
+    function displayMessage(id, msg) {
+      const isMe = msg.name === currentUserName;
+      const chatBox = document.getElementById('chatBox');
+      const reactionsHtml = msg.reactions ? Object.values(msg.reactions).join(' ') : '';
+      const replyHtml = msg.replyTo ? `<div class="text-xs border-l-3 border-indigo-300 pl-2 mb-1 opacity-80">↩️ ${escapeHtml(msg.replyTo.text)}</div>` : '';
+      const mediaHtml = msg.image ? `<img src="${msg.image}" class="rounded-xl max-w-[200px] max-h-[200px] object-cover mt-1 shadow">` : (msg.voice ? `<audio controls src="${msg.voice}" class="mt-1 rounded-full"></audio>` : '');
+      const ticks = (msg.readBy && Object.keys(msg.readBy).length > 1) ? '✓✓' : '✓';
+      const canDelete = (isMe || (currentRoomType === 'group' && isGroupAdmin())) ? `<button onclick="deleteMessage('${id}')" class="text-rose-400 text-xs ml-2 hover:scale-110 transition"><i class="fas fa-trash-alt"></i></button>` : '';
 
-            // ---------- Sync across tabs using 'storage' event ----------
-            function onStorageEvent(event) {
-                // listen only to changes on our MESSAGES_KEY
-                if (event.key === MESSAGES_KEY) {
-                    // messages updated in another tab → re-render current view
-                    renderMessages();
-                }
-                // optional: could also listen to username changes? no need, username is session based.
-            }
+      const bubbleClass = isMe ? 'bg-emerald-100 dark:bg-emerald-800/60 text-gray-800 dark:text-white rounded-2xl rounded-tr-sm' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-2xl rounded-tl-sm shadow-sm';
+      const wrapperClass = `flex ${isMe ? 'justify-end' : 'justify-start'} message-wrapper relative message-slide`;
+      const msgDiv = document.createElement('div');
+      msgDiv.id = `msg-${id}`;
+      msgDiv.className = wrapperClass;
+      msgDiv.innerHTML = `
+        <div class="max-w-[75%] px-4 py-2 ${bubbleClass}">
+          <div class="text-xs font-semibold ${isMe ? 'text-right text-emerald-700 dark:text-emerald-300' : 'text-indigo-600 dark:text-indigo-400'}">${escapeHtml(msg.name)}</div>
+          ${replyHtml}
+          <div class="message-text break-words">${escapeHtml(msg.message || '')}</div>
+          ${mediaHtml}
+          <div class="text-[10px] flex justify-between gap-3 mt-1 opacity-60">
+            <span>${new Date(msg.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+            <span>${isMe ? ticks : ''}</span>
+          </div>
+          <div class="reactions text-xs mt-1">${reactionsHtml}</div>
+          <div class="reaction-picker">
+            <button onclick="reactToMessage('${id}','👍')" class="hover:scale-125 transition">👍</button>
+            <button onclick="reactToMessage('${id}','😂')" class="hover:scale-125 transition">😂</button>
+            <button onclick="reactToMessage('${id}','❤️')" class="hover:scale-125 transition">❤️</button>
+          </div>
+          <div class="flex justify-end gap-1 mt-1">
+            <button onclick="setReply('${id}','${escapeHtml((msg.message || '').substring(0,30))}')" class="text-blue-500 text-xs hover:scale-110 transition"><i class="fas fa-reply"></i></button>
+            ${canDelete}
+          </div>
+        </div>
+      `;
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-            // ---------- Additional: ensure input enter key works ----------
-            function setupEventListeners() {
-                sendBtn.addEventListener('click', handleSendMessage);
-                messageInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                    }
-                });
-                setUsernameBtn.addEventListener('click', () => {
-                    const newName = usernameInput.value.trim();
-                    if (newName && newName !== currentUsername) {
-                        updateUsername(newName);
-                        // subtle user feedback
-                        const notif = document.createElement('div');
-                        // no intrusive toasts, just re-render
-                    } else if (!newName) {
-                        alert("Please enter a valid username");
-                    } else if (newName === currentUsername) {
-                        // same name, nothing changes
-                    }
-                });
-                clearChatBtn.addEventListener('click', clearAllMessages);
-                // manual focus & optional clear
-                window.addEventListener('storage', onStorageEvent);
-            }
+    function updateMessage(id, msg) {
+      const el = document.getElementById(`msg-${id}`);
+      if (!el) return;
+      const textDiv = el.querySelector('.message-text');
+      if (textDiv) textDiv.innerHTML = escapeHtml(msg.message || (msg.deleted ? '🚫 Deleted' : ''));
+      const reactionsDiv = el.querySelector('.reactions');
+      if (reactionsDiv && msg.reactions) reactionsDiv.innerHTML = Object.values(msg.reactions).join(' ');
+    }
 
-            // ---------- initial page load & health check for corrupt data ----------
-            function bootstrap() {
-                loadCurrentUsername();     // load from sessionStorage (tab identity)
-                // ensure messages array exists + valid structure
-                let messages = getStoredMessages();
-                if (!messages) {
-                    // brand new site
-                    const defaultMsgs = initDefaultMessages();
-                    saveMessagesToLocalStorage(defaultMsgs);
-                } else {
-                    // validate each message has required fields, else fix
-                    let valid = true;
-                    for (let i = 0; i < messages.length; i++) {
-                        if (!messages[i].id || !messages[i].text || !messages[i].sender || !messages[i].timestamp) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                    if (!valid || messages.some(m => typeof m.timestamp !== 'number')) {
-                        // data corrupted: reset to clean state with a warning system message
-                        const resetMsg = {
-                            id: `reset_${Date.now()}`,
-                            text: "⚠️ Chat history was repaired due to data inconsistency. Fresh start.",
-                            sender: "Smuk",
-                            timestamp: Date.now()
-                        };
-                        saveMessagesToLocalStorage([resetMsg]);
-                    }
-                }
-                renderMessages();
-                setupEventListeners();
-                // Also call render on any external storage event (already done)
-                // For double safety, check also if we missed any update
-            }
+    window.reactToMessage = (msgId, emoji) => {
+      const path = currentRoomType === 'global' ? `chat/global/${msgId}/reactions/${currentUserName}` : `groups/${currentRoomId}/messages/${msgId}/reactions/${currentUserName}`;
+      db.ref(path).set(emoji);
+    };
 
-            // optional: re-render on visibility change (just to be extra safe)
-            document.addEventListener('visibilitychange', () => {
-                if (!document.hidden) {
-                    renderMessages();
-                }
-            });
+    window.setReply = (msgId, text) => {
+      replyTo = { id: msgId, text: text };
+      const previewDiv = document.getElementById('replyPreview');
+      previewDiv.innerHTML = `↩️ Replying to: ${escapeHtml(text)} <button onclick="cancelReply()" class="text-rose-500 ml-2">✖</button>`;
+      previewDiv.classList.remove('hidden');
+    };
+    window.cancelReply = () => { replyTo = null; document.getElementById('replyPreview').classList.add('hidden'); };
 
-            bootstrap();
-        })();
-    </script>
-    <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+    window.deleteMessage = (msgId) => {
+      if (confirm("Delete this message for everyone?")) {
+        const path = currentRoomType === 'global' ? `chat/global/${msgId}` : `groups/${currentRoomId}/messages/${msgId}`;
+        db.ref(path).update({ message: "🚫 This message was deleted", deleted: true });
+      }
+    };
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
-    authDomain: "smuk-library.firebaseapp.com",
-    projectId: "smuk-library",
-    storageBucket: "smuk-library.firebasestorage.app",
-    messagingSenderId: "101518774671",
-    appId: "1:101518774671:web:24c6c9c2574f230639fbfa",
-    measurementId: "G-9M8VW7EL0B"
-  };
+    async function isGroupAdmin() {
+      if (currentRoomType !== 'group') return false;
+      const snap = await db.ref(`groups/${currentRoomId}/admin`).once('value');
+      return snap.val() === currentUserName;
+    }
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
+    function sendMessage(text, mediaUrl = null, mediaType = null) {
+      if (!text.trim() && !mediaUrl) return;
+      const msgObj = { name: currentUserName, message: text, time: Date.now(), readBy: { [currentUserName]: true } };
+      if (replyTo) { msgObj.replyTo = replyTo; cancelReply(); }
+      if (mediaUrl && mediaType === 'image') msgObj.image = mediaUrl;
+      if (mediaUrl && mediaType === 'voice') msgObj.voice = mediaUrl;
+      const path = currentRoomType === 'global' ? 'chat/global' : `groups/${currentRoomId}/messages`;
+      db.ref(path).push(msgObj);
+      document.getElementById('messageInput').value = '';
+    }
+
+    document.getElementById('sendBtn').onclick = () => sendMessage(document.getElementById('messageInput').value);
+    document.getElementById('messageInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(e.target.value); });
+
+    // Attach file (image)
+    document.getElementById('attachBtn').onclick = () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const ref = storage.ref(`chat_images/${Date.now()}_${file.name}`);
+          await ref.put(file);
+          const url = await ref.getDownloadURL();
+          sendMessage('', url, 'image');
+        }
+      };
+      input.click();
+    };
+
+    // Voice recording
+    let mediaRecorder, audioChunks = [];
+    document.getElementById('voiceBtn').onclick = async () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone"></i> Voice';
+        return;
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const storageRef = storage.ref(`voice_notes/${Date.now()}.webm`);
+        await storageRef.put(blob);
+        const url = await storageRef.getDownloadURL();
+        sendMessage('', url, 'voice');
+      };
+      mediaRecorder.start();
+      document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-stop-circle"></i> Stop';
+    };
+
+    // Simple emoji picker
+    document.getElementById('emojiBtn').onclick = () => {
+      const emojis = ['😀', '😂', '❤️', '👍', '🔥', '🎉'];
+      const picker = document.createElement('div');
+      picker.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-3 flex gap-3 z-50';
+      emojis.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.innerText = emoji;
+        btn.className = 'text-2xl hover:scale-125 transition';
+        btn.onclick = () => { sendMessage(emoji); picker.remove(); };
+        picker.appendChild(btn);
+      });
+      document.body.appendChild(picker);
+      setTimeout(() => picker.remove(), 5000);
+    };
+
+    // Dark mode
+    if (localStorage.getItem('dark') === 'true') document.documentElement.classList.add('dark');
+    document.getElementById('darkModeToggle').onclick = () => {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('dark', document.documentElement.classList.contains('dark'));
+    };
+
+    // Typing indicator
+    let typingTimeout;
+    document.getElementById('messageInput').oninput = () => {
+      const typingRef = db.ref(`typing/${currentRoomId}/${currentUserName}`);
+      typingRef.set(true);
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => typingRef.remove(), 1500);
+    };
+    db.ref(`typing/${currentRoomId}`).on('value', (snap) => {
+      const typingUsers = snap.val();
+      const statusDiv = document.getElementById('roomStatus');
+      if (typingUsers) {
+        const names = Object.keys(typingUsers).filter(n => n !== currentUserName);
+        if (names.length) statusDiv.innerHTML = `<span class="flex items-center gap-1"><span class="typing-dot"></span><span class="typing-dot" style="animation-delay:0.2s"></span><span class="typing-dot" style="animation-delay:0.4s"></span> ${names.slice(0,2).join(', ')} typing...</span>`;
+        else statusDiv.innerHTML = '';
+      } else statusDiv.innerHTML = '';
+    });
+
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+
+    // Logout
+    document.getElementById('logoutBtn').onclick = async () => {
+      await auth.signOut();
+      window.location.href = "login.html";
+    };
+  </script>
 </body>
 </html>
