@@ -4,16 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Admin Control Panel | ST KALEMBA SS VILAMARIA</title>
-  <!-- TailwindCSS + Font Awesome + Google Fonts -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- FullCalendar -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-  <!-- Firebase SDKs (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-database-compat.js"></script>
   <style>
     * { font-family: 'Inter', sans-serif; }
     body { background: #f1f5f9; }
@@ -22,12 +15,12 @@
     .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
     .status-dot.online { background-color: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,0.2); }
     .status-dot.offline { background-color: #9ca3af; }
-    .user-list { max-height: 320px; overflow-y: auto; scrollbar-width: thin; }
-    .fc { --fc-border-color: #e2e8f0; --fc-button-bg-color: #4f46e5; --fc-button-border-color: #4f46e5; --fc-button-hover-bg-color: #4338ca; --fc-today-bg-color: #eef2ff; }
-    .fc-event { background: #4f46e5; border: none; cursor: pointer; }
-    .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-    .library-link-card { transition: all 0.2s ease; }
-    .library-link-card:hover { transform: translateY(-3px); background: #f8fafc; }
+    .file-drop-zone { transition: all 0.2s; }
+    .file-drop-zone.drag-over { background-color: #eef2ff; border-color: #4f46e5; }
+    .book-grid { max-height: 380px; overflow-y: auto; scrollbar-width: thin; }
+    .user-list { max-height: 320px; overflow-y: auto; }
+    .nav-card { transition: all 0.2s; }
+    .nav-card:hover { transform: translateY(-2px); background-color: #eef2ff; }
   </style>
 </head>
 <body class="bg-slate-50">
@@ -41,7 +34,7 @@
         </div>
         <div>
           <h1 class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-indigo-800 to-purple-800 bg-clip-text text-transparent">Admin Control Panel</h1>
-          <p class="text-slate-500 text-sm flex items-center gap-1"><i class="fas fa-tachometer-alt"></i> Full Calendar Management · Live Oversight</p>
+          <p class="text-slate-500 text-sm flex items-center gap-1"><i class="fas fa-tachometer-alt"></i> Full Library & User Management</p>
         </div>
       </div>
       <div class="bg-white/70 backdrop-blur rounded-full px-4 py-2 shadow-sm text-indigo-700 text-sm font-medium">
@@ -49,7 +42,7 @@
       </div>
     </div>
 
-    <!-- Stats Cards (real-time from Firebase) -->
+    <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
       <div class="dashboard-card bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 flex items-center justify-between">
         <div><p class="text-slate-500 text-sm">📚 Total Books</p><p id="totalBooksStat" class="text-3xl font-bold text-indigo-700">0</p></div>
@@ -60,36 +53,54 @@
         <i class="fas fa-users-viewfinder text-4xl text-indigo-300"></i>
       </div>
       <div class="dashboard-card bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 flex items-center justify-between">
-        <div><p class="text-slate-500 text-sm">👥 Total Users</p><p id="totalUsersStat" class="text-3xl font-bold text-slate-700">0</p></div>
+        <div><p class="text-slate-500 text-sm">👥 Active Users</p><p id="totalUsersStat" class="text-3xl font-bold text-slate-700">0</p></div>
         <i class="fas fa-user-friends text-4xl text-indigo-300"></i>
       </div>
       <div class="dashboard-card bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 flex items-center justify-between">
-        <div><p class="text-slate-500 text-sm">📅 Calendar Events</p><p id="totalEventsStat" class="text-3xl font-bold text-purple-600">0</p></div>
+        <div><p class="text-slate-500 text-sm">📅 Events</p><p id="totalEventsStat" class="text-3xl font-bold text-purple-600">0</p></div>
         <i class="fas fa-calendar-week text-4xl text-indigo-300"></i>
       </div>
     </div>
 
-    <!-- Two Column Layout: Library Link (left) + Live Users (right) -->
+    <!-- Navigation Cards (Links to Calendar, Assignments, Chat, etc.) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
+      <a href="calendar.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-calendar-alt text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Calendar</span></a>
+      <a href="assignments.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-tasks text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Assignments</span></a>
+      <a href="chat.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-comments text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Chat</span></a>
+      <a href="admin-library.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-book text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Manage Books</span></a>
+      <a href="dashboard.html" class="nav-card bg-white rounded-xl p-3 text-center shadow-sm border border-slate-100 hover:shadow-md transition"><i class="fas fa-chalkboard-user text-indigo-500 text-xl mb-1 block"></i><span class="text-sm font-medium">Student View</span></a>
+    </div>
+
+    <!-- Two Column Layout: PDF Library (left) + Live Users (right) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-      <!-- Left: Admin Library Link Card -->
-      <div class="lg:col-span-2">
-        <a href="admin-library.html" class="library-link-card block bg-white rounded-2xl shadow-md border border-indigo-100 overflow-hidden transition-all hover:shadow-lg">
-          <div class="bg-gradient-to-r from-indigo-50 to-white px-5 py-4 flex items-center gap-4">
-            <div class="bg-indigo-100 p-3 rounded-xl">
-              <i class="fas fa-book-open text-indigo-600 text-2xl"></i>
-            </div>
-            <div>
-              <h2 class="font-bold text-slate-800 text-lg">📚 Admin Library Manager</h2>
-              <p class="text-slate-500 text-sm">Upload, delete, and manage PDF books · Full control over digital collection</p>
-            </div>
-            <div class="ml-auto">
-              <i class="fas fa-arrow-right text-indigo-400 text-xl"></i>
-            </div>
+      <!-- Left: PDF Library Management -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+          <div class="bg-gradient-to-r from-indigo-50 to-white px-5 py-3 border-b border-slate-100 flex justify-between items-center flex-wrap gap-2">
+            <h2 class="font-semibold text-slate-700 flex items-center gap-2"><i class="fas fa-cloud-upload-alt text-indigo-500"></i> PDF Library · Full Control</h2>
+            <span class="text-xs text-slate-400"><i class="fas fa-database"></i> Upload / Delete / Preview</span>
           </div>
-        </a>
+          <div class="p-5">
+            <div id="dropZone" class="file-drop-zone border-2 border-dashed border-slate-300 rounded-xl p-5 text-center cursor-pointer transition bg-slate-50 hover:bg-indigo-50/40">
+              <i class="fas fa-file-pdf text-3xl text-indigo-400 mb-2"></i>
+              <p class="text-slate-600 font-medium">Drag & drop PDF or click to browse (Admin only)</p>
+              <input type="file" id="fileInput" accept="application/pdf" multiple class="hidden" />
+              <button id="browseBtn" class="mt-2 text-sm bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition inline-flex items-center gap-1"><i class="fas fa-folder-open"></i> Select files</button>
+            </div>
+            <div id="uploadStatus" class="mt-3 text-sm text-center"></div>
+            <p class="text-xs text-slate-400 mt-2"><i class="fas fa-info-circle"></i> Max 20MB per PDF · Click on book to view, download or delete</p>
+          </div>
+          <div class="bg-slate-50 px-5 py-2 border-t border-slate-100 flex justify-between items-center">
+            <span class="text-sm font-medium"><i class="fas fa-list"></i> Library Collection</span>
+            <button id="refreshBooksBtn" class="text-indigo-600 text-sm hover:bg-indigo-100 px-2 py-1 rounded"><i class="fas fa-sync-alt"></i> Refresh</button>
+          </div>
+          <div id="booksContainer" class="book-grid p-4 divide-y divide-slate-100 bg-white">
+            <div class="text-center py-8 text-slate-400"><i class="fas fa-spinner fa-pulse"></i> Loading books...</div>
+          </div>
+        </div>
       </div>
 
-      <!-- Right: Real-time Users Panel (Monitor) -->
+      <!-- Right: Real-time Users Panel -->
       <div class="space-y-6">
         <div class="bg-white rounded-2xl shadow-md border border-indigo-100 overflow-hidden">
           <div class="bg-indigo-50/60 px-5 py-3 border-b border-indigo-100 flex justify-between items-center">
@@ -101,39 +112,22 @@
           </div>
           <div class="bg-slate-50 px-4 py-2 text-xs text-slate-500 border-t border-slate-100 flex justify-between items-center">
             <span><i class="fas fa-user-tag"></i> You (Admin): <span id="myPresenceName">Administrator</span></span>
+            <button id="setNameQuickBtn" class="text-indigo-500 hover:text-indigo-700"><i class="fas fa-pen"></i> set name</button>
           </div>
         </div>
         <div class="bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-4 shadow-sm border border-indigo-100">
           <div class="flex items-center gap-2 mb-1"><i class="fas fa-gavel text-indigo-600"></i><span class="font-semibold">Admin Privileges</span></div>
-          <p class="text-slate-600 text-xs">✔ Upload & delete PDFs (via Library Manager)<br>✔ Add / Edit / Delete calendar events<br>✔ Monitor live users</p>
+          <p class="text-slate-600 text-xs">✔ Upload & delete PDFs<br>✔ Add / Edit / Delete calendar events (via Calendar page)<br>✔ Monitor live users</p>
         </div>
       </div>
     </div>
-
-    <!-- Full-Width Calendar Section with Edit/Delete Controls -->
-    <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden mt-4">
-      <div class="bg-gradient-to-r from-purple-50 to-indigo-50 px-5 py-3 border-b border-slate-100 flex justify-between items-center flex-wrap gap-2">
-        <div><i class="fas fa-calendar-alt text-indigo-500"></i> <span class="font-semibold text-slate-700">School Calendar · Full Admin Control</span></div>
-        <div class="text-xs text-slate-500"><i class="fas fa-mouse-pointer"></i> Click date to add · Click event to edit/delete</div>
-      </div>
-      <div class="p-4">
-        <div id="calendar"></div>
-      </div>
-    </div>
   </div>
 
-  <!-- Modal for editing event (hidden by default) -->
-  <div id="editEventModal" class="fixed inset-0 flex items-center justify-center z-50 modal-overlay hidden transition-all">
-    <div class="bg-white rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl">
-      <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fas fa-edit text-indigo-500"></i> Edit Event</h3>
-      <input type="text" id="editEventTitle" placeholder="Event title" class="w-full border border-slate-200 rounded-xl px-4 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-      <input type="date" id="editEventDate" class="w-full border border-slate-200 rounded-xl px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-      <div class="flex gap-3 justify-end">
-        <button id="closeModalBtn" class="px-4 py-2 bg-slate-200 rounded-xl hover:bg-slate-300">Cancel</button>
-        <button id="saveEventBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">Save Changes</button>
-      </div>
-    </div>
-  </div>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-storage-compat.js"></script>
 
   <script>
     // ========== FIREBASE CONFIGURATION ==========
@@ -150,32 +144,159 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
+    const storage = firebase.storage();
 
     // DOM elements
     const totalBooksSpan = document.getElementById('totalBooksStat');
     const onlineUsersSpan = document.getElementById('onlineUsersStat');
     const totalUsersSpan = document.getElementById('totalUsersStat');
     const totalEventsSpan = document.getElementById('totalEventsStat');
+    const booksContainer = document.getElementById('booksContainer');
     const liveUsersList = document.getElementById('liveUsersList');
     const myPresenceNameSpan = document.getElementById('myPresenceName');
+    const uploadStatusDiv = document.getElementById('uploadStatus');
 
-    let calendar = null;
     let currentUserId = null;
     let currentUserName = "Admin";
 
+    // Helper
     function escapeHtml(str) {
       if (!str) return '';
       return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
     }
-
-    // ========== 1. LOAD TOTAL BOOKS COUNT (from Realtime DB) ==========
-    async function loadBookCount() {
-      const snapshot = await db.ref('books').once('value');
-      const books = snapshot.val() || {};
-      totalBooksSpan.innerText = Object.keys(books).length;
+    function showToast(msg, isErr = false) {
+      uploadStatusDiv.innerHTML = `<span class="${isErr ? 'text-rose-600 bg-rose-50' : 'text-emerald-600 bg-emerald-50'} px-2 py-1 rounded text-xs">${msg}</span>`;
+      setTimeout(() => uploadStatusDiv.innerHTML = '', 2500);
+    }
+    function formatSize(bytes) {
+      if (!bytes) return '0 KB';
+      const k = 1024;
+      const sizes = ['Bytes','KB','MB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+    function formatDate(iso) {
+      if (!iso) return '';
+      return new Date(iso).toLocaleDateString() + ' ' + new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
     }
 
-    // ========== 2. REAL-TIME USER PRESENCE (Firebase) ==========
+    // ========== 1. PDF BOOKS MANAGEMENT ==========
+    async function loadBooks() {
+      const snapshot = await db.ref('books').once('value');
+      const books = snapshot.val() || {};
+      const count = Object.keys(books).length;
+      totalBooksSpan.innerText = count;
+      if (count === 0) {
+        booksContainer.innerHTML = '<div class="text-center py-8 text-slate-400"><i class="fas fa-folder-open"></i> No PDFs uploaded</div>';
+        return;
+      }
+      let html = '<div class="space-y-2">';
+      for (const [id, book] of Object.entries(books)) {
+        html += `
+          <div class="flex flex-wrap sm:flex-nowrap justify-between items-center p-3 bg-white rounded-lg border border-slate-100 hover:shadow-sm">
+            <div class="flex items-center gap-3 min-w-0 flex-1"><i class="fas fa-file-pdf text-red-500 text-xl"></i><div class="truncate"><p class="font-medium text-slate-700 truncate">${escapeHtml(book.name)}</p><p class="text-xs text-slate-400">${formatSize(book.size)} · ${formatDate(book.uploadedAt)}</p></div></div>
+            <div class="flex gap-2 mt-2 sm:mt-0">
+              <button class="viewBookBtn text-blue-600 hover:bg-blue-50 p-1.5 rounded" data-url="${book.url}"><i class="fas fa-eye"></i></button>
+              <button class="downloadBookBtn text-indigo-600 hover:bg-indigo-50 p-1.5 rounded" data-url="${book.url}" data-name="${escapeHtml(book.name)}"><i class="fas fa-download"></i></button>
+              <button class="deleteBookBtn text-rose-600 hover:bg-rose-50 p-1.5 rounded" data-id="${id}"><i class="fas fa-trash-alt"></i></button>
+            </div>
+          </div>`;
+      }
+      html += '</div>';
+      booksContainer.innerHTML = html;
+      attachBookEvents();
+    }
+
+    function attachBookEvents() {
+      document.querySelectorAll('.viewBookBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const url = btn.getAttribute('data-url');
+          if (url) window.open(url, '_blank');
+        });
+      });
+      document.querySelectorAll('.downloadBookBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const url = btn.getAttribute('data-url');
+          const name = btn.getAttribute('data-name');
+          if (url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name || 'document.pdf';
+            a.click();
+          }
+        });
+      });
+      document.querySelectorAll('.deleteBookBtn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          if (confirm('Permanently delete this book?')) {
+            try {
+              await db.ref(`books/${id}`).remove();
+              const storageRef = storage.ref(`books/${id}.pdf`);
+              await storageRef.delete();
+              showToast('Book deleted', false);
+              loadBooks();
+            } catch (err) {
+              showToast('Delete failed: ' + err.message, true);
+            }
+          }
+        });
+      });
+    }
+
+    async function uploadPDF(file) {
+      if (file.type !== 'application/pdf') throw new Error('Only PDF allowed');
+      if (file.size > 20 * 1024 * 1024) throw new Error('File exceeds 20MB');
+      const bookId = Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const storageRef = storage.ref(`books/${bookId}.pdf`);
+      const uploadTask = await storageRef.put(file);
+      const downloadURL = await uploadTask.ref.getDownloadURL();
+      await db.ref(`books/${bookId}`).set({
+        name: file.name,
+        size: file.size,
+        url: downloadURL,
+        uploadedAt: new Date().toISOString()
+      });
+      return bookId;
+    }
+
+    async function handleUpload(files) {
+      let success = 0, fail = 0;
+      for (const file of files) {
+        try {
+          await uploadPDF(file);
+          success++;
+        } catch (err) {
+          fail++;
+          showToast(err.message, true);
+        }
+      }
+      if (success) showToast(`✅ ${success} PDF(s) uploaded`, false);
+      loadBooks();
+    }
+
+    function setupUpload() {
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+      const browseBtn = document.getElementById('browseBtn');
+      dropZone.addEventListener('click', () => fileInput.click());
+      browseBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+      fileInput.addEventListener('change', async (e) => {
+        if (e.target.files.length) await handleUpload(Array.from(e.target.files));
+        fileInput.value = '';
+      });
+      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+      dropZone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+        if (files.length) await handleUpload(files);
+        else showToast('Only PDF allowed', true);
+      });
+    }
+
+    // ========== 2. REAL-TIME USER PRESENCE ==========
     function initPresence() {
       const user = auth.currentUser;
       if (!user) return;
@@ -192,7 +313,6 @@
           });
         }
       });
-      // Listen to all presence entries
       db.ref('presence').on('value', (snapshot) => {
         const presence = snapshot.val() || {};
         const onlineCount = Object.keys(presence).length;
@@ -214,83 +334,16 @@
         if (onlineCount === 0) html = '<div class="text-center py-4 text-slate-400 text-sm">No active users</div>';
         liveUsersList.innerHTML = html;
       });
-      // Listen to total users count from /users
       db.ref('users').on('value', (snapshot) => {
         const users = snapshot.val() || {};
         totalUsersSpan.innerText = Object.keys(users).length;
       });
-    }
-
-    // ========== 3. CALENDAR (Firebase Realtime Database) ==========
-    function initCalendar() {
-      const calendarEl = document.getElementById('calendar');
-      calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,dayGridWeek' },
-        selectable: true,
-        dateClick: async (info) => {
-          let title = prompt("📌 Add New Event (Admin):", "School Event");
-          if (!title || title.trim() === "") return;
-          const eventData = { title: title.trim(), start: info.dateStr, createdAt: firebase.database.ServerValue.TIMESTAMP };
-          try {
-            await db.ref("events").push(eventData);
-            showFloatingMessage(`✅ "${title}" added`, false);
-          } catch(err) { showFloatingMessage("Failed to add event", true); }
-        },
-        eventClick: (info) => {
-          const userChoice = confirm(`Event: "${info.event.title}"\nClick OK to EDIT, Cancel to DELETE this event.`);
-          if (userChoice) {
-            currentEditingEventId = info.event.id;
-            document.getElementById('editEventTitle').value = info.event.title;
-            const startDate = info.event.start ? info.event.start.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-            document.getElementById('editEventDate').value = startDate;
-            document.getElementById('editEventModal').classList.remove('hidden');
-          } else {
-            if (confirm(`Permanently delete "${info.event.title}"?`)) {
-              db.ref("events/"+info.event.id).remove().then(() => showFloatingMessage("Event deleted", false));
-            }
-          }
-        },
-        eventDidMount: (info) => { info.el.setAttribute('title', 'Click to edit or delete (Admin)'); }
-      });
-      calendar.render();
-      // Listen to events in real-time
-      db.ref("events").on("value", (snapshot) => {
-        const events = [];
-        snapshot.forEach(child => {
-          events.push({ id: child.key, title: child.val().title, start: child.val().start });
-        });
-        if (calendar) {
-          calendar.removeAllEvents();
-          calendar.addEventSource(events);
-        }
-        totalEventsSpan.innerText = events.length;
+      db.ref('events').on('value', (snapshot) => {
+        totalEventsSpan.innerText = snapshot.numChildren();
       });
     }
 
-    let currentEditingEventId = null;
-    async function saveEventEdit() {
-      if (!currentEditingEventId) return;
-      const newTitle = document.getElementById('editEventTitle').value.trim();
-      const newDate = document.getElementById('editEventDate').value;
-      if (!newTitle || !newDate) { alert("Title and date required"); return; }
-      try {
-        await db.ref(`events/${currentEditingEventId}`).update({ title: newTitle, start: newDate });
-        showFloatingMessage("Event updated successfully", false);
-        document.getElementById('editEventModal').classList.add('hidden');
-        currentEditingEventId = null;
-      } catch(e) { showFloatingMessage("Update failed", true); }
-    }
-
-    function showFloatingMessage(msg, isErr = false) {
-      const toast = document.createElement('div');
-      toast.className = `fixed bottom-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm ${isErr ? 'bg-red-100 text-red-700 border-l-4 border-red-500' : 'bg-green-100 text-green-700 border-l-4 border-green-500'}`;
-      toast.innerHTML = msg;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-
-    // ========== 4. AUTHENTICATION & ROLE CHECK ==========
+    // ========== 3. AUTHENTICATION & ROLE CHECK ==========
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
         window.location.href = "login.html";
@@ -305,23 +358,29 @@
       }
       currentUserName = userData.name || "Admin";
       myPresenceNameSpan.innerText = currentUserName;
-      // Initialize modules
-      await loadBookCount();
+      await loadBooks();
+      setupUpload();
       initPresence();
-      initCalendar();
-      // Clock
-      function updateClock() {
-        document.getElementById('liveClock').innerText = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-      }
-      setInterval(updateClock, 1000);
-      updateClock();
-      // Modal controls
-      document.getElementById('closeModalBtn').addEventListener('click', () => {
-        document.getElementById('editEventModal').classList.add('hidden');
-        currentEditingEventId = null;
-      });
-      document.getElementById('saveEventBtn').addEventListener('click', saveEventEdit);
     });
+
+    document.getElementById('refreshBooksBtn').addEventListener('click', loadBooks);
+    document.getElementById('setNameQuickBtn').addEventListener('click', () => {
+      const newName = prompt('Enter your display name:', currentUserName);
+      if (newName && newName.trim()) {
+        currentUserName = newName.trim().substring(0, 30);
+        myPresenceNameSpan.innerText = currentUserName;
+        if (currentUserId) {
+          db.ref(`presence/${currentUserId}`).update({ name: currentUserName });
+        }
+        showToast(`Name updated to ${currentUserName}`, false);
+      }
+    });
+
+    function updateClock() {
+      document.getElementById('liveClock').innerText = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
   </script>
 </body>
 </html>
