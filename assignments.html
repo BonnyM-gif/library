@@ -264,27 +264,45 @@
                 }
                 const toastId = showToast("⏫ Uploading submission...", "info");
                 try {
+                    // Create a unique filename
+                    const timestamp = Date.now();
                     const ext = file.name.split('.').pop();
-                    const fileName = `sub_${assignmentId}_${currentUser.uid}_${Date.now()}.${ext}`;
+                    const fileName = `sub_${assignmentId}_${currentUser.uid}_${timestamp}.${ext}`;
                     const storageRef = storage.ref(`submissions/${fileName}`);
-                    await storageRef.put(file);
-                    const url = await storageRef.getDownloadURL();
+                    
+                    // Upload file to Firebase Storage
+                    const uploadTask = await storageRef.put(file);
+                    const url = await uploadTask.ref.getDownloadURL();
+                    
+                    // Double-check deadline again before saving to DB
                     if (!isDeadlineOpen(deadlineISO)) {
                         alert("⛔ Deadline just passed! Submission rejected.");
                         hideToast(toastId);
                         return;
                     }
+                    
+                    // Save submission metadata to Realtime Database
                     await db.ref(`submissions/${assignmentId}/${currentUser.uid}`).set({
-                        assignmentId, assignmentTitle, studentId: currentUser.uid,
-                        studentName: currentUserName, fileUrl: url, fileName: file.name,
-                        submittedAt: Date.now(), deadline: deadlineISO, points: points, grade: null, feedback: null,
+                        assignmentId, 
+                        assignmentTitle, 
+                        studentId: currentUser.uid,
+                        studentName: currentUserName, 
+                        fileUrl: url, 
+                        fileName: file.name,
+                        submittedAt: timestamp, 
+                        deadline: deadlineISO, 
+                        points: points, 
+                        grade: null, 
+                        feedback: null,
                         onTime: true
                     });
+                    
                     hideToast(toastId);
                     showToast("✅ Assignment submitted successfully!", "success");
                     logActivity(`Submitted "${assignmentTitle}"`, 'submit');
                     loadAnalytics();
                 } catch (err) {
+                    console.error("Upload error:", err);
                     hideToast(toastId);
                     alert("Upload failed: " + err.message);
                 }
@@ -312,7 +330,7 @@
             loadAnalytics();
         };
 
-        // ========== LOAD ASSIGNMENTS & SUBMISSIONS (Teacher/Admin see all) ==========
+        // ========== LOAD ASSIGNMENTS & SUBMISSIONS ==========
         function loadAssignments() {
             db.ref('assignments').on('value', (snap) => {
                 const assignments = snap.val();
@@ -395,13 +413,13 @@
             });
         }
 
-        // ========== FILE SHARING ==========
+        // ========== FILE SHARING (Teachers/Admins) ==========
         window.uploadSharedFile = async function() {
             const file = document.getElementById('fileInput').files[0];
             if (!file) return;
             const allowed = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','image/jpeg','image/png','image/jpg'];
             if (!allowed.includes(file.type)) {
-                alert("Unsupported format.");
+                alert("Unsupported format. Use PDF, DOC, DOCX, JPG, PNG.");
                 return;
             }
             if (file.size > 10*1024*1024) {
@@ -412,12 +430,16 @@
             try {
                 const ext = file.name.split('.').pop();
                 const fileName = `shared_${Date.now()}_${currentUser.uid}.${ext}`;
-                const refStorage = storage.ref(`shared/${fileName}`);
-                await refStorage.put(file);
-                const url = await refStorage.getDownloadURL();
+                const storageRef = storage.ref(`shared/${fileName}`);
+                await storageRef.put(file);
+                const url = await storageRef.getDownloadURL();
                 await db.ref('sharedFiles').push({
-                    name: file.name, url, type: file.type, size: file.size,
-                    uploadedBy: currentUserEmail, uploadedByRole: currentUserRole,
+                    name: file.name, 
+                    url, 
+                    type: file.type, 
+                    size: file.size,
+                    uploadedBy: currentUserEmail, 
+                    uploadedByRole: currentUserRole,
                     timestamp: Date.now()
                 });
                 hideToast(toastId);
@@ -425,6 +447,7 @@
                 logActivity(`Uploaded resource: ${file.name}`, 'upload');
                 document.getElementById('fileInput').value = '';
             } catch (err) {
+                console.error("Upload error:", err);
                 hideToast(toastId);
                 alert("Upload error: " + err.message);
             }
