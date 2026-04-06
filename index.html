@@ -7,7 +7,7 @@
   <!-- TailwindCSS + Font Awesome 6 + Google Fonts -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * {
       font-family: 'Inter', sans-serif;
@@ -46,6 +46,7 @@
     .delay-100 { animation-delay: 0.1s; }
     .delay-150 { animation-delay: 0.15s; }
     .delay-200 { animation-delay: 0.2s; }
+    .delay-250 { animation-delay: 0.25s; }
     .delay-300 { animation-delay: 0.3s; }
     .delay-400 { animation-delay: 0.4s; }
     .delay-500 { animation-delay: 0.5s; }
@@ -146,11 +147,11 @@
           </span>
         </h1>
         
-        <!-- Motto: Dir Herr ist mein Hirt (The Lord is my Shepherd) -->
+        <!-- Motto -->
         <div class="transition-item delay-150 mt-4">
           <p class="motto-text text-indigo-700 text-lg md:text-xl font-medium tracking-wide">
             <i class="fas fa-church mr-2 text-indigo-500"></i> 
-            Der Herr ist mein Hirt
+            Dir Herr ist mein Hirt
           </p>
           <p class="text-slate-500 text-sm mt-1">— The Lord is my Shepherd —</p>
         </div>
@@ -160,7 +161,7 @@
           <div class="animated-underline w-32 h-1 bg-indigo-300 rounded-full"></div>
         </div>
         
-        <!-- Subtitle & welcoming phrase -->
+        <!-- Subtitle -->
         <div class="transition-item delay-250 mt-6 space-y-2">
           <p class="text-indigo-800 text-lg md:text-xl font-medium tracking-wide">
             <i class="fas fa-graduation-cap mr-2 text-indigo-500"></i> 
@@ -196,10 +197,13 @@
           </div>
         </div>
         
-        <!-- Call to action buttons -->
+        <!-- Call to action buttons (Student Hub & Staff Login) -->
         <div class="transition-item delay-400 mt-8 flex flex-wrap justify-center gap-4">
-          <a href="login.html" id="exploreBtn" class="btn-transition bg-indigo-700 hover:bg-indigo-800 text-white font-semibold px-8 py-3 rounded-2xl shadow-md flex items-center gap-2 text-base">
-            <i class="fas fa-arrow-right-to-bracket"></i> Enter Learning Hub
+          <a href="dashboard.html" class="btn-transition bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-8 py-3 rounded-2xl shadow-md flex items-center gap-2 text-base">
+            <i class="fas fa-graduation-cap"></i> Student Hub
+          </a>
+          <a href="login.html" class="btn-transition bg-indigo-700 hover:bg-indigo-800 text-white font-semibold px-8 py-3 rounded-2xl shadow-md flex items-center gap-2 text-base">
+            <i class="fas fa-user-lock"></i> Staff / Admin Login
           </a>
           <button id="libraryTourBtn" class="btn-transition bg-white/70 backdrop-blur-sm border border-indigo-200 text-indigo-700 font-semibold px-7 py-3 rounded-2xl hover:bg-indigo-50 flex items-center gap-2 transition shadow-sm">
             <i class="fas fa-compass"></i> Virtual Tour
@@ -228,35 +232,14 @@
     </svg>
   </div>
   
-  <!-- Welcome modal (for "Enter Learning Hub") -->
-  <div id="welcomeModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 opacity-0 invisible transition-all duration-300 pointer-events-none">
-    <div class="bg-white rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl transform scale-95 transition-all duration-300" id="modalContent">
-      <div class="text-center">
-        <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-indigo-100 text-indigo-700 mb-4">
-          <i class="fas fa-school-circle-check text-2xl"></i>
-        </div>
-        <h3 class="text-xl font-bold text-slate-800">Welcome to ST KALEMBA SS</h3>
-        <p class="text-slate-500 mt-2 text-sm">You are stepping into a world of wisdom & transformation. The library portal, live study rooms, and collaborative tools await.</p>
-        <div class="mt-6 flex gap-3 justify-center">
-          <a href="login.html" class="bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm hover:bg-indigo-700 transition">Begin Journey</a>
-        </div>
-      </div>
-    </div>
-  </div>
-  
   <!-- Toast for virtual tour -->
   <div id="tourToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-5 py-2 rounded-full text-sm shadow-lg z-50 opacity-0 transition-all duration-500 pointer-events-none flex items-center gap-2">
     <i class="fas fa-map-marked-alt"></i> <span>Virtual tour coming soon — explore the campus in 3D!</span>
   </div>
-  
+
   <script>
-    // modal & toast interactions
-    const exploreBtn = document.getElementById('exploreBtn');
     const libraryTourBtn = document.getElementById('libraryTourBtn');
-    const modal = document.getElementById('welcomeModal');
-    const closeModalBtn = document.querySelector('#modalContent a');
     const tourToast = document.getElementById('tourToast');
-    
     let toastTimeout = null;
     
     function showToast(message, icon = 'fa-map-marked-alt') {
@@ -271,45 +254,9 @@
       }, 2800);
     }
     
-    function openWelcomeModal(e) {
-      e.preventDefault();
-      modal.classList.remove('opacity-0', 'invisible', 'pointer-events-none');
-      modal.classList.add('opacity-100', 'visible', 'pointer-events-auto');
-      const modalInner = document.querySelector('#modalContent');
-      modalInner.classList.remove('scale-95');
-      modalInner.classList.add('scale-100');
-    }
-    
-    function closeModal() {
-      const modalInner = document.querySelector('#modalContent');
-      modalInner.classList.remove('scale-100');
-      modalInner.classList.add('scale-95');
-      setTimeout(() => {
-        modal.classList.remove('opacity-100', 'visible', 'pointer-events-auto');
-        modal.classList.add('opacity-0', 'invisible', 'pointer-events-none');
-        modalInner.classList.add('scale-95');
-      }, 180);
-    }
-    
-    // Replace the default link behavior with modal (optional: we can just let the link work)
-    // To keep both: we'll use modal for "Enter Learning Hub" button (the a tag)
-    exploreBtn.addEventListener('click', openWelcomeModal);
-    
-    // Library tour button: show toast
     libraryTourBtn.addEventListener('click', () => {
       showToast('✨ Virtual campus tour launching soon — stay tuned!', 'fa-vr-cardboard');
     });
-    
-    // Close modal when clicking background or the button
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
-    });
-    if (closeModalBtn) {
-      closeModalBtn.addEventListener('click', (e) => {
-        // allow navigation to login.html; modal will close and then redirect
-        closeModal();
-      });
-    }
     
     // ripple effect on buttons
     const allBtns = document.querySelectorAll('.btn-transition');
