@@ -3,455 +3,113 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>💬 SMUK Chatroom | Real‑time Messenger</title>
+  <title>💬 SMUK Chatroom | Public Chat</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-storage-compat.js"></script>
   <style>
     * { font-family: 'Inter', sans-serif; }
     body { background: linear-gradient(145deg, #e0e7ff 0%, #f3e8ff 100%); }
-    .dark body { background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 100%); }
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.3);
-    }
-    .dark .glass-panel { background: rgba(15, 23, 42, 0.7); border-color: rgba(255,255,255,0.05); }
-    .chat-scroll::-webkit-scrollbar { width: 4px; }
-    .chat-scroll::-webkit-scrollbar-track { background: transparent; }
-    .chat-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3); }
     .message-slide { animation: fadeSlideUp 0.2s ease-out; }
     @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-    .reaction-picker {
-      display: none;
-      position: absolute;
-      bottom: 100%;
-      left: 0;
-      background: white;
-      border-radius: 40px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      padding: 6px 12px;
-      gap: 12px;
-      z-index: 20;
-    }
-    .dark .reaction-picker { background: #1e293b; }
-    .message-wrapper:hover .reaction-picker { display: flex; }
-    .typing-dot {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background-color: #94a3b8;
-      margin: 0 2px;
-      animation: typingBounce 1.4s infinite ease-in-out;
-    }
-    @keyframes typingBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
     .online-indicator { width: 10px; height: 10px; background-color: #22c55e; border-radius: 50%; box-shadow: 0 0 0 2px white; }
-    .dark .online-indicator { box-shadow: 0 0 0 2px #1e293b; }
+    .chat-scroll::-webkit-scrollbar { width: 4px; }
   </style>
 </head>
-<body class="p-4 md:p-6 font-sans antialiased">
-
-  <div class="max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="glass-panel rounded-2xl p-3 mb-5 flex flex-wrap justify-between items-center shadow-xl">
-      <div class="flex items-center gap-3">
-        <div class="bg-gradient-to-tr from-emerald-500 to-teal-500 p-2.5 rounded-2xl shadow-md">
-          <i class="fab fa-whatsapp text-white text-xl"></i>
-        </div>
-        <div>
-          <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-indigo-800 to-purple-800 bg-clip-text text-transparent">SMUK Chatroom</h1>
-          <p class="text-xs text-gray-500 dark:text-gray-400">Real‑time school messenger</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3">
-        <span id="currentUserSpan" class="text-sm font-semibold bg-white/50 dark:bg-gray-800/50 px-3 py-1.5 rounded-full backdrop-blur shadow-sm"></span>
-        <button id="darkModeToggle" class="p-2 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur hover:scale-105 transition"><i class="fas fa-moon text-indigo-600 dark:text-yellow-300"></i></button>
-        <a href="dashboard.html" class="p-2 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur text-indigo-500 hover:scale-105 transition"><i class="fas fa-arrow-left"></i></a>
-        <button id="logoutBtn" class="p-2 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur text-rose-500 hover:scale-105 transition"><i class="fas fa-sign-out-alt"></i></button>
-      </div>
+<body class="p-4 md:p-6">
+<div class="max-w-7xl mx-auto">
+  <div class="glass-panel rounded-2xl p-3 mb-5 flex flex-wrap justify-between items-center shadow-xl">
+    <div class="flex items-center gap-3"><div class="bg-gradient-to-tr from-emerald-500 to-teal-500 p-2.5 rounded-2xl"><i class="fab fa-whatsapp text-white text-xl"></i></div><div><h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-indigo-800 to-purple-800 bg-clip-text text-transparent">SMUK Chatroom</h1><p class="text-xs text-gray-500">Public chat · no login needed</p></div></div>
+    <div class="flex items-center gap-3"><span id="currentUserSpan" class="text-sm font-semibold bg-white/50 px-3 py-1.5 rounded-full shadow-sm"></span><a href="dashboard.html" class="p-2 rounded-full bg-white/50 text-indigo-500 hover:scale-105"><i class="fas fa-arrow-left"></i></a></div>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="glass-panel rounded-2xl p-4 shadow-xl">
+      <div class="flex justify-between items-center mb-4"><h2 class="font-bold"><i class="fas fa-comments text-indigo-500"></i> Chats</h2></div>
+      <div id="groupsList" class="space-y-2 max-h-80 overflow-y-auto"><div class="cursor-pointer p-3 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 shadow-sm" onclick="switchRoom('global')"><i class="fas fa-globe text-indigo-500"></i> Global Chat</div></div>
+      <hr class="my-3">
+      <p class="text-xs font-semibold text-gray-500 mb-2"><i class="fas fa-circle text-green-500 text-[8px]"></i> Online now</p>
+      <div id="usersList" class="space-y-1 text-sm max-h-40 overflow-y-auto"></div>
     </div>
-
-    <!-- Main Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Groups & Online Users -->
-      <div class="glass-panel rounded-2xl p-4 shadow-xl backdrop-blur-md">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="font-bold flex items-center gap-2"><i class="fas fa-comments text-indigo-500"></i> Chats</h2>
-          <button id="createGroupBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white text-sm px-3 py-1.5 rounded-full shadow-md"><i class="fas fa-plus"></i> Group</button>
-        </div>
-        <div id="groupsList" class="space-y-2 max-h-80 overflow-y-auto pr-1"></div>
-        <hr class="my-3 border-gray-300 dark:border-gray-700">
-        <p class="text-xs font-semibold text-gray-500 mb-2"><i class="fas fa-circle text-green-500 text-[8px]"></i> Online now</p>
-        <div id="usersList" class="space-y-1 text-sm max-h-40 overflow-y-auto"></div>
-      </div>
-
-      <!-- Chat Area -->
-      <div class="lg:col-span-2 glass-panel rounded-2xl shadow-xl flex flex-col h-[70vh] backdrop-blur-md">
-        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <div>
-            <span id="currentRoomName" class="font-bold text-lg">Global Chat</span>
-            <div id="roomStatus" class="text-xs text-gray-500 flex items-center gap-1 mt-0.5"></div>
-          </div>
-          <div id="roomActions" class="hidden">
-            <button id="addMemberBtn" class="bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-full shadow-md hover:bg-emerald-600"><i class="fas fa-user-plus"></i> Add member</button>
-          </div>
-        </div>
-        <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-3 chat-scroll bg-[#f8f9fc] dark:bg-gray-900/30"></div>
-        <div id="replyPreview" class="mx-4 mt-2 text-xs text-gray-500 hidden bg-white/50 dark:bg-gray-800/50 rounded-lg p-2 backdrop-blur"></div>
-        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-          <div class="flex gap-2 items-center">
-            <button id="attachBtn" class="text-indigo-500 hover:scale-110 transition"><i class="fas fa-paperclip text-xl"></i></button>
-            <input type="text" id="messageInput" placeholder="Type a message..." class="flex-1 border-0 bg-white/50 dark:bg-gray-800/50 rounded-full px-5 py-2.5 focus:ring-2 focus:ring-indigo-300 outline-none">
-            <button id="sendBtn" class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-2.5 rounded-full shadow-md hover:scale-105"><i class="fas fa-paper-plane"></i></button>
-          </div>
-          <div class="flex gap-3 mt-2 text-sm">
-            <button id="voiceBtn" class="text-rose-500 flex items-center gap-1 bg-white/30 rounded-full px-3 py-1"><i class="fas fa-microphone"></i> Voice</button>
-            <button id="emojiBtn" class="text-amber-500 flex items-center gap-1 bg-white/30 rounded-full px-3 py-1"><i class="fas fa-smile"></i> Emoji</button>
-          </div>
+    <div class="lg:col-span-2 glass-panel rounded-2xl shadow-xl flex flex-col h-[70vh]">
+      <div class="p-4 border-b"><span id="currentRoomName" class="font-bold text-lg">Global Chat</span><div id="roomStatus" class="text-xs text-gray-500"></div></div>
+      <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-3 chat-scroll bg-[#f8f9fc] dark:bg-gray-900/30"></div>
+      <div id="replyPreview" class="mx-4 mt-2 text-xs hidden bg-white/50 rounded-lg p-2"></div>
+      <div class="p-4 border-t">
+        <div class="flex gap-2 items-center">
+          <button id="attachBtn" class="text-indigo-500 hover:scale-110"><i class="fas fa-paperclip text-xl"></i></button>
+          <input type="text" id="messageInput" placeholder="Type a message..." class="flex-1 border-0 bg-white/50 rounded-full px-5 py-2.5 focus:ring-2 focus:ring-indigo-300 outline-none">
+          <button id="sendBtn" class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-2.5 rounded-full shadow-md hover:scale-105"><i class="fas fa-paper-plane"></i></button>
         </div>
       </div>
     </div>
   </div>
+</div>
+<script>
+  const firebaseConfig = { apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc", authDomain: "smuk-library.firebaseapp.com", databaseURL: "https://smuk-library-default-rtdb.firebaseio.com/", projectId: "smuk-library", storageBucket: "smuk-library.firebasestorage.app", messagingSenderId: "101518774671", appId: "1:101518774671:web:24c6c9c2574f230639fbfa" };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const storage = firebase.storage();
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-storage-compat.js"></script>
+  let currentUserName = localStorage.getItem('chat_username') || `Guest_${Math.floor(Math.random()*1000)}`;
+  localStorage.setItem('chat_username', currentUserName);
+  document.getElementById('currentUserSpan').innerText = currentUserName;
 
-  <script>
-    // ========== FIREBASE CONFIG (same as your project) ==========
-    const firebaseConfig = {
-      apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
-      authDomain: "smuk-library.firebaseapp.com",
-      databaseURL: "https://smuk-library-default-rtdb.firebaseio.com/",
-      projectId: "smuk-library",
-      storageBucket: "smuk-library.firebasestorage.app",
-      messagingSenderId: "101518774671",
-      appId: "1:101518774671:web:24c6c9c2574f230639fbfa",
-      measurementId: "G-9M8VW7EL0B"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
-    const storage = firebase.storage();
+  let currentRoomId = 'global';
+  let replyTo = null;
 
-    let currentUser = null;
-    let currentUserName = "";
-    let currentRoomId = "global";
-    let currentRoomType = "global";
-    let replyTo = null;
+  // Presence (online status)
+  const presenceRef = db.ref(`presence/${currentUserName}`);
+  presenceRef.set({ online: true, lastSeen: Date.now() });
+  presenceRef.onDisconnect().update({ online: false, lastSeen: Date.now() });
+  db.ref('presence').on('value', snap => {
+    const users = snap.val() || {};
+    const container = document.getElementById('usersList');
+    container.innerHTML = '';
+    for (let [name, data] of Object.entries(users)) if (data.online && name !== currentUserName) container.innerHTML += `<div class="flex items-center gap-2 py-1"><span class="online-indicator"></span><span class="text-sm">${escapeHtml(name)}</span></div>`;
+  });
 
-    // Helper: show floating toast
-    function showToast(msg, isError = false) {
-      const toast = document.createElement("div");
-      toast.className = `fixed bottom-5 right-5 bg-white dark:bg-gray-800 shadow-xl rounded-lg px-4 py-2 text-sm z-50 border-l-4 ${isError ? "border-red-500 text-red-600" : "border-green-500 text-green-600"} transition-all`;
-      toast.innerHTML = msg;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-
-    // ========== AUTHENTICATION ==========
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
-      currentUser = user;
-      console.log("User logged in:", user.uid);
-      // Get user name from /users/{uid}
-      const userSnap = await db.ref(`users/${user.uid}`).once("value");
-      const userData = userSnap.val();
-      if (userData && userData.name) {
-        currentUserName = userData.name;
-      } else {
-        // Fallback: use email prefix
-        currentUserName = user.email.split("@")[0];
-        // Optionally create user node
-        await db.ref(`users/${user.uid}`).set({ name: currentUserName, email: user.email, role: "student" });
-      }
-      document.getElementById("currentUserSpan").innerText = currentUserName;
-
-      // Set presence (online status)
-      const userStatusRef = db.ref(`presence/${currentUserName}`);
-      userStatusRef.set({ online: true, lastSeen: Date.now() });
-      userStatusRef.onDisconnect().update({ online: false, lastSeen: Date.now() });
-
-      // Load online users
-      db.ref("presence").on("value", (snap) => {
-        const users = snap.val() || {};
-        const container = document.getElementById("usersList");
-        container.innerHTML = "";
-        for (let [name, data] of Object.entries(users)) {
-          if (data.online && name !== currentUserName) {
-            container.innerHTML += `<div class="flex items-center gap-2 py-1"><span class="online-indicator"></span><span class="text-sm font-medium">${escapeHtml(name)}</span></div>`;
-          }
-        }
-        if (container.innerHTML === "") container.innerHTML = '<p class="text-xs text-gray-400">No one else online</p>';
-      });
-
-      // Load groups and start global chat
-      loadGroups();
-      switchRoom("global", "Global Chat");
-    });
-
-    // ========== GROUPS ==========
-    function loadGroups() {
-      db.ref("groups").on("value", (snap) => {
-        const groups = snap.val() || {};
-        const container = document.getElementById("groupsList");
-        container.innerHTML = `<div class="cursor-pointer p-3 rounded-xl flex items-center gap-3 transition-all hover:bg-white/40 dark:hover:bg-gray-800/40 ${currentRoomId === "global" ? "bg-indigo-100 dark:bg-indigo-900/30 shadow-sm" : ""}" onclick="switchRoom('global','Global Chat')">
-          <i class="fas fa-globe text-indigo-500"></i><span>Global Chat</span>
-        </div>`;
-        for (let [id, group] of Object.entries(groups)) {
-          if (group.members && group.members[currentUserName]) {
-            container.innerHTML += `<div class="cursor-pointer p-3 rounded-xl flex items-center gap-3 transition-all hover:bg-white/40 dark:hover:bg-gray-800/40 ${currentRoomId === id ? "bg-indigo-100 dark:bg-indigo-900/30 shadow-sm" : ""}" onclick="switchRoom('${id}','${escapeHtml(group.name)}')">
-              <i class="fas fa-users text-emerald-500"></i><span>${escapeHtml(group.name)} ${group.admin === currentUserName ? "(admin)" : ""}</span>
-            </div>`;
-          }
-        }
-      });
-    }
-
-    window.switchRoom = (roomId, roomName) => {
-      currentRoomId = roomId;
-      currentRoomType = roomId === "global" ? "global" : "group";
-      document.getElementById("currentRoomName").innerHTML = escapeHtml(roomName);
-      document.getElementById("chatBox").innerHTML = "";
-      replyTo = null;
-      document.getElementById("replyPreview").classList.add("hidden");
-      document.getElementById("roomActions").classList.toggle("hidden", currentRoomType !== "group");
-      attachMessageListener();
-    };
-
-    document.getElementById("createGroupBtn").onclick = () => {
-      let groupName = prompt("New group name:");
-      if (!groupName) return;
-      const newGroupRef = db.ref("groups").push();
-      newGroupRef.set({
-        name: groupName,
-        admin: currentUserName,
-        members: { [currentUserName]: true },
-        createdAt: Date.now()
-      }).catch(err => showToast("Error: " + err.message, true));
-    };
-
-    document.getElementById("addMemberBtn").onclick = () => {
-      const memberName = prompt("Username to add:");
-      if (memberName) {
-        db.ref(`groups/${currentRoomId}/members/${memberName}`).set(true).catch(err => showToast("Error: " + err.message, true));
-      }
-    };
-
-    // ========== MESSAGING ==========
-    function attachMessageListener() {
-      const path = currentRoomType === "global" ? "chat/global" : `groups/${currentRoomId}/messages`;
-      db.ref(path).off();
-      db.ref(path).on("child_added", (snap) => displayMessage(snap.key, snap.val()));
-      db.ref(path).on("child_changed", (snap) => updateMessage(snap.key, snap.val()));
-      db.ref(path).on("child_removed", (snap) => {
-        const el = document.getElementById(`msg-${snap.key}`);
-        if (el) el.remove();
-      });
-    }
-
-    function displayMessage(id, msg) {
-      const isMe = msg.name === currentUserName;
-      const chatBox = document.getElementById("chatBox");
-      const reactionsHtml = msg.reactions ? Object.values(msg.reactions).join(" ") : "";
-      const replyHtml = msg.replyTo ? `<div class="text-xs border-l-3 border-indigo-300 pl-2 mb-1 opacity-80">↩️ ${escapeHtml(msg.replyTo.text)}</div>` : "";
-      const mediaHtml = msg.image ? `<img src="${msg.image}" class="rounded-xl max-w-[200px] max-h-[200px] object-cover mt-1 shadow">` : (msg.voice ? `<audio controls src="${msg.voice}" class="mt-1 rounded-full"></audio>` : "");
-      const ticks = (msg.readBy && Object.keys(msg.readBy).length > 1) ? "✓✓" : "✓";
-      const canDelete = (isMe || (currentRoomType === "group" && isGroupAdmin())) ? `<button onclick="deleteMessage('${id}')" class="text-rose-400 text-xs ml-2 hover:scale-110 transition"><i class="fas fa-trash-alt"></i></button>` : "";
-
-      const bubbleClass = isMe ? "bg-emerald-100 dark:bg-emerald-800/60 text-gray-800 dark:text-white rounded-2xl rounded-tr-sm" : "bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-2xl rounded-tl-sm shadow-sm";
-      const wrapperClass = `flex ${isMe ? "justify-end" : "justify-start"} message-wrapper relative message-slide`;
-      const msgDiv = document.createElement("div");
-      msgDiv.id = `msg-${id}`;
-      msgDiv.className = wrapperClass;
-      msgDiv.innerHTML = `
-        <div class="max-w-[75%] px-4 py-2 ${bubbleClass}">
-          <div class="text-xs font-semibold ${isMe ? "text-right text-emerald-700 dark:text-emerald-300" : "text-indigo-600 dark:text-indigo-400"}">${escapeHtml(msg.name)}</div>
-          ${replyHtml}
-          <div class="message-text break-words">${escapeHtml(msg.message || "")}</div>
-          ${mediaHtml}
-          <div class="text-[10px] flex justify-between gap-3 mt-1 opacity-60">
-            <span>${new Date(msg.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-            <span>${isMe ? ticks : ""}</span>
-          </div>
-          <div class="reactions text-xs mt-1">${reactionsHtml}</div>
-          <div class="reaction-picker">
-            <button onclick="reactToMessage('${id}','👍')" class="hover:scale-125 transition">👍</button>
-            <button onclick="reactToMessage('${id}','😂')" class="hover:scale-125 transition">😂</button>
-            <button onclick="reactToMessage('${id}','❤️')" class="hover:scale-125 transition">❤️</button>
-          </div>
-          <div class="flex justify-end gap-1 mt-1">
-            <button onclick="setReply('${id}','${escapeHtml((msg.message || "").substring(0,30))}')" class="text-blue-500 text-xs hover:scale-110 transition"><i class="fas fa-reply"></i></button>
-            ${canDelete}
-          </div>
-        </div>
-      `;
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function updateMessage(id, msg) {
-      const el = document.getElementById(`msg-${id}`);
-      if (!el) return;
-      const textDiv = el.querySelector(".message-text");
-      if (textDiv) textDiv.innerHTML = escapeHtml(msg.message || (msg.deleted ? "🚫 Deleted" : ""));
-      const reactionsDiv = el.querySelector(".reactions");
-      if (reactionsDiv && msg.reactions) reactionsDiv.innerHTML = Object.values(msg.reactions).join(" ");
-    }
-
-    window.reactToMessage = (msgId, emoji) => {
-      const path = currentRoomType === "global" ? `chat/global/${msgId}/reactions/${currentUserName}` : `groups/${currentRoomId}/messages/${msgId}/reactions/${currentUserName}`;
-      db.ref(path).set(emoji).catch(err => console.error("Reaction error:", err));
-    };
-
-    window.setReply = (msgId, text) => {
-      replyTo = { id: msgId, text: text };
-      const previewDiv = document.getElementById("replyPreview");
-      previewDiv.innerHTML = `↩️ Replying to: ${escapeHtml(text)} <button onclick="cancelReply()" class="text-rose-500 ml-2">✖</button>`;
-      previewDiv.classList.remove("hidden");
-    };
-    window.cancelReply = () => {
-      replyTo = null;
-      document.getElementById("replyPreview").classList.add("hidden");
-    };
-
-    window.deleteMessage = (msgId) => {
-      if (confirm("Delete this message for everyone?")) {
-        const path = currentRoomType === "global" ? `chat/global/${msgId}` : `groups/${currentRoomId}/messages/${msgId}`;
-        db.ref(path).update({ message: "🚫 This message was deleted", deleted: true }).catch(err => showToast("Delete failed", true));
-      }
-    };
-
-    async function isGroupAdmin() {
-      if (currentRoomType !== "group") return false;
-      const snap = await db.ref(`groups/${currentRoomId}/admin`).once("value");
-      return snap.val() === currentUserName;
-    }
-
-    function sendMessage(text, mediaUrl = null, mediaType = null) {
-      if (!text.trim() && !mediaUrl) return;
-      const msgObj = { name: currentUserName, message: text, time: Date.now(), readBy: { [currentUserName]: true } };
-      if (replyTo) { msgObj.replyTo = replyTo; cancelReply(); }
-      if (mediaUrl && mediaType === "image") msgObj.image = mediaUrl;
-      if (mediaUrl && mediaType === "voice") msgObj.voice = mediaUrl;
-      const path = currentRoomType === "global" ? "chat/global" : `groups/${currentRoomId}/messages`;
-      db.ref(path).push(msgObj).catch(err => showToast("Send failed: " + err.message, true));
-      document.getElementById("messageInput").value = "";
-    }
-
-    // UI send
-    document.getElementById("sendBtn").onclick = () => sendMessage(document.getElementById("messageInput").value);
-    document.getElementById("messageInput").addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(e.target.value); });
-
-    // Attach image
-    document.getElementById("attachBtn").onclick = () => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-      input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const toastId = showToast("Uploading image...");
-        try {
-          const ext = file.name.split(".").pop();
-          const fileName = `chat_images/${Date.now()}_${currentUserName}.${ext}`;
-          const storageRef = storage.ref(fileName);
-          await storageRef.put(file);
-          const url = await storageRef.getDownloadURL();
-          sendMessage("", url, "image");
-          showToast("Image sent!");
-        } catch (err) {
-          showToast("Upload failed: " + err.message, true);
-        }
-      };
-      input.click();
-    };
-
-    // Voice recording
-    let mediaRecorder, audioChunks = [];
-    document.getElementById("voiceBtn").onclick = async () => {
-      if (mediaRecorder && mediaRecorder.state === "recording") {
-        mediaRecorder.stop();
-        document.getElementById("voiceBtn").innerHTML = '<i class="fas fa-microphone"></i> Voice';
-        return;
-      }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = async () => {
-          const blob = new Blob(audioChunks, { type: "audio/webm" });
-          const storageRef = storage.ref(`voice_notes/${Date.now()}_${currentUserName}.webm`);
-          await storageRef.put(blob);
-          const url = await storageRef.getDownloadURL();
-          sendMessage("", url, "voice");
-        };
-        mediaRecorder.start();
-        document.getElementById("voiceBtn").innerHTML = '<i class="fas fa-stop-circle"></i> Stop';
-      } catch (err) {
-        showToast("Microphone access denied", true);
-      }
-    };
-
-    // Emoji picker
-    document.getElementById("emojiBtn").onclick = () => {
-      const emojis = ["😀", "😂", "❤️", "👍", "🔥", "🎉"];
-      const picker = document.createElement("div");
-      picker.className = "fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-3 flex gap-3 z-50";
-      emojis.forEach(emoji => {
-        const btn = document.createElement("button");
-        btn.innerText = emoji;
-        btn.className = "text-2xl hover:scale-125 transition";
-        btn.onclick = () => { sendMessage(emoji); picker.remove(); };
-        picker.appendChild(btn);
-      });
-      document.body.appendChild(picker);
-      setTimeout(() => picker.remove(), 5000);
-    };
-
-    // Dark mode
-    if (localStorage.getItem("dark") === "true") document.documentElement.classList.add("dark");
-    document.getElementById("darkModeToggle").onclick = () => {
-      document.documentElement.classList.toggle("dark");
-      localStorage.setItem("dark", document.documentElement.classList.contains("dark"));
-    };
-
-    // Typing indicator
-    let typingTimeout;
-    document.getElementById("messageInput").oninput = () => {
-      const typingRef = db.ref(`typing/${currentRoomId}/${currentUserName}`);
-      typingRef.set(true);
-      clearTimeout(typingTimeout);
-      typingTimeout = setTimeout(() => typingRef.remove(), 1500);
-    };
-    db.ref(`typing/${currentRoomId}`).on("value", (snap) => {
-      const typingUsers = snap.val();
-      const statusDiv = document.getElementById("roomStatus");
-      if (typingUsers) {
-        const names = Object.keys(typingUsers).filter(n => n !== currentUserName);
-        if (names.length) {
-          statusDiv.innerHTML = `<span class="flex items-center gap-1"><span class="typing-dot"></span><span class="typing-dot" style="animation-delay:0.2s"></span><span class="typing-dot" style="animation-delay:0.4s"></span> ${names.slice(0,2).join(", ")} typing...</span>`;
-        } else statusDiv.innerHTML = "";
-      } else statusDiv.innerHTML = "";
-    });
-
-    function escapeHtml(str) {
-      if (!str) return "";
-      return str.replace(/[&<>]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[m]));
-    }
-
-    // Logout
-    document.getElementById("logoutBtn").onclick = async () => {
-      await auth.signOut();
-      window.location.href = "login.html";
-    };
-  </script>
+  function attachMessageListener() {
+    db.ref('chat/global').off();
+    db.ref('chat/global').on('child_added', snap => displayMessage(snap.key, snap.val()));
+    db.ref('chat/global').on('child_changed', snap => updateMessage(snap.key, snap.val()));
+    db.ref('chat/global').on('child_removed', snap => { const el = document.getElementById(`msg-${snap.key}`); if(el) el.remove(); });
+  }
+  function displayMessage(id, msg) {
+    const isMe = msg.name === currentUserName;
+    const chatBox = document.getElementById('chatBox');
+    const replyHtml = msg.replyTo ? `<div class="text-xs border-l-2 border-indigo-300 pl-2 mb-1">↩️ ${escapeHtml(msg.replyTo.text)}</div>` : '';
+    const mediaHtml = msg.image ? `<img src="${msg.image}" class="rounded-xl max-w-[200px] mt-1">` : (msg.voice ? `<audio controls src="${msg.voice}" class="mt-1"></audio>` : '');
+    const canDelete = isMe ? `<button onclick="deleteMessage('${id}')" class="text-rose-400 text-xs ml-2"><i class="fas fa-trash-alt"></i></button>` : '';
+    const bubbleClass = isMe ? 'bg-emerald-100 dark:bg-emerald-800/60 rounded-2xl rounded-tr-sm' : 'bg-white dark:bg-gray-800 rounded-2xl rounded-tl-sm shadow-sm';
+    const div = document.createElement('div');
+    div.id = `msg-${id}`;
+    div.className = `flex ${isMe ? 'justify-end' : 'justify-start'} message-slide`;
+    div.innerHTML = `<div class="max-w-[75%] px-4 py-2 ${bubbleClass}"><div class="text-xs font-semibold ${isMe ? 'text-right' : ''}">${escapeHtml(msg.name)}</div>${replyHtml}<div class="break-words">${escapeHtml(msg.message || '')}</div>${mediaHtml}<div class="text-[10px] flex justify-between mt-1 opacity-60"><span>${new Date(msg.time).toLocaleTimeString()}</span><div><button onclick="setReply('${id}','${escapeHtml((msg.message || '').substring(0,30))}')" class="text-blue-500 text-xs mr-2">↩️</button>${canDelete}</div></div></div>`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+  function updateMessage(id, msg) { const el = document.getElementById(`msg-${id}`); if(el && el.querySelector('.break-words')) el.querySelector('.break-words').innerHTML = escapeHtml(msg.message || (msg.deleted ? '🚫 Deleted' : '')); }
+  window.deleteMessage = (id) => { if(confirm("Delete?")) db.ref(`chat/global/${id}`).update({ message: "🚫 Deleted", deleted: true }); };
+  window.setReply = (id, text) => { replyTo = { id, text }; document.getElementById('replyPreview').innerHTML = `↩️ Replying to: ${text} <button onclick="cancelReply()" class="text-rose-500 ml-2">✖</button>`; document.getElementById('replyPreview').classList.remove('hidden'); };
+  window.cancelReply = () => { replyTo = null; document.getElementById('replyPreview').classList.add('hidden'); };
+  function sendMessage(text, mediaUrl = null) {
+    if (!text.trim() && !mediaUrl) return;
+    const msgObj = { name: currentUserName, message: text, time: Date.now(), readBy: { [currentUserName]: true } };
+    if (replyTo) { msgObj.replyTo = replyTo; cancelReply(); }
+    if (mediaUrl) msgObj.image = mediaUrl;
+    db.ref('chat/global').push(msgObj);
+    document.getElementById('messageInput').value = '';
+  }
+  document.getElementById('sendBtn').onclick = () => sendMessage(document.getElementById('messageInput').value);
+  document.getElementById('messageInput').addEventListener('keypress', e => { if(e.key === 'Enter') sendMessage(e.target.value); });
+  document.getElementById('attachBtn').onclick = () => { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.onchange = async e => { const file = e.target.files[0]; if(file){ const ref = storage.ref(`chat_images/${Date.now()}_${file.name}`); await ref.put(file); const url = await ref.getDownloadURL(); sendMessage('', url); } }; input.click(); };
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+  attachMessageListener();
+</script>
 </body>
 </html>
