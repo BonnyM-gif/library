@@ -1,380 +1,689 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Riddle Chamber | 50 Enigmas</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SMUK RIDDLES - 50 Enigmas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      min-height: 100vh;
-      background: radial-gradient(circle at 20% 30%, #0a0f1e, #03050b);
-      font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
-      position: relative;
-      overflow-x: hidden;
-    }
+        body {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 20% 30%, #1a1f2e, #0b0e17);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+            position: relative;
+            overflow-x: hidden;
+            padding: 1.5rem;
+        }
 
-    /* particle canvas (same as before) */
-    #particle-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-    }
+        /* Subtle animated vignette & grain */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.6) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
 
-    .orb {
-      position: absolute;
-      width: 50vmax;
-      height: 50vmax;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0, 242, 255, 0.2), transparent 70%);
-      filter: blur(70px);
-      animation: floatOrb 18s infinite alternate ease-in-out;
-      z-index: 0;
-    }
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJmIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjUiIG51bU9jdGF2ZXM9IjMiLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjZikiIG9wYWNpdHk9IjAuMDYiLz48L3N2Zz4=');
+            background-repeat: repeat;
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 1;
+        }
 
-    .orb1 { top: -20%; left: -20%; animation-duration: 22s; background: radial-gradient(circle, rgba(0, 180, 255, 0.25), transparent); }
-    .orb2 { bottom: -15%; right: -15%; animation-duration: 19s; background: radial-gradient(circle, rgba(150, 0, 255, 0.2), transparent); }
-    .orb3 { top: 40%; left: 30%; width: 30vmax; height: 30vmax; animation-duration: 26s; background: radial-gradient(circle, rgba(0, 255, 200, 0.15), transparent); }
+        /* Main Card – Parchment meets glassmorphism */
+        .container {
+            position: relative;
+            max-width: 680px;
+            width: 100%;
+            background: rgba(20, 22, 32, 0.82);
+            backdrop-filter: blur(14px);
+            border-radius: 2rem;
+            padding: 2rem 2rem 2.2rem;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+            border: 1px solid rgba(210, 180, 140, 0.4);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
 
-    @keyframes floatOrb {
-      0% { transform: translate(0, 0) scale(1); opacity: 0.4; }
-      100% { transform: translate(8%, 12%) scale(1.2); opacity: 0.8; }
-    }
+        /* decorative corners */
+        .container::before,
+        .container::after {
+            content: "";
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            pointer-events: none;
+        }
+        .container::before {
+            top: 20px;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
+        }
+        .container::after {
+            bottom: 20px;
+            right: 20px;
+            border-left: none;
+            border-top: none;
+        }
 
-    .container {
-      position: relative;
-      width: 780px;
-      max-width: 90vw;
-      padding: 2rem 1.8rem;
-      background: rgba(8, 12, 25, 0.55);
-      backdrop-filter: blur(14px);
-      border-radius: 2rem;
-      border: 1px solid rgba(0, 242, 255, 0.35);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 242, 255, 0.1) inset, 0 0 25px rgba(0, 242, 255, 0.3);
-      text-align: center;
-      z-index: 10;
-      transition: transform 0.2s ease, box-shadow 0.3s ease;
-    }
+        /* header area with classic motif */
+        .riddle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 1.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px dashed rgba(212, 175, 55, 0.5);
+        }
 
-    .container:hover {
-      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.6), 0 0 0 1.5px rgba(0, 242, 255, 0.5) inset, 0 0 32px #00f2ff66;
-      transform: scale(1.01);
-    }
+        .level-badge {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            font-family: 'Montserrat', sans-serif;
+            color: #e9c893;
+            border: 1px solid rgba(212, 175, 55, 0.6);
+            backdrop-filter: blur(4px);
+        }
 
-    h2 {
-      font-size: 2rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #e0f2fe, #00f2ff, #2a6eff);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      letter-spacing: -0.5px;
-      text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
-      margin-bottom: 0.3rem;
-    }
+        .score-board {
+            font-family: 'Montserrat', monospace;
+            background: #1e1b17aa;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #dbb879;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
 
-    .score-area {
-      font-family: 'Inter', sans-serif;
-      font-size: 1rem;
-      background: rgba(0, 0, 0, 0.5);
-      display: inline-block;
-      padding: 0.4rem 1.2rem;
-      border-radius: 40px;
-      margin: 1rem 0;
-      color: #a0e9ff;
-    }
+        h2 {
+            font-size: 2rem;
+            text-align: center;
+            font-weight: 500;
+            letter-spacing: 3px;
+            margin: 0.5rem 0 0.2rem;
+            color: #ecd9b4;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            font-family: 'Cormorant Garamond', serif;
+        }
 
-    .riddle-box {
-      background: rgba(0, 0, 0, 0.45);
-      padding: 1.8rem 1.5rem;
-      border-radius: 1.5rem;
-      font-size: 1.35rem;
-      font-family: 'Cormorant Garamond', 'Times New Roman', serif;
-      font-weight: 500;
-      min-height: 180px;
-      margin: 1rem 0 1.2rem;
-      color: #f2e6d5;
-      border-left: 4px solid #dbb464;
-      box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 6px 12px rgba(0,0,0,0.2);
-      line-height: 1.5;
-      word-break: break-word;
-    }
+        /* riddle text area – elegant, readable */
+        .ai-text {
+            background: rgba(0, 0, 0, 0.45);
+            padding: 1.8rem 1.5rem;
+            border-radius: 1.5rem;
+            font-size: 1.35rem;
+            font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+            font-weight: 500;
+            min-height: 160px;
+            margin: 1.5rem 0 1.2rem;
+            color: #f2e6d5;
+            border-left: 4px solid #dbb464;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 6px 12px rgba(0,0,0,0.2);
+            line-height: 1.5;
+            word-break: break-word;
+            font-style: normal;
+            backdrop-filter: blur(2px);
+        }
 
-    .riddle-buttons {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin: 1rem 0;
-    }
+        /* input field – professional minimal */
+        .input-area {
+            display: flex;
+            gap: 14px;
+            margin: 1.2rem 0 1rem;
+            flex-wrap: wrap;
+        }
 
-    button {
-      background: transparent;
-      border: 1.5px solid #b87c4f;
-      padding: 0.6rem 1.4rem;
-      font-family: 'Inter', sans-serif;
-      font-weight: 500;
-      font-size: 0.85rem;
-      border-radius: 40px;
-      color: #ecd9b4;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: rgba(255,245,225,0.2);
-      backdrop-filter: blur(4px);
-    }
+        input {
+            flex: 1;
+            padding: 0.9rem 1.2rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #aa8e54;
+            border-radius: 60px;
+            color: #f7e9cf;
+            font-size: 1rem;
+            font-family: 'Montserrat', monospace;
+            font-weight: 400;
+            outline: none;
+            transition: 0.2s;
+            letter-spacing: 0.3px;
+        }
 
-    button:hover {
-      background: #b87c4f;
-      color: #fff6e8;
-      border-color: #9b693f;
-      transform: translateY(-2px);
-    }
+        input:focus {
+            border-color: #e9bc6d;
+            box-shadow: 0 0 12px rgba(233, 188, 109, 0.4);
+            background: #0a0c12;
+        }
 
-    .reset-btn {
-      background: rgba(239, 213, 181, 0.3);
-      border-color: #c49a6c;
-    }
+        button {
+            background: transparent;
+            border: 1px solid #c9aa5f;
+            padding: 0.9rem 1.8rem;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            color: #ecd9b4;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Montserrat', sans-serif;
+            backdrop-filter: blur(5px);
+        }
 
-    .back-btn {
-      display: inline-block;
-      background: rgba(255,255,255,0.1);
-      padding: 0.5rem 1.2rem;
-      border-radius: 40px;
-      color: white;
-      text-decoration: none;
-      margin-top: 1.5rem;
-      transition: 0.2s;
-      border: 1px solid rgba(0,224,255,0.3);
-    }
+        button:hover {
+            background: rgba(201, 170, 95, 0.2);
+            border-color: #f3cf8a;
+            color: #fff3e0;
+            transform: scale(0.98);
+        }
 
-    .back-btn:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateX(-3px);
-    }
+        .action-group {
+            display: flex;
+            gap: 14px;
+            margin-top: 0.5rem;
+        }
 
-    @media (max-width: 680px) {
-      body { padding: 1rem; }
-      .riddle-box { font-size: 1.1rem; padding: 1.2rem; }
-    }
-  </style>
+        .reset-btn {
+            border-color: #9c7b4b;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 3px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+            margin: 1.5rem 0 0.2rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #dbb464, #e9bc6d);
+            border-radius: 10px;
+            transition: width 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        /* subtle glitch */
+        .glitch-effect {
+            animation: gentleGlitch 0.2s ease-in-out both;
+        }
+
+        @keyframes gentleGlitch {
+            0% { transform: translate(0); opacity: 1; }
+            20% { transform: translate(-1px, 1px); }
+            40% { transform: translate(1px, -1px); }
+            60% { transform: translate(-1px, 0px); }
+            100% { transform: translate(0); }
+        }
+
+        /* toast hint */
+        .hint-toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0d0b10e6;
+            backdrop-filter: blur(16px);
+            border-left: 5px solid #e9bc6d;
+            padding: 0.8rem 1.8rem;
+            border-radius: 60px;
+            color: #f7e5cd;
+            font-family: 'Montserrat', monospace;
+            font-size: 0.85rem;
+            z-index: 200;
+            pointer-events: none;
+            animation: toastFade 1.8s ease forwards;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            max-width: 90vw;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        @keyframes toastFade {
+            0% { opacity: 0; transform: translateX(-50%) translateY(15px); }
+            12% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-10px); visibility: hidden; }
+        }
+
+        /* particle celebration subtle */
+        .celebrate-particle {
+            position: fixed;
+            pointer-events: none;
+            font-size: 1.3rem;
+            z-index: 1000;
+            filter: drop-shadow(0 0 2px gold);
+        }
+
+        /* subtle animation for container */
+        @keyframes softPulse {
+            0% { border-color: rgba(212, 175, 55, 0.3); box-shadow: 0 0 12px rgba(0,0,0,0.4);}
+            100% { border-color: rgba(212, 175, 55, 0.7); box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);}
+        }
+        .container {
+            animation: softPulse 4s infinite alternate;
+        }
+
+        /* responsiveness */
+        @media (max-width: 550px) {
+            .container { padding: 1.4rem; }
+            .ai-text { font-size: 1.1rem; padding: 1.2rem; min-height: 130px; }
+            button { padding: 0.6rem 1.2rem; }
+            h2 { font-size: 1.5rem; }
+        }
+    </style>
 </head>
 <body>
-<canvas id="particle-canvas"></canvas>
-<div class="orb orb1"></div>
-<div class="orb orb2"></div>
-<div class="orb orb3"></div>
 
-<div class="container">
-  <h2>🧩 CHAMBER OF RIDDLES</h2>
-  <div class="score-area">
-    ⭐ Score: <strong id="score">0</strong> / 50
-  </div>
-  <div id="riddleBox" class="riddle-box">
-    Loading riddles...
-  </div>
-  <div class="riddle-buttons">
-    <button onclick="prevRiddle()">◀ Previous</button>
-    <button onclick="nextRiddle()">Next ▶</button>
-  </div>
-  <button onclick="resetScore()" class="reset-btn">Reset Score</button>
-  <div>
-    <a href="dashboard.html" class="back-btn">← Return to Dashboard</a>
-  </div>
+<div class="container" id="gameContainer">
+    <div class="riddle-header">
+        <div class="level-badge" id="levelDisplay">◈ RIDDLE I</div>
+        <div class="score-board" id="scoreDisplay">🏆 WISDOM: 0</div>
+    </div>
+    <h2>◈ THE CHAMBER OF ENIGMAS ◈</h2>
+    <div class="ai-text" id="aiText">Awakening the oracle...</div>
+
+    <div class="input-area">
+        <input type="text" id="answer" placeholder="Your answer..." autocomplete="off">
+        <button id="submitBtn">✦ DECIPHER ✦</button>
+    </div>
+    <div class="action-group">
+        <button id="hintBtn" class="hint-btn">⌾ SEEK HINT</button>
+        <button id="resetBtn" class="reset-btn">↺ RESET QUEST</button>
+    </div>
+    <div class="progress-container">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
 </div>
 
 <script>
-  // ---------- 50 RIDDLES (mix of classic, logic, wordplay) ----------
-  const riddles = [
-    { q: "I speak without a mouth. What am I?", a: "Echo" },
-    { q: "The more you take, the more you leave behind. What am I?", a: "Footsteps" },
-    { q: "What has keys but no locks?", a: "Piano" },
-    { q: "What can you catch but not throw?", a: "Cold" },
-    { q: "What is always in front of you but can’t be seen?", a: "Future" },
-    { q: "I have cities, but no houses. I have mountains, but no trees. What am I?", a: "Map" },
-    { q: "What gets wetter as it dries?", a: "Towel" },
-    { q: "What has a heart that doesn’t beat?", a: "Artichoke" },
-    { q: "I have a face and two hands, but no arms or legs. What am I?", a: "Clock" },
-    { q: "What has words but never speaks?", a: "Book" },
-    { q: "I can run but never walk, have a mouth but never talk. What am I?", a: "River" },
-    { q: "What has an eye but cannot see?", a: "Needle" },
-    { q: "What month of the year has 28 days?", a: "All of them" },
-    { q: "What is full of holes but still holds water?", a: "Sponge" },
-    { q: "What can travel around the world while staying in a corner?", a: "Stamp" },
-    { q: "What has a head, a tail, is brown, and has no legs?", a: "Penny" },
-    { q: "What has a neck but no head?", a: "Bottle" },
-    { q: "What has many teeth but cannot bite?", a: "Comb" },
-    { q: "What has a thumb and four fingers but is not alive?", a: "Glove" },
-    { q: "What has to be broken before you can use it?", a: "Egg" },
-    { q: "I have a door but no house. I have a screen but no computer. What am I?", a: "Net" },
-    { q: "What can you hold without ever touching?", a: "Breath" },
-    { q: "What has a bottom at the top?", a: "Legs" },
-    { q: "What has words but never speaks?", a: "Book" },
-    { q: "What is so fragile that saying its name breaks it?", a: "Silence" },
-    { q: "What has a ring but no finger?", a: "Telephone" },
-    { q: "What has a thousand words but cannot speak?", a: "Dictionary" },
-    { q: "What has a face and two hands but no arms or legs?", a: "Clock" },
-    { q: "What has a head, a tail, but no body?", a: "Coin" },
-    { q: "What has a spine but no bones?", a: "Book" },
-    { q: "What has a bark but no bite?", a: "Tree" },
-    { q: "What has a sole but no foot?", a: "Shoe" },
-    { q: "What has a roof but no ceiling?", a: "Mouth" },
-    { q: "What has a heart that doesn’t pump blood?", a: "Artichoke" },
-    { q: "What has a foot but no leg?", a: "Snail" },
-    { q: "What has a wave but no sea?", a: "Hair" },
-    { q: "What has a spring but no autumn?", a: "Watch" },
-    { q: "What has a lock but no key?", a: "Wrestling hold" },
-    { q: "What has a crown but no king?", a: "Tooth" },
-    { q: "What has a wing but cannot fly?", a: "Airplane (wing) / Angel statue" },
-    { q: "What has a belt but no pants?", a: "Seatbelt" },
-    { q: "What has a tongue but cannot taste?", a: "Shoe" },
-    { q: "What has a face but no mouth?", a: "Drum" },
-    { q: "What has a stem but no flower?", a: "Pipe" },
-    { q: "What has a spine but no vertebrae?", a: "Book" },
-    { q: "What has a battery but no electricity?", a: "Jail" },
-    { q: "What has a key but no lock?", a: "Keyboard" },
-    { q: "What has a date but no calendar?", a: "Fruit" },
-    { q: "What has a bark but no leaves?", a: "Dog" },
-    { q: "What has a wave but no ocean?", a: "Microwave" }
-  ];
+    // ==================== 50 RIDDLES (mix of classic, logic, wordplay) ====================
+    const RIDDLES = [
+        { text: "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?", keywords: ["echo"], hint: "Sound that returns, bouncing through canyon walls." },
+        { text: "I have cities, but no houses; mountains, but no trees; water, but no fish. What am I?", keywords: ["map"], hint: "A flat depiction of the world, used for navigation." },
+        { text: "The more you take, the more you leave behind. What am I?", keywords: ["footsteps", "steps"], hint: "Each stride you make, something lingers behind you." },
+        { text: "I can run but never walk, have a mouth but never talk, have a head but never weep, have a bed but never sleep. What am I?", keywords: ["river"], hint: "Flowing body of water, meandering through valleys." },
+        { text: "I am taken from a mine and shut up in a wooden case, from which I am never released, and yet I am used by almost every person. What am I?", keywords: ["pencil", "lead"], hint: "An instrument of writing, its core is graphite, encased in wood." },
+        { text: "I have keys but open no locks. I have space but no room. You can enter, but not go outside. What am I?", keywords: ["keyboard", "piano"], hint: "Found on a desk, used for typing or musical composition." },
+        { text: "I am always in front of you, yet you can never touch me. I shape destinies, yet I am invisible. What am I?", keywords: ["future", "tomorrow"], hint: "Time that has not yet arrived, a horizon of possibilities." },
+        { text: "I am not alive, but I grow; I don't have lungs, but I need air; I don't have a mouth, but water kills me. What am I?", keywords: ["fire", "flame"], hint: "A primal element, sustained by oxygen, extinguished by water." },
+        { text: "The person who makes it has no need of it; the person who buys it has no use for it; the person who uses it never sees it. What is it?", keywords: ["coffin", "casket"], hint: "A final vessel, crafted but never used by its maker." },
+        { text: "I have no doors, but I house knowledge. I have no voice, but I speak to those who seek. I can be opened, yet I am not a door. What am I?", keywords: ["book", "tome"], hint: "Bound pages that contain wisdom, stories, and secrets." },
+        { text: "What has an eye but cannot see?", keywords: ["needle"], hint: "Used for sewing, has a small hole at one end." },
+        { text: "What month of the year has 28 days?", keywords: ["all"], hint: "Every month has at least 28 days." },
+        { text: "What is full of holes but still holds water?", keywords: ["sponge"], hint: "A porous cleaning tool." },
+        { text: "What can travel around the world while staying in a corner?", keywords: ["stamp"], hint: "Affixed to mail, never moves from its spot on the envelope." },
+        { text: "What has a head, a tail, is brown, and has no legs?", keywords: ["penny"], hint: "A coin, often copper-colored." },
+        { text: "What has a neck but no head?", keywords: ["bottle"], hint: "Holds liquids, has a narrow top." },
+        { text: "What has many teeth but cannot bite?", keywords: ["comb"], hint: "Used for hair, has tines." },
+        { text: "What has a thumb and four fingers but is not alive?", keywords: ["glove"], hint: "Worn on hands for warmth or protection." },
+        { text: "What has to be broken before you can use it?", keywords: ["egg"], hint: "A food item that requires cracking open." },
+        { text: "What has a ring but no finger?", keywords: ["telephone"], hint: "It rings when someone calls." },
+        { text: "What has a face and two hands but no arms or legs?", keywords: ["clock"], hint: "Tells time." },
+        { text: "What has a bark but no bite?", keywords: ["tree"], hint: "Its outer layer is called bark." },
+        { text: "What has a sole but no foot?", keywords: ["shoe"], hint: "Worn on feet, has a bottom part." },
+        { text: "What has a heart that doesn't pump blood?", keywords: ["artichoke"], hint: "A vegetable with a edible heart." },
+        { text: "What has a foot but no leg?", keywords: ["snail"], hint: "A slow-moving mollusk." },
+        { text: "What has a wave but no sea?", keywords: ["hair"], hint: "It can be wavy." },
+        { text: "What has a spring but no autumn?", keywords: ["watch"], hint: "A mechanical device with a coiled spring." },
+        { text: "What has a lock but no key?", keywords: ["wrestling hold"], hint: "A grappling technique." },
+        { text: "What has a crown but no king?", keywords: ["tooth"], hint: "The top part of a tooth is called a crown." },
+        { text: "What has a wing but cannot fly?", keywords: ["airplane wing"], hint: "Part of an aircraft." },
+        { text: "What has a belt but no pants?", keywords: ["seatbelt"], hint: "Found in cars for safety." },
+        { text: "What has a tongue but cannot taste?", keywords: ["shoe"], hint: "The flap under laces is called a tongue." },
+        { text: "What has a face but no mouth?", keywords: ["drum"], hint: "A musical instrument with a striking surface." },
+        { text: "What has a stem but no flower?", keywords: ["pipe"], hint: "Used for smoking." },
+        { text: "What has a spine but no vertebrae?", keywords: ["book"], hint: "The back of a book is called a spine." },
+        { text: "What has a battery but no electricity?", keywords: ["jail"], hint: "Assault and battery (legal term)." },
+        { text: "What has a key but no lock?", keywords: ["keyboard"], hint: "Used for typing." },
+        { text: "What has a date but no calendar?", keywords: ["fruit"], hint: "A sweet dried fruit." },
+        { text: "What has a bark but no leaves?", keywords: ["dog"], hint: "An animal that barks." },
+        { text: "What has a wave but no ocean?", keywords: ["microwave"], hint: "A kitchen appliance." },
+        { text: "I have a door but no house. I have a screen but no computer. What am I?", keywords: ["net"], hint: "A mesh used for catching things." },
+        { text: "What can you hold without ever touching?", keywords: ["breath"], hint: "You can hold it in your lungs." },
+        { text: "What has a bottom at the top?", keywords: ["legs"], hint: "Your legs have feet at the bottom." },
+        { text: "What is so fragile that saying its name breaks it?", keywords: ["silence"], hint: "The absence of sound." },
+        { text: "What has a thousand words but cannot speak?", keywords: ["dictionary"], hint: "A reference book." },
+        { text: "What has a head, a tail, but no body?", keywords: ["coin"], hint: "A piece of money." },
+        { text: "What has a ring but no finger?", keywords: ["telephone"], hint: "It rings when someone calls." },
+        { text: "What has a face that doesn't smile?", keywords: ["clock"], hint: "It has a dial with numbers." }
+    ];
 
-  let currentRiddleIndex = 0;
-  let currentScore = 0;
-  const STORAGE_KEY = "riddle_score_50";
-
-  // Load score from localStorage
-  function loadScore() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved !== null) {
-      currentScore = parseInt(saved);
-    } else {
-      currentScore = 0;
+    const TOTAL_RIDDLES = RIDDLES.length;
+    
+    // DOM elements
+    const aiTextDiv = document.getElementById("aiText");
+    const answerInput = document.getElementById("answer");
+    const submitBtn = document.getElementById("submitBtn");
+    const hintBtn = document.getElementById("hintBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const levelDisplaySpan = document.getElementById("levelDisplay");
+    const scoreDisplaySpan = document.getElementById("scoreDisplay");
+    const progressFill = document.getElementById("progressFill");
+    
+    // Game state
+    let currentRiddleIndex = 0;      // 0-based
+    let score = 0;
+    let isTyping = false;
+    let isProcessing = false;
+    let currentTypingInterval = null;
+    let pendingTimeouts = [];
+    
+    // Helper: clear pending timeouts
+    function clearTimeouts() {
+        for (let id of pendingTimeouts) clearTimeout(id);
+        pendingTimeouts = [];
     }
-    updateScoreDisplay();
-  }
-
-  function updateScoreDisplay() {
-    document.getElementById("score").innerText = currentScore;
-    localStorage.setItem(STORAGE_KEY, currentScore);
-  }
-
-  function nextRiddle() {
-    currentRiddleIndex = (currentRiddleIndex + 1) % riddles.length;
-    renderCurrentRiddle();
-  }
-
-  function prevRiddle() {
-    currentRiddleIndex = (currentRiddleIndex - 1 + riddles.length) % riddles.length;
-    renderCurrentRiddle();
-  }
-
-  function renderCurrentRiddle() {
-    const box = document.getElementById("riddleBox");
-    const r = riddles[currentRiddleIndex];
-    box.innerHTML = `
-      <div style="font-weight:600; margin-bottom:0.5rem;">❓ Riddle ${currentRiddleIndex+1} of ${riddles.length}</div>
-      <div style="font-size:1.2rem;">${escapeHtml(r.q)}</div>
-      <div style="margin-top:1rem;">
-        <button onclick="revealAnswer('${escapeHtml(r.a).replace(/'/g, "\\'")}')" style="margin-right:0.5rem;">🔍 Reveal Answer</button>
-        <button onclick="addPoint()">⭐ +1 point (solved)</button>
-      </div>
-    `;
-  }
-
-  function revealAnswer(answer) {
-    alert(`Answer: ${answer}`);
-  }
-
-  function addPoint() {
-    currentScore++;
-    updateScoreDisplay();
-    alert("➕ +1 point! Great job!");
-  }
-
-  function resetScore() {
-    if (confirm("Reset your score to 0?")) {
-      currentScore = 0;
-      updateScoreDisplay();
-      alert("Score reset to 0");
-    }
-  }
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    });
-  }
-
-  // ---------- Particle network (same as login) ----------
-  const canvas = document.getElementById('particle-canvas');
-  const ctx = canvas.getContext('2d');
-  let width, height, particles = [];
-  const PARTICLE_COUNT = 75, MAX_DIST = 130;
-  function initParticles() {
-    particles = [];
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      particles.push({
-        x: Math.random() * width, y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.3,
-        radius: Math.random() * 2.2 + 1.2,
-        color: `rgba(0, ${180 + Math.random() * 75}, 255, ${0.2 + Math.random() * 0.5})`
-      });
-    }
-  }
-  function resizeCanvas() {
-    width = window.innerWidth; height = window.innerHeight;
-    canvas.width = width; canvas.height = height;
-    initParticles();
-  }
-  function drawParticles() {
-    ctx.clearRect(0, 0, width, height);
-    for (let i = 0; i < particles.length; i++) {
-      const p = particles[i];
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = p.color; ctx.fill();
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0) p.x = width; if (p.x > width) p.x = 0;
-      if (p.y < 0) p.y = height; if (p.y > height) p.y = 0;
-    }
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < MAX_DIST) {
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(0, 200, 255, ${0.08 * (1 - dist / MAX_DIST)})`;
-          ctx.stroke();
+    
+    function abortTyping() {
+        if (currentTypingInterval) {
+            clearInterval(currentTypingInterval);
+            currentTypingInterval = null;
         }
-      }
+        isTyping = false;
     }
-    requestAnimationFrame(drawParticles);
-  }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
-  drawParticles();
+    
+    // Enhanced typewriter with subtle elegance
+    function typeMessage(text, callback) {
+        abortTyping();
+        aiTextDiv.innerHTML = "";
+        let i = 0;
+        isTyping = true;
+        currentTypingInterval = setInterval(() => {
+            if (i < text.length) {
+                aiTextDiv.innerHTML += text[i];
+                i++;
+            } else {
+                clearInterval(currentTypingInterval);
+                currentTypingInterval = null;
+                isTyping = false;
+                if (callback) callback();
+            }
+        }, 28);
+    }
+    
+    // Update UI (level badge, score, progress)
+    function updateUI() {
+        const romanLevel = currentRiddleIndex + 1;
+        levelDisplaySpan.innerHTML = `◈ RIDDLE ${romanLevel}/${TOTAL_RIDDLES}`;
+        scoreDisplaySpan.innerHTML = `🏆 WISDOM: ${score}`;
+        const percent = (currentRiddleIndex / TOTAL_RIDDLES) * 100;
+        progressFill.style.width = `${percent}%`;
+        if (currentRiddleIndex === TOTAL_RIDDLES) progressFill.style.width = "100%";
+    }
+    
+    // show current riddle question with animation
+    function displayCurrentRiddle() {
+        if (currentRiddleIndex < TOTAL_RIDDLES) {
+            const riddleText = RIDDLES[currentRiddleIndex].text;
+            typeMessage(riddleText);
+        } else {
+            // final completion handled elsewhere
+        }
+    }
+    
+    // celebration effect: elegant gold particles
+    function celebrateCorrect() {
+        const container = document.getElementById("gameContainer");
+        container.classList.add("glitch-effect");
+        setTimeout(() => container.classList.remove("glitch-effect"), 250);
+        
+        for (let i = 0; i < 24; i++) {
+            const particle = document.createElement("div");
+            particle.className = "celebrate-particle";
+            particle.innerHTML = ["✦","✧","◈","⚜","❂","𖤓"][Math.floor(Math.random()*6)];
+            particle.style.position = "fixed";
+            particle.style.left = Math.random() * window.innerWidth + "px";
+            particle.style.top = Math.random() * window.innerHeight + "px";
+            particle.style.fontSize = (Math.random() * 24 + 14) + "px";
+            particle.style.opacity = "0.9";
+            particle.style.transition = "transform 0.7s ease-out, opacity 1s";
+            particle.style.color = "#f5cb8b";
+            document.body.appendChild(particle);
+            setTimeout(() => {
+                particle.style.transform = `translate(${Math.random() * 100 - 50}px, ${Math.random() * -120 - 40}px) scale(0.3)`;
+                particle.style.opacity = "0";
+            }, 20);
+            setTimeout(() => particle.remove(), 800);
+        }
+    }
+    
+    function failEffect() {
+        const container = document.getElementById("gameContainer");
+        container.classList.add("glitch-effect");
+        setTimeout(() => container.classList.remove("glitch-effect"), 280);
+        answerInput.style.borderColor = "#c07a5b";
+        setTimeout(() => answerInput.style.borderColor = "#aa8e54", 400);
+    }
+    
+    function showHint() {
+        if (currentRiddleIndex >= TOTAL_RIDDLES) {
+            showToast("The quest is complete. Reset to begin anew.", "#c9aa5f");
+            return;
+        }
+        const hintMsg = RIDDLES[currentRiddleIndex].hint;
+        showToast(`⌾ HINT: ${hintMsg}`, "#e9bc6d");
+    }
+    
+    function showToast(message, borderColor) {
+        const existing = document.querySelector(".hint-toast");
+        if (existing) existing.remove();
+        const toast = document.createElement("div");
+        toast.className = "hint-toast";
+        toast.style.borderLeftColor = borderColor;
+        toast.innerText = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 1800);
+    }
+    
+    // Final completion: deep wisdom message
+    function completeGame() {
+        if (currentRiddleIndex >= TOTAL_RIDDLES) return;
+        currentRiddleIndex = TOTAL_RIDDLES;
+        updateUI();
+        typeMessage("✨ *Wisdom attained* ✨\n\nYou have unravelled all 50 ancient enigmas, proving your mind sharp as a blade. The Chamber of Enigmas bows to your intellect.\n\n⚜️ You are now a Keeper of Riddles. Press RESET to test another seeker.", () => {});
+        // disable input and submit
+        answerInput.disabled = true;
+        submitBtn.disabled = true;
+        hintBtn.disabled = false;
+        // final celebration burst
+        for (let i=0;i<50;i++) {
+            setTimeout(() => {
+                const burst = document.createElement("div");
+                burst.style.position = "fixed";
+                burst.style.left = Math.random() * window.innerWidth + "px";
+                burst.style.top = Math.random() * window.innerHeight + "px";
+                burst.style.fontSize = (Math.random() * 26 + 18) + "px";
+                burst.style.pointerEvents = "none";
+                burst.style.zIndex = "9999";
+                burst.style.opacity = "0.8";
+                burst.style.transition = "all 0.8s ease";
+                burst.innerText = ["◈","⚜","✧","𖤓","★","⌾"][Math.floor(Math.random()*6)];
+                burst.style.color = "#e9bc6d";
+                document.body.appendChild(burst);
+                setTimeout(() => {
+                    burst.style.transform = `scale(2) translateY(-80px)`;
+                    burst.style.opacity = "0";
+                }, 20);
+                setTimeout(() => burst.remove(), 800);
+            }, i*25);
+        }
+    }
+    
+    // advance to next riddle
+    function goToNextRiddle() {
+        if (currentRiddleIndex + 1 < TOTAL_RIDDLES) {
+            currentRiddleIndex++;
+            updateUI();
+            displayCurrentRiddle();
+            answerInput.disabled = false;
+            submitBtn.disabled = false;
+            isProcessing = false;
+            answerInput.value = "";
+            answerInput.focus();
+        } 
+        else if (currentRiddleIndex + 1 === TOTAL_RIDDLES) {
+            // final riddle solved correctly
+            currentRiddleIndex++; // now equals TOTAL_RIDDLES
+            updateUI();
+            completeGame();
+            isProcessing = false;
+            answerInput.disabled = true;
+            submitBtn.disabled = true;
+        }
+    }
+    
+    // Submit answer logic
+    function submitAnswer() {
+        if (isTyping) {
+            showToast("The oracle is still speaking... wait a moment.", "#aa8e54");
+            return;
+        }
+        if (isProcessing) return;
+        if (currentRiddleIndex >= TOTAL_RIDDLES) {
+            showToast("Your wisdom has peaked. Press RESET to begin a new journey.", "#c9aa5f");
+            return;
+        }
+        
+        const userAnswer = answerInput.value.trim().toLowerCase();
+        if (userAnswer === "") {
+            showToast("Enter your answer, seeker.", "#c9aa5f");
+            return;
+        }
+        
+        const current = RIDDLES[currentRiddleIndex];
+        const valid = current.keywords.some(kw => userAnswer.includes(kw));
+        
+        if (valid) {
+            // correct answer
+            score++;
+            updateUI();
+            celebrateCorrect();
+            typeMessage("✓ *Correct!* Your insight pierces the veil. Advancing...", () => {
+                setTimeout(() => {
+                    goToNextRiddle();
+                }, 700);
+            });
+            answerInput.value = "";
+            isProcessing = true;
+            submitBtn.disabled = true;
+            setTimeout(() => { 
+                submitBtn.disabled = false; 
+                isProcessing = false;
+                if (currentRiddleIndex < TOTAL_RIDDLES) answerInput.focus();
+            }, 1300);
+        } else {
+            failEffect();
+            typeMessage("✗ The answer is not accepted. Ponder deeper, the riddle demands subtlety. Try again.", () => {});
+            answerInput.classList.add("glitch-effect");
+            setTimeout(() => answerInput.classList.remove("glitch-effect"), 300);
+            showToast("❌ Not this time. Re-read the riddle with care.", "#c07a5b");
+        }
+    }
+    
+    // Full reset
+    function resetGame() {
+        clearTimeouts();
+        abortTyping();
+        isProcessing = false;
+        isTyping = false;
+        currentRiddleIndex = 0;
+        score = 0;
+        answerInput.value = "";
+        answerInput.disabled = false;
+        submitBtn.disabled = false;
+        updateUI();
+        const container = document.getElementById("gameContainer");
+        container.classList.remove("glitch-effect");
+        
+        typeMessage("♢ The Chamber resets... ♢\n\nNew seeker, prepare your mind.", () => {
+            setTimeout(() => {
+                typeMessage("I shall present 50 ancient riddles. Each answer must be precise.", () => {
+                    setTimeout(() => {
+                        displayCurrentRiddle();
+                        answerInput.focus();
+                    }, 500);
+                });
+            }, 700);
+        });
+    }
+    
+    // Initial boot sequence
+    function startBootSequence() {
+        currentRiddleIndex = 0;
+        score = 0;
+        updateUI();
+        typeMessage("Welcome, Seeker of Truth.\n\nBeyond these gates lie 50 classical enigmas — each a key to sharpen the mind. Speak your answers with clarity.", () => {
+            setTimeout(() => {
+                typeMessage("Let the trial begin.", () => {
+                    setTimeout(() => {
+                        displayCurrentRiddle();
+                        answerInput.focus();
+                    }, 600);
+                });
+            }, 800);
+        });
+    }
+    
+    // Event listeners
+    submitBtn.addEventListener("click", submitAnswer);
+    hintBtn.addEventListener("click", showHint);
+    resetBtn.addEventListener("click", resetGame);
+    answerInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") submitAnswer();
+    });
+    
+    // start game
+    startBootSequence();
+</script>
 
-  // Initialize
-  loadScore();
-  renderCurrentRiddle();
+<!-- Firebase initialization (optional, for analytics) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
+    authDomain: "smuk-library.firebaseapp.com",
+    projectId: "smuk-library",
+    storageBucket: "smuk-library.firebasestorage.app",
+    messagingSenderId: "101518774671",
+    appId: "1:101518774671:web:24c6c9c2574f230639fbfa",
+    measurementId: "G-9M8VW7EL0B"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
 </script>
 </body>
 </html>
