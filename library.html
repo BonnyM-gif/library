@@ -7,40 +7,69 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* keep your existing styles */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #f1f5f9; font-family: 'Inter', sans-serif; }
-    /* ... (copy your existing library styles) ... */
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: #f1f5f9; }
+    .book-card { transition: all 0.2s ease; }
+    .book-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.15); }
+    .view-btn { transition: all 0.2s; }
+    .view-btn:hover { background-color: #1e3a8a; transform: scale(1.02); }
+    .book-grid { max-height: 70vh; overflow-y: auto; scrollbar-width: thin; }
   </style>
 </head>
-<body class="bg-gradient-to-br from-sky-50 to-indigo-50">
+<body class="bg-gradient-to-br from-sky-50 to-indigo-50 font-sans antialiased">
+
 <div class="max-w-7xl mx-auto px-4 py-6 md:py-10">
   <!-- Header -->
   <div class="flex flex-wrap justify-between items-center mb-8 border-b border-indigo-200 pb-4">
     <div class="flex items-center gap-3">
-      <div class="bg-indigo-700 text-white p-3 rounded-2xl shadow-md"><i class="fas fa-chalkboard-user text-xl"></i></div>
-      <div><h1 class="text-3xl md:text-4xl font-bold text-slate-800">📚 Student Library</h1><p class="text-slate-500 text-sm">Browse & read digital books</p></div>
+      <div class="bg-indigo-700 text-white p-3 rounded-2xl shadow-md">
+        <i class="fas fa-chalkboard-user text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight">📚 Student Library</h1>
+        <p class="text-slate-500 text-sm mt-0.5">Browse & read digital books — view only</p>
+      </div>
     </div>
-    <div class="mt-2 sm:mt-0 bg-white/70 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm text-indigo-700 text-sm"><i class="fas fa-book-open"></i> <span id="bookCount">0 books available</span></div>
+    <div class="mt-2 sm:mt-0 bg-white/70 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm text-indigo-700 text-sm flex items-center gap-2">
+      <i class="fas fa-book-open"></i>
+      <span id="bookCount">0 books available</span>
+    </div>
   </div>
-  <!-- Search -->
+
+  <!-- Search & filter -->
   <div class="mb-6 flex flex-wrap gap-3 items-center justify-between">
-    <div class="relative w-full sm:w-72"><i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" id="searchInput" placeholder="Search by title..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white shadow-sm"></div>
-    <button id="refreshBtn" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-200"><i class="fas fa-sync-alt"></i> Refresh</button>
+    <div class="relative w-full sm:w-72">
+      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+      <input type="text" id="searchInput" placeholder="Search by title..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300 transition">
+    </div>
+    <div class="flex gap-2">
+      <button id="refreshBtn" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-200 transition flex items-center gap-1"><i class="fas fa-sync-alt"></i> Refresh</button>
+    </div>
   </div>
+
   <!-- Books container -->
   <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-indigo-100 overflow-hidden">
     <div class="bg-indigo-50/50 px-5 py-3 border-b border-indigo-100 flex justify-between items-center">
-      <div><i class="fas fa-book text-indigo-600"></i> <span class="font-semibold text-slate-700">Digital Collection</span></div>
+      <div class="flex items-center gap-2">
+        <i class="fas fa-book text-indigo-600"></i>
+        <h2 class="font-semibold text-slate-700">📖 Digital Collection</h2>
+      </div>
       <span class="text-xs text-slate-500"><i class="fas fa-eye"></i> Click any book to read online</span>
     </div>
-    <div id="booksContainer" class="book-grid p-5"></div>
+    <div id="booksContainer" class="book-grid p-5">
+      <div class="text-center py-10 text-slate-400"><i class="fas fa-spinner fa-pulse"></i> Loading books...</div>
+    </div>
+  </div>
+
+  <div class="mt-8 text-center text-xs text-slate-400 border-t border-indigo-100 pt-5">
+    <span><i class="fas fa-database"></i> Books are stored in the cloud – access from anywhere</span>
   </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-database-compat.js"></script>
 <script>
+  // Firebase configuration (same as your project)
   const firebaseConfig = {
     apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
     authDomain: "smuk-library.firebaseapp.com",
@@ -57,28 +86,149 @@
   const booksContainer = document.getElementById('booksContainer');
   const bookCountSpan = document.getElementById('bookCount');
   const searchInput = document.getElementById('searchInput');
+  const refreshBtn = document.getElementById('refreshBtn');
 
-  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
-  function openBook(book) { if (book.url) window.open(book.url, '_blank'); else alert('No content'); }
-  function renderBooks(searchTerm = '') {
-    let filtered = allBooks.filter(b => b.title.toLowerCase().includes(searchTerm) || (b.author && b.author.toLowerCase().includes(searchTerm)));
-    bookCountSpan.innerText = `${filtered.length} book${filtered.length !== 1 ? 's' : ''}`;
-    if (!filtered.length) { booksContainer.innerHTML = '<div class="text-center py-16 text-slate-400">📭 No matching books found.</div>'; return; }
-    let html = `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">`;
-    filtered.forEach(book => {
-      html += `<div class="book-card bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden flex flex-col">
-        <div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 text-center"><i class="fas ${book.type === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-book text-indigo-500'} text-5xl"></i></div>
-        <div class="p-4 flex-1"><h3 class="font-bold text-slate-800">${escapeHtml(book.title)}</h3><div class="text-xs text-slate-500 mt-1">${escapeHtml(book.author || 'Unknown')}</div>
-        <div class="mt-4"><button class="view-book-btn bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-1.5 rounded-lg" data-url="${book.url}"><i class="fas fa-eye"></i> Read</button></div></div>
-      </div>`;
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
     });
-    html += `</div>`;
-    booksContainer.innerHTML = html;
-    document.querySelectorAll('.view-book-btn').forEach(btn => btn.addEventListener('click', () => openBook({ url: btn.dataset.url })));
   }
-  db.ref('books').on('value', snap => { allBooks = Object.values(snap.val() || {}); renderBooks(searchInput.value); });
-  searchInput.addEventListener('input', () => renderBooks(searchInput.value.toLowerCase()));
-  document.getElementById('refreshBtn').addEventListener('click', () => renderBooks(searchInput.value.toLowerCase()));
+
+  function formatFileSize(bytes) {
+    if (!bytes) return '';
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  function openBook(book) {
+    if (book.url) {
+      window.open(book.url, '_blank');
+    } else {
+      alert('This book has no readable content.');
+    }
+  }
+
+  function renderBooks(searchTerm = '') {
+    let filtered = allBooks;
+    if (searchTerm.trim() !== '') {
+      const term = searchTerm.trim().toLowerCase();
+      filtered = allBooks.filter(book =>
+        book.title.toLowerCase().includes(term) ||
+        (book.author && book.author.toLowerCase().includes(term)) ||
+        (book.description && book.description.toLowerCase().includes(term))
+      );
+    }
+
+    bookCountSpan.innerText = `${filtered.length} book${filtered.length !== 1 ? 's' : ''} available`;
+
+    if (filtered.length === 0) {
+      booksContainer.innerHTML = `
+        <div class="text-center py-16 text-slate-400 flex flex-col items-center gap-3">
+          <i class="fas fa-search text-5xl opacity-40"></i>
+          <p class="text-lg">No matching books found.</p>
+          <p class="text-sm">Try a different keyword or refresh the library.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let gridHtml = `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">`;
+    for (const book of filtered) {
+      const isPdf = book.type === 'pdf';
+      const iconClass = isPdf ? 'fa-file-pdf text-red-500' : 'fa-book text-indigo-500';
+      const typeLabel = isPdf ? 'PDF' : 'Link';
+      const displayTitle = escapeHtml(book.title.length > 40 ? book.title.substring(0, 37) + '...' : book.title);
+      const author = escapeHtml(book.author || 'Unknown Author');
+      const year = book.year ? `📅 ${book.year}` : '—';
+
+      gridHtml += `
+        <div class="book-card bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden flex flex-col transition-all hover:shadow-lg">
+          <div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 flex justify-center items-center border-b border-slate-100">
+            <i class="fas ${iconClass} text-5xl drop-shadow-sm"></i>
+          </div>
+          <div class="p-4 flex-1 flex flex-col">
+            <h3 class="font-bold text-slate-800 text-md line-clamp-2 mb-1" title="${escapeHtml(book.title)}">${displayTitle}</h3>
+            <div class="text-xs text-slate-500 mt-1">${author}</div>
+            <div class="flex items-center gap-2 text-xs text-slate-500 mt-1">
+              ${year}
+              ${isPdf && book.size ? `<span class="w-1 h-1 bg-slate-300 rounded-full"></span> ${formatFileSize(book.size)}` : ''}
+            </div>
+            <div class="mt-4 flex justify-between items-center">
+              <span class="text-indigo-600 text-xs bg-indigo-50 px-2 py-1 rounded-full"><i class="fas fa-bookmark"></i> ${typeLabel}</span>
+              <button class="view-book-btn bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm view-btn" data-url="${escapeHtml(book.url)}">
+                <i class="fas fa-eye"></i> Read
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    gridHtml += `</div>`;
+    booksContainer.innerHTML = gridHtml;
+
+    // Attach click handlers
+    document.querySelectorAll('.view-book-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const url = btn.getAttribute('data-url');
+        if (url) {
+          window.open(url, '_blank');
+        } else {
+          alert('No URL available for this book.');
+        }
+      });
+    });
+  }
+
+  // Real-time listener to Firebase books node
+  function subscribeToBooks() {
+    const booksRef = db.ref('books');
+    booksRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        allBooks = Object.entries(data).map(([id, book]) => ({
+          id: id,
+          ...book
+        }));
+      } else {
+        allBooks = [];
+      }
+      renderBooks(searchInput.value.toLowerCase());
+    }, (error) => {
+      console.error("Error loading books:", error);
+      booksContainer.innerHTML = `
+        <div class="text-center py-16 text-rose-500">
+          <i class="fas fa-exclamation-triangle text-3xl mb-2"></i>
+          <p>Failed to load library from cloud.</p>
+          <p class="text-xs mt-1">${error.message}</p>
+        </div>
+      `;
+    });
+  }
+
+  // Debounced search
+  let debounceTimer;
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      renderBooks(e.target.value.toLowerCase());
+    }, 300);
+  });
+
+  refreshBtn.addEventListener('click', () => {
+    // Force re‑fetch (listener is real‑time, but this resets search)
+    searchInput.value = '';
+    renderBooks('');
+  });
+
+  // Start listening
+  subscribeToBooks();
 </script>
 </body>
 </html>
