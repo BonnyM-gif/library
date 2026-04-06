@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>AssignFlow | Role-Based Assignment Hub</title>
+    <title>AssignFlow | Assignment Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -37,15 +37,17 @@
             </div>
             <div class="flex items-center gap-4">
                 <span id="userEmailDisplay" class="text-sm text-gray-700 hidden md:inline font-medium"></span>
-                <button onclick="logout()" class="bg-red-50 text-red-700 px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-red-100 transition border border-red-200">🚪 Sign out</button>
+                <button id="logoutBtn" class="bg-red-50 text-red-700 px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-red-100 transition border border-red-200 hidden">🚪 Sign out</button>
+                <button id="loginBtn" class="bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-100 transition border border-indigo-200">🔐 Staff Login</button>
             </div>
         </div>
 
         <div class="flex flex-col md:flex-row">
+            <!-- Dynamic Sidebar -->
             <div id="sidebarMenu" class="md:w-64 bg-gray-900 text-white p-4 space-y-2 min-h-screen shadow-xl"></div>
 
             <div class="flex-1 p-6">
-                <!-- ASSIGNMENTS -->
+                <!-- ASSIGNMENTS (public) -->
                 <div id="sectionAssignments" class="page-section">
                     <div class="bg-white rounded-xl shadow-lg p-5">
                         <h2 class="text-2xl font-bold mb-2 text-gray-800 flex items-center gap-2">📋 Active & Past Assignments</h2>
@@ -66,7 +68,7 @@
                                 <input type="datetime-local" id="assignmentDeadline" class="border rounded-lg px-4 py-2.5 w-full focus:ring-2 focus:ring-emerald-500">
                             </div>
                             <input type="number" id="assignmentPoints" placeholder="Max points (e.g., 100)" class="border rounded-lg px-4 py-2.5">
-                            <button onclick="createAssignment()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-lg hover:bg-emerald-700 md:col-span-2 transition font-semibold shadow">📌 Publish Assignment</button>
+                            <button id="createAssignmentBtn" class="bg-emerald-600 text-white px-5 py-2.5 rounded-lg hover:bg-emerald-700 md:col-span-2 transition font-semibold shadow">📌 Publish Assignment</button>
                         </div>
                     </div>
                 </div>
@@ -85,7 +87,7 @@
                     </div>
                 </div>
 
-                <!-- FILE RESOURCE HUB -->
+                <!-- FILE RESOURCE HUB (Teachers/Admins upload) -->
                 <div id="sectionFiles" class="page-section">
                     <div class="bg-white rounded-xl shadow-lg p-5">
                         <h2 class="text-xl font-bold mb-4">📎 Course Resources</h2>
@@ -116,7 +118,7 @@
     <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-storage-compat.js"></script>
 
     <script>
-        // ========== FIREBASE CONFIG (REPLACE WITH YOUR OWN) ==========
+        // ========== FIREBASE CONFIG ==========
         const firebaseConfig = {
             apiKey: "AIzaSyBR0RDkC8SsT7v89eH4qBX6q_87UyqcYWc",
             authDomain: "smuk-library.firebaseapp.com",
@@ -124,8 +126,7 @@
             projectId: "smuk-library",
             storageBucket: "smuk-library.firebasestorage.app",
             messagingSenderId: "101518774671",
-            appId: "1:101518774671:web:24c6c9c2574f230639fbfa",
-            measurementId: "G-9M8VW7EL0B"
+            appId: "1:101518774671:web:24c6c9c2574f230639fbfa"
         };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -136,48 +137,118 @@
         let currentUserRole = null;
         let currentUserEmail = null;
         let currentUserName = null;
+        let isLoggedIn = false;
+
+        // Guest mode: store student name in localStorage
+        let guestName = localStorage.getItem('assignment_guest_name') || '';
+
+        // DOM elements
+        const mainApp = document.getElementById('mainApp');
+        const roleBadge = document.getElementById('roleBadge');
+        const userEmailDisplay = document.getElementById('userEmailDisplay');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const loginBtn = document.getElementById('loginBtn');
+
+        function showToast(msg, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-5 right-5 toast bg-white shadow-xl rounded-lg px-5 py-3 text-sm border-l-4 ${isError ? 'border-red-500 text-red-600' : 'border-green-500 text-green-600'} z-50`;
+            toast.innerHTML = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
 
         function isDeadlineOpen(deadlineISO) {
             if (!deadlineISO) return false;
             return new Date() <= new Date(deadlineISO);
         }
 
-        // ========== AUTHENTICATION & ROLE ==========
+        // ========== UI: Guest Name Prompt (if not logged in and no guest name) ==========
+        function promptGuestName() {
+            if (!isLoggedIn && !guestName) {
+                const name = prompt("Enter your name to submit assignments:", localStorage.getItem('assignment_guest_name') || "Student");
+                if (name && name.trim()) {
+                    guestName = name.trim();
+                    localStorage.setItem('assignment_guest_name', guestName);
+                } else {
+                    guestName = "Anonymous";
+                }
+            }
+        }
+
+        // ========== AUTHENTICATION (optional) ==========
         auth.onAuthStateChanged(async (user) => {
-            if (!user) {
-                window.location.href = "login.html";
-                return;
-            }
-            currentUser = user;
-            currentUserEmail = user.email;
-            const userSnap = await db.ref(`users/${user.uid}`).once('value');
-            const userData = userSnap.val();
-            if (!userData) {
-                alert("User data not found. Please contact admin.");
-                await auth.signOut();
-                window.location.href = "login.html";
-                return;
-            }
-            currentUserRole = userData.role;
-            currentUserName = userData.name || user.email.split('@')[0];
-            document.getElementById('userEmailDisplay').innerText = currentUserEmail;
-            document.getElementById('roleBadge').innerHTML = currentUserRole.toUpperCase();
-            document.getElementById('mainApp').classList.remove('hidden');
-            buildMenuByRole();
-            loadAssignments();
-            loadSharedFiles();
-            loadAnalytics();
-            setupRealtimeListeners();
-            if (currentUserRole === 'admin') loadUsersForAdmin();
-            const uploadArea = document.getElementById('resourceUploadArea');
-            if (currentUserRole === 'teacher' || currentUserRole === 'admin') {
-                uploadArea.classList.remove('hidden');
+            if (user) {
+                isLoggedIn = true;
+                currentUser = user;
+                currentUserEmail = user.email;
+                const userSnap = await db.ref(`users/${user.uid}`).once('value');
+                const userData = userSnap.val();
+                if (userData) {
+                    currentUserRole = userData.role;
+                    currentUserName = userData.name || user.email.split('@')[0];
+                } else {
+                    currentUserRole = 'student';
+                    currentUserName = user.email.split('@')[0];
+                }
+                roleBadge.innerText = currentUserRole.toUpperCase();
+                userEmailDisplay.innerText = currentUserEmail;
+                logoutBtn.classList.remove('hidden');
+                loginBtn.classList.add('hidden');
+                // Show full admin/teacher UI
+                buildMenuByRole();
+                loadAssignments();
+                loadSharedFiles();
+                loadAnalytics();
+                setupRealtimeListeners();
+                if (currentUserRole === 'admin') loadUsersForAdmin();
+                const uploadArea = document.getElementById('resourceUploadArea');
+                if (currentUserRole === 'teacher' || currentUserRole === 'admin') {
+                    uploadArea.classList.remove('hidden');
+                } else {
+                    uploadArea.classList.add('hidden');
+                }
             } else {
-                uploadArea.classList.add('hidden');
+                isLoggedIn = false;
+                currentUserRole = 'guest';
+                currentUserName = guestName || 'Guest';
+                roleBadge.innerText = 'GUEST';
+                userEmailDisplay.innerText = '';
+                logoutBtn.classList.add('hidden');
+                loginBtn.classList.remove('hidden');
+                // Build guest menu (only assignments)
+                buildGuestMenu();
+                loadAssignments();
+                loadSharedFiles();
             }
+            mainApp.classList.remove('hidden');
+            promptGuestName();
         });
 
-        window.logout = () => { auth.signOut().then(() => window.location.href = "login.html"); };
+        window.logout = () => auth.signOut();
+        loginBtn.onclick = () => window.location.href = "login.html";
+
+        function buildGuestMenu() {
+            const menu = document.getElementById('sidebarMenu');
+            menu.innerHTML = '';
+            const items = [
+                { id: 'assignments', label: '📋 Assignments', section: 'sectionAssignments' },
+                { id: 'files', label: '📎 Resource Hub', section: 'sectionFiles' }
+            ];
+            items.forEach(item => {
+                const btn = document.createElement('div');
+                btn.className = 'nav-item p-3 rounded-lg mb-2 font-medium';
+                btn.innerHTML = item.label;
+                btn.onclick = () => {
+                    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active-page'));
+                    document.getElementById(item.section).classList.add('active-page');
+                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('nav-active'));
+                    btn.classList.add('nav-active');
+                };
+                menu.appendChild(btn);
+            });
+            document.getElementById('sectionAssignments').classList.add('active-page');
+            if (document.querySelectorAll('.nav-item')[0]) document.querySelectorAll('.nav-item')[0].classList.add('nav-active');
+        }
 
         function buildMenuByRole() {
             const menu = document.getElementById('sidebarMenu');
@@ -211,7 +282,12 @@
             if (document.querySelectorAll('.nav-item')[0]) document.querySelectorAll('.nav-item')[0].classList.add('nav-active');
         }
 
-        window.createAssignment = function() {
+        // ========== CREATE ASSIGNMENT (Teacher/Admin) ==========
+        document.getElementById('createAssignmentBtn')?.addEventListener('click', () => {
+            if (!isLoggedIn || (currentUserRole !== 'teacher' && currentUserRole !== 'admin')) {
+                alert("Only teachers and admins can create assignments.");
+                return;
+            }
             const title = document.getElementById('assignmentTitle').value.trim();
             const desc = document.getElementById('assignmentDesc').value;
             const deadlineRaw = document.getElementById('assignmentDeadline').value;
@@ -230,16 +306,27 @@
                 document.getElementById('assignmentDesc').value = '';
                 document.getElementById('assignmentDeadline').value = '';
                 document.getElementById('assignmentPoints').value = '';
-                alert("✅ Assignment published.");
-            }).catch(err => alert("Error: " + err.message));
-        };
+                showToast("✅ Assignment published.");
+            }).catch(err => showToast("Error: " + err.message, true));
+        });
 
-        // ========== SUBMIT ASSIGNMENT (students only) ==========
+        // ========== SUBMIT ASSIGNMENT (Guest or Student) ==========
         window.submitAssignment = async function(assignmentId, assignmentTitle, deadlineISO, points) {
             if (!isDeadlineOpen(deadlineISO)) {
                 alert(`⛔ SUBMISSION CLOSED: Deadline was ${new Date(deadlineISO).toLocaleString()}.`);
                 return;
             }
+            // For guests, ensure name is set
+            if (!isLoggedIn && !guestName) {
+                const name = prompt("Enter your name:", "");
+                if (name && name.trim()) {
+                    guestName = name.trim();
+                    localStorage.setItem('assignment_guest_name', guestName);
+                } else {
+                    guestName = "Anonymous";
+                }
+            }
+            const submitterName = isLoggedIn ? currentUserName : guestName;
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
             fileInput.accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png';
@@ -250,54 +337,52 @@
                     alert("File exceeds 10MB limit.");
                     return;
                 }
-                const toastId = showToast("⏫ Uploading submission...", "info");
+                const toastId = showToast("⏫ Uploading submission...");
                 try {
                     const ext = file.name.split('.').pop();
-                    const fileName = `sub_${assignmentId}_${currentUser.uid}_${Date.now()}.${ext}`;
+                    const fileName = `sub_${assignmentId}_${submitterName}_${Date.now()}.${ext}`;
                     const storageRef = storage.ref(`submissions/${fileName}`);
-                    console.log("Uploading to storage path:", `submissions/${fileName}`);
-                    const uploadTask = await storageRef.put(file);
-                    console.log("Upload successful, getting URL...");
-                    const url = await uploadTask.ref.getDownloadURL();
-                    console.log("Download URL:", url);
+                    await storageRef.put(file);
+                    const url = await storageRef.getDownloadURL();
                     if (!isDeadlineOpen(deadlineISO)) {
                         alert("⛔ Deadline just passed! Submission rejected.");
-                        hideToast(toastId);
                         return;
                     }
-                    await db.ref(`submissions/${assignmentId}/${currentUser.uid}`).set({
-                        assignmentId, assignmentTitle, studentId: currentUser.uid,
-                        studentName: currentUserName, fileUrl: url, fileName: file.name,
+                    const submissionId = db.ref(`submissions/${assignmentId}`).push().key;
+                    await db.ref(`submissions/${assignmentId}/${submissionId}`).set({
+                        assignmentId, assignmentTitle, studentName: submitterName,
+                        fileUrl: url, fileName: file.name,
                         submittedAt: Date.now(), deadline: deadlineISO, points: points, grade: null, feedback: null,
                         onTime: true
                     });
-                    hideToast(toastId);
-                    showToast("✅ Assignment submitted successfully!", "success");
+                    showToast("✅ Assignment submitted successfully!");
                     loadAnalytics();
                 } catch (err) {
-                    console.error("Upload error:", err);
-                    hideToast(toastId);
-                    alert("Upload failed: " + err.message);
+                    showToast("Upload failed: " + err.message, true);
                 }
             };
             fileInput.click();
         };
 
-        // ========== GRADE SUBMISSION ==========
-        window.gradeSubmission = async function(assignmentId, studentId, gradeValue, feedbackText) {
+        // ========== GRADE SUBMISSION (Teacher/Admin) ==========
+        window.gradeSubmission = async function(assignmentId, submissionId, gradeValue, feedbackText) {
+            if (!isLoggedIn || (currentUserRole !== 'teacher' && currentUserRole !== 'admin')) {
+                alert("Only teachers and admins can grade.");
+                return;
+            }
             if (!gradeValue || isNaN(parseFloat(gradeValue))) {
                 alert("Please enter a numeric grade.");
                 return;
             }
             const gradeNum = parseFloat(gradeValue);
-            await db.ref(`submissions/${assignmentId}/${studentId}`).update({
+            await db.ref(`submissions/${assignmentId}/${submissionId}`).update({
                 grade: gradeNum, feedback: feedbackText || "", gradedBy: currentUserEmail, gradedAt: Date.now()
             });
-            showToast("Grade recorded", "success");
+            showToast("Grade recorded");
             loadAnalytics();
         };
 
-        // ========== LOAD ASSIGNMENTS & SUBMISSIONS ==========
+        // ========== LOAD ASSIGNMENTS ==========
         function loadAssignments() {
             db.ref('assignments').on('value', (snap) => {
                 const assignments = snap.val();
@@ -312,9 +397,9 @@
                     let cardClass = deadlineOpen ? 'deadline-open' : 'deadline-closed';
                     let deadlineStatusLabel = deadlineOpen ? '<span class="badge-open text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 ml-2">📢 OPEN</span>' : '<span class="badge-locked text-xs px-2 py-0.5 rounded-full ml-2">🔒 CLOSED</span>';
                     let submitButtonHtml = '';
-                    if (currentUserRole === 'student' && deadlineOpen) {
+                    if (deadlineOpen) {
                         submitButtonHtml = `<button onclick="submitAssignment('${ass.id}', '${ass.title.replace(/'/g, "\\'")}', '${ass.deadline}', ${ass.points})" class="bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition shadow">📎 Submit Work</button>`;
-                    } else if (currentUserRole === 'student' && !deadlineOpen) {
+                    } else {
                         submitButtonHtml = `<button disabled class="bg-gray-400 text-white px-5 py-2 rounded-lg text-sm cursor-not-allowed">⛔ Submission Closed</button>`;
                     }
 
@@ -333,22 +418,11 @@
                                 </div>
                                 ${submitButtonHtml}
                             </div>
-                            ${(currentUserRole === 'teacher' || currentUserRole === 'admin') ? `<div id="submissions-list-${ass.id}" class="mt-5 border-t border-gray-200 pt-4"><h4 class="font-semibold text-md flex items-center gap-1">📥 Student Submissions</h4><div class="space-y-3 mt-2"></div></div>` : ''}
+                            ${(isLoggedIn && (currentUserRole === 'teacher' || currentUserRole === 'admin')) ? `<div id="submissions-list-${ass.id}" class="mt-5 border-t border-gray-200 pt-4"><h4 class="font-semibold text-md flex items-center gap-1">📥 Student Submissions</h4><div class="space-y-3 mt-2"></div></div>` : ''}
                         </div>`;
                     
-                    if (currentUserRole === 'student') {
-                        db.ref(`submissions/${ass.id}/${currentUser.uid}`).once('value', s => {
-                            const sub = s.val();
-                            const statusDiv = document.getElementById(`sub-status-${ass.id}`);
-                            if (sub && statusDiv) {
-                                if (sub.grade !== null) statusDiv.innerHTML = `✅ Your submission: graded ${sub.grade}/${sub.points} - ${sub.feedback ? `Feedback: ${sub.feedback}` : ''}`;
-                                else statusDiv.innerHTML = `📎 Submitted on ${new Date(sub.submittedAt).toLocaleString()} (pending grading)`;
-                            } else if (statusDiv && !deadlineOpen) statusDiv.innerHTML = `⚠️ Deadline passed. No submission.`;
-                            else if (statusDiv && deadlineOpen) statusDiv.innerHTML = `⌛ Awaiting your submission before deadline.`;
-                        });
-                    }
-                    
-                    if (currentUserRole === 'teacher' || currentUserRole === 'admin') {
+                    // For logged-in teachers/admins, load submissions
+                    if (isLoggedIn && (currentUserRole === 'teacher' || currentUserRole === 'admin')) {
                         const submissionsRef = db.ref(`submissions/${ass.id}`);
                         submissionsRef.off();
                         submissionsRef.on('value', (subSnap) => {
@@ -378,8 +452,12 @@
             });
         }
 
-        // ========== FILE SHARING ==========
+        // ========== FILE SHARING (Teachers/Admins) ==========
         window.uploadSharedFile = async function() {
+            if (!isLoggedIn || (currentUserRole !== 'teacher' && currentUserRole !== 'admin')) {
+                alert("Only teachers and admins can upload resources.");
+                return;
+            }
             const file = document.getElementById('fileInput').files[0];
             if (!file) return;
             const allowed = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','image/jpeg','image/png','image/jpg'];
@@ -391,7 +469,7 @@
                 alert("Max 10MB.");
                 return;
             }
-            const toastId = showToast("Uploading resource...", "info");
+            const toastId = showToast("Uploading resource...");
             try {
                 const ext = file.name.split('.').pop();
                 const fileName = `shared_${Date.now()}_${currentUser.uid}.${ext}`;
@@ -403,12 +481,10 @@
                     uploadedBy: currentUserEmail, uploadedByRole: currentUserRole,
                     timestamp: Date.now()
                 });
-                hideToast(toastId);
-                showToast("Resource uploaded.", "success");
+                showToast("Resource uploaded.");
                 document.getElementById('fileInput').value = '';
             } catch (err) {
-                hideToast(toastId);
-                alert("Upload error: " + err.message);
+                showToast("Upload error: " + err.message, true);
             }
         };
 
@@ -429,6 +505,7 @@
         }
 
         async function loadAnalytics() {
+            if (!isLoggedIn) return;
             const assignSnap = await db.ref('assignments').once('value');
             document.getElementById('totalAssignments').innerText = assignSnap.numChildren();
             const subSnap = await db.ref('submissions').once('value');
@@ -451,6 +528,7 @@
         }
 
         function setupRealtimeListeners() {
+            if (!isLoggedIn) return;
             db.ref('activityLog').limitToLast(12).on('child_added', snap => {
                 const act = snap.val();
                 const iconMap = { login:'🔐', submit:'📤', grade:'⭐', create:'📌', upload:'📎' };
@@ -480,24 +558,9 @@
             const newRole = prompt("Set new role: student, teacher, admin");
             if (newRole && ['student','teacher','admin'].includes(newRole)) {
                 db.ref(`users/${uid}/role`).set(newRole);
-                showToast(`Role changed to ${newRole}`, "success");
+                showToast(`Role changed to ${newRole}`);
             }
         };
-
-        function showToast(msg, type) {
-            const id = 't'+Date.now();
-            const div = document.createElement('div');
-            div.id = id;
-            div.className = `fixed bottom-5 right-5 toast bg-white shadow-xl rounded-lg px-5 py-3 text-sm border-l-4 ${type==='success'?'border-green-500':'border-blue-500'} z-50`;
-            div.innerHTML = msg;
-            document.body.appendChild(div);
-            setTimeout(() => div.remove(), 3000);
-            return id;
-        }
-        function hideToast(id) {
-            const t = document.getElementById(id);
-            if (t) t.remove();
-        }
     </script>
 </body>
 </html>
