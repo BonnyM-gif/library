@@ -27,13 +27,13 @@
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100">
 
-    <div id="mainApp" class="hidden">
+    <div id="mainApp">
         <!-- Top bar -->
         <div class="bg-white shadow-md px-5 py-3 flex flex-wrap justify-between items-center sticky top-0 z-30 border-b border-gray-200">
             <div class="flex items-center gap-3">
                 <div class="text-2xl">📌</div>
                 <h1 class="text-xl font-bold text-gray-800">AssignFlow <span class="text-xs font-normal text-gray-400">| Deadline‑Protected</span></h1>
-                <span id="roleBadge" class="text-xs bg-gray-100 px-3 py-1 rounded-full font-mono shadow-inner"></span>
+                <span id="roleBadge" class="text-xs bg-gray-100 px-3 py-1 rounded-full font-mono shadow-inner">GUEST</span>
             </div>
             <div class="flex items-center gap-4">
                 <span id="userEmailDisplay" class="text-sm text-gray-700 hidden md:inline font-medium"></span>
@@ -48,7 +48,7 @@
 
             <div class="flex-1 p-6">
                 <!-- ASSIGNMENTS (public) -->
-                <div id="sectionAssignments" class="page-section">
+                <div id="sectionAssignments" class="page-section active-page">
                     <div class="bg-white rounded-xl shadow-lg p-5">
                         <h2 class="text-2xl font-bold mb-2 text-gray-800 flex items-center gap-2">📋 Active & Past Assignments</h2>
                         <p class="text-sm text-gray-500 mb-5">Deadline passed? Portal closed – no further uploads allowed.</p>
@@ -143,7 +143,6 @@
         let guestName = localStorage.getItem('assignment_guest_name') || '';
 
         // DOM elements
-        const mainApp = document.getElementById('mainApp');
         const roleBadge = document.getElementById('roleBadge');
         const userEmailDisplay = document.getElementById('userEmailDisplay');
         const logoutBtn = document.getElementById('logoutBtn');
@@ -162,8 +161,8 @@
             return new Date() <= new Date(deadlineISO);
         }
 
-        // ========== UI: Guest Name Prompt (if not logged in and no guest name) ==========
-        function promptGuestName() {
+        // ========== UI: Guest Name Prompt ==========
+        function ensureGuestName() {
             if (!isLoggedIn && !guestName) {
                 const name = prompt("Enter your name to submit assignments:", localStorage.getItem('assignment_guest_name') || "Student");
                 if (name && name.trim()) {
@@ -175,7 +174,7 @@
             }
         }
 
-        // ========== AUTHENTICATION (optional) ==========
+        // ========== AUTHENTICATION (optional, no redirect) ==========
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 isLoggedIn = true;
@@ -194,7 +193,7 @@
                 userEmailDisplay.innerText = currentUserEmail;
                 logoutBtn.classList.remove('hidden');
                 loginBtn.classList.add('hidden');
-                // Show full admin/teacher UI
+                // Build full menu
                 buildMenuByRole();
                 loadAssignments();
                 loadSharedFiles();
@@ -215,13 +214,12 @@
                 userEmailDisplay.innerText = '';
                 logoutBtn.classList.add('hidden');
                 loginBtn.classList.remove('hidden');
-                // Build guest menu (only assignments)
+                // Build guest menu (only assignments and resources)
                 buildGuestMenu();
                 loadAssignments();
                 loadSharedFiles();
             }
-            mainApp.classList.remove('hidden');
-            promptGuestName();
+            ensureGuestName();
         });
 
         window.logout = () => auth.signOut();
@@ -246,6 +244,8 @@
                 };
                 menu.appendChild(btn);
             });
+            // Ensure assignments is active
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active-page'));
             document.getElementById('sectionAssignments').classList.add('active-page');
             if (document.querySelectorAll('.nav-item')[0]) document.querySelectorAll('.nav-item')[0].classList.add('nav-active');
         }
@@ -316,7 +316,7 @@
                 alert(`⛔ SUBMISSION CLOSED: Deadline was ${new Date(deadlineISO).toLocaleString()}.`);
                 return;
             }
-            // For guests, ensure name is set
+            // Ensure name is set
             if (!isLoggedIn && !guestName) {
                 const name = prompt("Enter your name:", "");
                 if (name && name.trim()) {
@@ -414,7 +414,6 @@
                                         <span class="bg-gray-100 px-3 py-1 rounded-full">⭐ ${ass.points} points</span>
                                         <span class="${deadlineOpen ? 'text-green-700' : 'text-red-700'}">${deadlineOpen ? '✅ Submissions open' : '❌ Portal closed'}</span>
                                     </div>
-                                    <div id="sub-status-${ass.id}" class="text-sm mt-2 font-medium"></div>
                                 </div>
                                 ${submitButtonHtml}
                             </div>
